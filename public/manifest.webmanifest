@@ -1,0 +1,9 @@
+{
+  "name": "SOMANG ERP",
+  "short_name": "SOMANG",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#fafafa",
+  "lang": "ko"
+}
