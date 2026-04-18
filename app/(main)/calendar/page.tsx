@@ -1,159 +1,155 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { format, isSameDay } from "date-fns";
+import { Plus } from "lucide-react";
 import AppHeader from "@/components/layout/AppHeader";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import CalendarHeader from "@/components/calendar/CalendarHeader";
+import CalendarGrid from "@/components/calendar/CalendarGrid";
+import CalendarEventItem from "@/components/calendar/CalendarEventItem";
+import CalendarBottomSheet from "@/components/calendar/CalendarBottomSheet";
+import { CATEGORY_CONFIG, type CalendarEvent, type EventCategory } from "@/types/calendar";
+import { DUMMY_EVENTS } from "@/lib/data/calendarEvents";
 import { cn } from "@/lib/utils/cn";
 
-const schedules = [
-  { date: "2026-04-18", title: "팀장 회의", time: "10:00", color: "bg-[#2F80ED]" },
-  { date: "2026-04-18", title: "신입사원 OJT", time: "14:00", color: "bg-green-500" },
-  { date: "2026-04-22", title: "이사회", time: "09:00", color: "bg-purple-500" },
-  { date: "2026-04-25", title: "월간 보고", time: "15:00", color: "bg-orange-400" },
-  { date: "2026-04-30", title: "예산 마감", time: "18:00", color: "bg-red-500" },
-];
-
-const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-
-function getDaysInMonth(year: number, month: number) {
-  return new Date(year, month + 1, 0).getDate();
-}
-
-function getFirstDayOfMonth(year: number, month: number) {
-  return new Date(year, month, 1).getDay();
-}
+const ALL_CATEGORIES: EventCategory[] = ["personal", "department", "company"];
 
 export default function CalendarPage() {
   const today = new Date();
+
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
-  const [selectedDate, setSelectedDate] = useState(
-    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
-  );
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [activeFilters, setActiveFilters] = useState<EventCategory[]>([...ALL_CATEGORIES]);
 
-  const daysInMonth = getDaysInMonth(year, month);
-  const firstDay = getFirstDayOfMonth(year, month);
+  const toggleFilter = (cat: EventCategory) => {
+    setActiveFilters((prev) =>
+      prev.includes(cat)
+        ? prev.length === 1 ? prev : prev.filter((c) => c !== cat)
+        : [...prev, cat]
+    );
+  };
 
-  const cells: (number | null)[] = [
-    ...Array(firstDay).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
+  const goToToday = () => {
+    setYear(today.getFullYear());
+    setMonth(today.getMonth());
+    setSelectedDate(today);
+  };
 
   const prevMonth = () => {
-    if (month === 0) { setYear(y => y - 1); setMonth(11); }
-    else setMonth(m => m - 1);
+    if (month === 0) { setYear((y) => y - 1); setMonth(11); }
+    else setMonth((m) => m - 1);
   };
+
   const nextMonth = () => {
-    if (month === 11) { setYear(y => y + 1); setMonth(0); }
-    else setMonth(m => m + 1);
+    if (month === 11) { setYear((y) => y + 1); setMonth(0); }
+    else setMonth((m) => m + 1);
   };
 
-  const formatDate = (day: number) =>
-    `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const filteredEvents = useMemo(
+    () => DUMMY_EVENTS.filter((e) => activeFilters.includes(e.category)),
+    [activeFilters]
+  );
 
-  const hasSchedule = (day: number) =>
-    schedules.some((s) => s.date === formatDate(day));
+  const selectedDayEvents = useMemo(
+    () => filteredEvents.filter((e) => isSameDay(new Date(e.date), selectedDate)),
+    [filteredEvents, selectedDate]
+  );
 
-  const selectedSchedules = schedules.filter((s) => s.date === selectedDate);
+  const formattedSelected = format(selectedDate, "M월 d일 (eee)", { locale: undefined });
 
   return (
     <div className="flex flex-col min-h-full bg-gray-50">
-      <AppHeader title="일정" />
+      <AppHeader
+        title="일정"
+        right={
+          <button className="flex items-center gap-1 bg-[#2F80ED] text-white text-xs font-medium px-3 py-1.5 rounded-lg">
+            <Plus size={14} />일정 추가
+          </button>
+        }
+      />
 
-      <main className="flex-1 pb-20">
-        <div className="bg-white px-4 pt-4 pb-2">
-          {/* 월 네비게이션 */}
-          <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth} className="p-1 text-gray-500">
-              <ChevronLeft size={20} />
+      {/* 월 헤더 */}
+      <CalendarHeader
+        year={year}
+        month={month}
+        onPrev={prevMonth}
+        onNext={nextMonth}
+        onToday={goToToday}
+      />
+
+      {/* 필터 탭 */}
+      <div className="flex gap-2 px-4 py-2 bg-white border-b border-gray-100 overflow-x-auto scrollbar-none">
+        {ALL_CATEGORIES.map((cat) => {
+          const cfg = CATEGORY_CONFIG[cat];
+          const active = activeFilters.includes(cat);
+          return (
+            <button
+              key={cat}
+              onClick={() => toggleFilter(cat)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap border transition-colors",
+                active
+                  ? `${cfg.bg} ${cfg.color} border-transparent`
+                  : "bg-white text-gray-400 border-gray-200"
+              )}
+            >
+              <span className={cn("w-2 h-2 rounded-full", active ? cfg.dot : "bg-gray-300")} />
+              {cfg.label}
             </button>
-            <span className="text-base font-semibold text-gray-900">
-              {year}년 {month + 1}월
-            </span>
-            <button onClick={nextMonth} className="p-1 text-gray-500">
-              <ChevronRight size={20} />
-            </button>
+          );
+        })}
+      </div>
+
+      {/* 캘린더 그리드 */}
+      <div className="bg-white shadow-sm">
+        <CalendarGrid
+          year={year}
+          month={month}
+          events={filteredEvents}
+          selectedDate={selectedDate}
+          onSelectDate={(date) => {
+            setSelectedDate(date);
+            if (date.getMonth() !== month) {
+              setYear(date.getFullYear());
+              setMonth(date.getMonth());
+            }
+          }}
+        />
+      </div>
+
+      {/* 선택된 날 일정 목록 */}
+      <div className="flex-1 px-4 py-4 pb-24">
+        <p className="text-sm font-semibold text-gray-700 mb-3">
+          {formattedSelected}
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            {selectedDayEvents.length}건
+          </span>
+        </p>
+
+        {selectedDayEvents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-gray-300">
+            <p className="text-sm">등록된 일정이 없습니다.</p>
           </div>
-
-          {/* 요일 헤더 */}
-          <div className="grid grid-cols-7 mb-1">
-            {DAYS.map((d, i) => (
-              <div
-                key={d}
-                className={cn(
-                  "text-center text-xs font-medium py-1",
-                  i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-gray-400"
-                )}
-              >
-                {d}
-              </div>
+        ) : (
+          <div className="space-y-2">
+            {selectedDayEvents.map((event) => (
+              <CalendarEventItem
+                key={event.id}
+                event={event}
+                onClick={() => setSelectedEvent(event)}
+              />
             ))}
           </div>
+        )}
+      </div>
 
-          {/* 날짜 그리드 */}
-          <div className="grid grid-cols-7 gap-y-1">
-            {cells.map((day, idx) => {
-              if (!day) return <div key={idx} />;
-              const dateStr = formatDate(day);
-              const isToday =
-                day === today.getDate() &&
-                month === today.getMonth() &&
-                year === today.getFullYear();
-              const isSelected = dateStr === selectedDate;
-              const hasSched = hasSchedule(day);
-              const col = idx % 7;
-
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedDate(dateStr)}
-                  className="flex flex-col items-center py-1 gap-0.5"
-                >
-                  <span
-                    className={cn(
-                      "w-8 h-8 flex items-center justify-center rounded-full text-sm",
-                      isSelected
-                        ? "bg-[#2F80ED] text-white font-semibold"
-                        : isToday
-                        ? "bg-blue-50 text-[#2F80ED] font-semibold"
-                        : col === 0
-                        ? "text-red-400"
-                        : col === 6
-                        ? "text-blue-400"
-                        : "text-gray-700"
-                    )}
-                  >
-                    {day}
-                  </span>
-                  {hasSched && (
-                    <span className="w-1 h-1 rounded-full bg-[#2F80ED]" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 선택된 날의 일정 */}
-        <div className="px-4 py-4">
-          <p className="text-sm font-semibold text-gray-700 mb-3">{selectedDate} 일정</p>
-          {selectedSchedules.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">등록된 일정이 없습니다.</p>
-          ) : (
-            <div className="space-y-2">
-              {selectedSchedules.map((s, i) => (
-                <div key={i} className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm">
-                  <span className={cn("w-2 h-10 rounded-full shrink-0", s.color)} />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{s.title}</p>
-                    <p className="text-xs text-gray-400">{s.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+      {/* 상세 바텀 시트 */}
+      <CalendarBottomSheet
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
     </div>
   );
 }
