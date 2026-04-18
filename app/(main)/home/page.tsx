@@ -1,11 +1,10 @@
 import AppHeader from "@/components/layout/AppHeader";
-import Badge from "@/components/ui/Badge";
-import { Bell, ChevronRight, CheckSquare, Calendar, User } from "lucide-react";
+import { Bell, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 function DraftIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 4H14L20 10V20C20 20.55 19.55 21 19 21H5C4.45 21 4 20.55 4 20V4Z"/>
       <path d="M14 4V10H20"/>
       <path d="M8.2 14.8L15.9 7.1"/>
@@ -15,16 +14,73 @@ function DraftIcon() {
   );
 }
 
-const pendingApprovals = [
-  { id: "1", title: "2024년 4분기 예산 집행 품의", type: "품의서", drafter: "김철수", createdAt: "2026-04-17" },
-  { id: "2", title: "업무용 차량 구매 결재", type: "결재서", drafter: "이영희", createdAt: "2026-04-16" },
-  { id: "3", title: "교육비 지원 신청서", type: "신청서", drafter: "박민수", createdAt: "2026-04-15" },
-];
+function ApprovalIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="3"/>
+      <path d="M8 12l3 3 5-5"/>
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="17" rx="2"/>
+      <path d="M16 2v4M8 2v4M3 10h18"/>
+      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+    </svg>
+  );
+}
+
+// SVG 도넛 차트: 승인대기 7, 보류 2, 완료 45 → 총 54
+function DonutChart() {
+  const total = 54;
+  const r = 38;
+  const cx = 50;
+  const cy = 50;
+  const circ = 2 * Math.PI * r;
+
+  // 각 세그먼트 (순서: 완료 → 승인대기 → 보류)
+  const segments = [
+    { value: 45, color: "#4A90D9", label: "완료" },
+    { value: 7,  color: "#00C9B1", label: "승인 대기" },
+    { value: 2,  color: "#1A2B5F", label: "보류" },
+  ];
+
+  let offset = 0;
+  const paths = segments.map((seg) => {
+    const dash = (seg.value / total) * circ;
+    const gap = circ - dash;
+    const el = (
+      <circle
+        key={seg.label}
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke={seg.color}
+        strokeWidth="12"
+        strokeDasharray={`${dash} ${gap}`}
+        strokeDashoffset={-offset}
+        style={{ transform: "rotate(-90deg)", transformOrigin: "50px 50px" }}
+      />
+    );
+    offset += dash;
+    return el;
+  });
+
+  return (
+    <svg width="80" height="80" viewBox="0 0 100 100">
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#E5E7EB" strokeWidth="12" />
+      {paths}
+    </svg>
+  );
+}
 
 const notices = [
-  { id: "1", title: "2026년 하계 휴가 일정 안내", date: "2026-04-18" },
-  { id: "2", title: "사내 시스템 정기 점검 공지", date: "2026-04-16" },
-  { id: "3", title: "복리후생 제도 변경 안내", date: "2026-04-14" },
+  { id: "1", title: "2026년 4월 20일 통합 워크숍 안내" },
+  { id: "2", title: "사내 시스템 정기 점검 공지" },
 ];
 
 export default function HomePage() {
@@ -40,73 +96,73 @@ export default function HomePage() {
         }
       />
 
-      <main className="flex-1 px-4 py-5 space-y-5 pb-20">
+      <main className="flex-1 px-4 py-5 space-y-4 pb-24">
         {/* 인사말 */}
-        <div className="bg-[#2F80ED] rounded-2xl p-5 text-white">
-          <p className="text-sm opacity-80">안녕하세요</p>
-          <p className="text-lg font-bold mt-1">홍길동 님</p>
-          <p className="text-sm opacity-80 mt-3">결재 대기 <span className="font-semibold text-white">{pendingApprovals.length}건</span>이 있습니다</p>
-        </div>
+        <p className="text-xl font-bold text-gray-900">반갑습니다, 박지영님</p>
 
-        {/* 코어액션 */}
-        <section>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">코어액션</h2>
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { href: "/draft", label: "기안하기", icon: <DraftIcon />, color: "text-[#2F80ED]", bg: "bg-blue-50" },
-              { href: "/approval", label: "결재함", icon: <CheckSquare size={24} />, color: "text-emerald-600", bg: "bg-emerald-50" },
-              { href: "/calendar", label: "일정", icon: <Calendar size={24} />, color: "text-violet-600", bg: "bg-violet-50" },
-              { href: "/mypage", label: "마이페이지", icon: <User size={24} />, color: "text-orange-500", bg: "bg-orange-50" },
-            ].map(({ href, label, icon, color, bg }) => (
-              <Link key={href} href={href} className="flex flex-col items-center gap-2">
-                <div className={`w-14 h-14 rounded-2xl ${bg} ${color} flex items-center justify-center shadow-sm`}>
-                  {icon}
-                </div>
-                <span className="text-xs text-gray-600 font-medium">{label}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* 결재 대기 */}
-        <section>
+        {/* 내결재 현황 */}
+        <Link href="/approval" className="block bg-white rounded-2xl px-5 py-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">결재 대기</h2>
-            <Link href="/approval" className="flex items-center text-xs text-[#2F80ED]">
-              전체보기 <ChevronRight size={14} />
-            </Link>
+            <span className="text-sm font-semibold text-gray-800">내결재 현황</span>
+            <ChevronRight size={16} className="text-gray-400" />
           </div>
+          <div className="flex items-center gap-5">
+            <DonutChart />
+            <div className="space-y-2 flex-1">
+              {[
+                { label: "승인 대기", value: 7,  dot: "bg-[#00C9B1]", valueColor: "text-[#00C9B1]" },
+                { label: "보류",     value: 2,  dot: "bg-[#1A2B5F]", valueColor: "text-[#1A2B5F]" },
+                { label: "완료",     value: 45, dot: "bg-[#4A90D9]", valueColor: "text-[#4A90D9]" },
+              ].map(({ label, value, dot, valueColor }) => (
+                <div key={label} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${dot}`} />
+                    <span className="text-xs text-gray-600">{label}</span>
+                  </div>
+                  <span className={`text-sm font-bold ${valueColor}`}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Link>
+
+        {/* 전체 공지 */}
+        <div className="bg-white rounded-2xl px-5 py-4 shadow-sm">
+          <p className="text-sm font-semibold text-gray-800 mb-3">전체 공지</p>
           <div className="space-y-2">
-            {pendingApprovals.map((item) => (
-              <Link
-                key={item.id}
-                href={`/approval/${item.id}`}
-                className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{item.drafter} · {item.createdAt}</p>
-                </div>
-                <Badge status="pending" className="ml-3 shrink-0" />
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* 공지사항 */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">공지사항</h2>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm divide-y divide-gray-100">
-            {notices.map((notice) => (
-              <div key={notice.id} className="flex items-center justify-between px-4 py-3">
-                <p className="text-sm text-gray-800 truncate flex-1">{notice.title}</p>
-                <span className="text-xs text-gray-400 ml-3 shrink-0">{notice.date}</span>
+            {notices.map((n) => (
+              <div key={n.id} className="flex items-start gap-2">
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#4A90D9] shrink-0" />
+                <p className="text-sm text-[#4A90D9]">{n.title}</p>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+
+        {/* Core Actions */}
+        <div>
+          <p className="text-sm font-bold text-gray-900 mb-3">Core Actions</p>
+          <div className="grid grid-cols-3 gap-3">
+            <Link href="/draft" className="flex flex-col items-center gap-2.5">
+              <div className="w-full aspect-square max-w-[110px] mx-auto bg-[#1E3A6E] rounded-2xl flex items-center justify-center text-white shadow-sm">
+                <DraftIcon />
+              </div>
+              <span className="text-xs font-medium text-gray-700">기안하기</span>
+            </Link>
+            <Link href="/approval" className="flex flex-col items-center gap-2.5">
+              <div className="w-full aspect-square max-w-[110px] mx-auto bg-[#00BFB3] rounded-2xl flex items-center justify-center text-white shadow-sm">
+                <ApprovalIcon />
+              </div>
+              <span className="text-xs font-medium text-gray-700">결재하기</span>
+            </Link>
+            <Link href="/calendar" className="flex flex-col items-center gap-2.5">
+              <div className="w-full aspect-square max-w-[110px] mx-auto bg-[#7BB8F5] rounded-2xl flex items-center justify-center text-white shadow-sm">
+                <CalendarIcon />
+              </div>
+              <span className="text-xs font-medium text-gray-700">일정보기</span>
+            </Link>
+          </div>
+        </div>
       </main>
     </div>
   );
