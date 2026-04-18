@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { format, isSameDay } from "date-fns";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
 import AppHeader from "@/components/layout/AppHeader";
 import CalendarHeader from "@/components/calendar/CalendarHeader";
 import CalendarGrid from "@/components/calendar/CalendarGrid";
@@ -22,6 +22,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [activeFilters, setActiveFilters] = useState<EventCategory[]>([...ALL_CATEGORIES]);
+  const [showEventList, setShowEventList] = useState(false); // 기본 숨김
 
   const toggleFilter = (cat: EventCategory) => {
     setActiveFilters((prev) =>
@@ -57,7 +58,13 @@ export default function CalendarPage() {
     [filteredEvents, selectedDate]
   );
 
-  const formattedSelected = format(selectedDate, "M월 d일 (eee)", { locale: undefined });
+  const totalMonthEvents = useMemo(
+    () => filteredEvents.filter((e) => {
+      const d = new Date(e.date);
+      return d.getFullYear() === year && d.getMonth() === month;
+    }).length,
+    [filteredEvents, year, month]
+  );
 
   return (
     <div className="flex flex-col min-h-full bg-gray-50">
@@ -116,34 +123,47 @@ export default function CalendarPage() {
               setMonth(date.getMonth());
             }
           }}
+          onEventClick={(event) => setSelectedEvent(event)}
         />
       </div>
 
-      {/* 선택된 날 일정 목록 */}
-      <div className="flex-1 px-4 py-4 pb-24">
-        <p className="text-sm font-semibold text-gray-700 mb-3">
-          {formattedSelected}
-          <span className="ml-2 text-xs font-normal text-gray-400">
-            {selectedDayEvents.length}건
-          </span>
-        </p>
+      {/* 전체 일정 토글 버튼 */}
+      <button
+        onClick={() => setShowEventList((v) => !v)}
+        className="flex items-center justify-between w-full px-4 py-3 bg-white border-t border-b border-gray-200 mt-2"
+      >
+        <span className="text-sm font-semibold text-gray-700">
+          {year}년 {month + 1}월 전체 일정
+          <span className="ml-2 text-xs font-normal text-gray-400">{totalMonthEvents}건</span>
+        </span>
+        {showEventList
+          ? <ChevronUp size={16} className="text-gray-400" />
+          : <ChevronDown size={16} className="text-gray-400" />}
+      </button>
 
-        {selectedDayEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-300">
-            <p className="text-sm">등록된 일정이 없습니다.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {selectedDayEvents.map((event) => (
+      {/* 전체 일정 목록 (토글) */}
+      {showEventList && (
+        <div className="px-4 py-3 pb-24 space-y-2">
+          {filteredEvents
+            .filter((e) => {
+              const d = new Date(e.date);
+              return d.getFullYear() === year && d.getMonth() === month;
+            })
+            .sort((a, b) => a.date.localeCompare(b.date))
+            .map((event) => (
               <CalendarEventItem
                 key={event.id}
                 event={event}
                 onClick={() => setSelectedEvent(event)}
               />
             ))}
-          </div>
-        )}
-      </div>
+          {totalMonthEvents === 0 && (
+            <p className="text-sm text-gray-400 text-center py-8">이달 일정이 없습니다.</p>
+          )}
+        </div>
+      )}
+
+      {!showEventList && <div className="pb-20" />}
 
       {/* 상세 바텀 시트 */}
       <CalendarBottomSheet
