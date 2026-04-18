@@ -1,13 +1,17 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Plus, ChevronDown, ChevronUp, X, Lock, Globe } from "lucide-react";
 
 export type ScheduleEventItem = {
+  id: number;
   title: string;
-  time: string;
-  color: string;
+  date: string;
+  time?: string;
+  isAllDay?: boolean;
   isPrivate?: boolean;
+  color: string;
+  category: "personal" | "department" | "company";
 };
 
 export type CalendarViewProps = {
@@ -19,233 +23,382 @@ export type CalendarViewProps = {
   onGoogleCalendarConnectedChange: (v: boolean) => void;
 };
 
-const MONTH_NAMES = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
-const DAY_NAMES = ["일","월","화","수","목","금","토"];
+const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
-function maskPrivateTitle(title: string) {
-  if (!title.trim()) return "비공개 일정";
-  return title.replace(/./g, "●");
-}
-
-const SCHEDULE_EVENTS: Record<number, ScheduleEventItem[]> = {
-  4:  [{ title: "부서 정기 회의", time: "09:00", color: "#3b5bdb" }],
-  7:  [{ title: "외부 미팅", time: "14:00", color: "#f59e0b" }],
-  10: [{ title: "건강검진 (연차)", time: "종일", color: "#10b981" }],
-  15: [{ title: "교육 연수", time: "15:00", color: "#6366f1" }],
-  18: [
-    { title: "팀장급 회의", time: "11:00", color: "#3b5bdb" },
-    { title: "클라이언트 미팅", time: "14:30", color: "#ef4444" },
-    { title: "개인 병원 예약", time: "16:00", color: "#9ca3af", isPrivate: true },
-  ],
-  20: [{ title: "프로젝트 발표", time: "10:00", color: "#ef4444" }],
-  22: [{ title: "신입사원 OJT", time: "09:00", color: "#f59e0b" }],
-  25: [{ title: "상반기 성과보고", time: "14:00", color: "#6366f1" }],
-  28: [{ title: "분기 경영 보고", time: "16:00", color: "#2c5aa0" }],
+const CATEGORY_CONFIG = {
+  personal:   { label: "내 일정",   color: "#3b5bdb", bg: "#3b5bdb18", dot: "#3b5bdb" },
+  department: { label: "부서 일정", color: "#10b981", bg: "#10b98118", dot: "#10b981" },
+  company:    { label: "전사 일정", color: "#f59e0b", bg: "#f59e0b18", dot: "#f59e0b" },
 };
 
-const GoogleIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-  </svg>
-);
+const ALL_CATEGORIES = ["personal", "department", "company"] as const;
+type Category = typeof ALL_CATEGORIES[number];
+
+const INITIAL_EVENTS: ScheduleEventItem[] = [
+  { id: 1,  title: "부서 정기 회의",  date: "2026-04-04", time: "09:00", color: "#3b5bdb", category: "department" },
+  { id: 2,  title: "외부 미팅",       date: "2026-04-07", time: "14:00", color: "#f59e0b", category: "personal" },
+  { id: 3,  title: "건강검진",         date: "2026-04-10", isAllDay: true, color: "#10b981", category: "personal" },
+  { id: 4,  title: "교육 연수",        date: "2026-04-15", time: "15:00", color: "#3b5bdb", category: "department" },
+  { id: 5,  title: "팀장급 회의",      date: "2026-04-18", time: "11:00", color: "#3b5bdb", category: "department" },
+  { id: 6,  title: "클라이언트 미팅",  date: "2026-04-18", time: "14:30", color: "#ef4444", category: "personal" },
+  { id: 7,  title: "병원 예약",        date: "2026-04-18", time: "16:00", isPrivate: true, color: "#9ca3af", category: "personal" },
+  { id: 8,  title: "프로젝트 발표",    date: "2026-04-20", time: "10:00", color: "#ef4444", category: "department" },
+  { id: 9,  title: "신입사원 OJT",    date: "2026-04-22", isAllDay: true, color: "#f59e0b", category: "company" },
+  { id: 10, title: "상반기 성과보고",  date: "2026-04-25", time: "14:00", color: "#3b5bdb", category: "company" },
+  { id: 11, title: "분기 경영 보고",  date: "2026-04-28", time: "16:00", color: "#3b5bdb", category: "company" },
+];
+
+function isSameDate(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
+function toDateString(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function AddEventForm({ defaultDate, onClose, onSave }: {
+  defaultDate: string;
+  onClose: () => void;
+  onSave: (event: Omit<ScheduleEventItem, "id">) => void;
+}) {
+  const [title, setTitle]         = useState("");
+  const [date, setDate]           = useState(defaultDate);
+  const [time, setTime]           = useState("09:00");
+  const [isAllDay, setIsAllDay]   = useState(false);
+  const [category, setCategory]   = useState<Category>("personal");
+  const [isPrivate, setIsPrivate] = useState(false);
+
+  const handleSave = () => {
+    if (!title.trim()) return;
+    onSave({
+      title: title.trim(),
+      date,
+      time: isAllDay ? undefined : time,
+      isAllDay: isAllDay || undefined,
+      isPrivate: category === "personal" ? isPrivate : undefined,
+      color: CATEGORY_CONFIG[category].color,
+      category,
+    });
+    onClose();
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 z-50 bg-black/40" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl">
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-gray-200" />
+        </div>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+          <button onClick={onClose} className="p-1 text-gray-400">
+            <X size={20} />
+          </button>
+          <h2 className="text-sm font-bold text-gray-900">일정 추가</h2>
+          <button
+            onClick={handleSave}
+            disabled={!title.trim()}
+            className="text-sm font-semibold text-[#3b5bdb] disabled:text-gray-300 transition-colors"
+          >
+            저장
+          </button>
+        </div>
+
+        <div className="px-5 py-4 space-y-5 overflow-y-auto max-h-[70vh] pb-10">
+          <input
+            type="text"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="제목을 입력하세요"
+            className="w-full text-base font-medium text-gray-900 placeholder:text-gray-300 border-b-2 border-gray-100 pb-2 outline-none focus:border-[#3b5bdb] transition-colors"
+            autoFocus
+          />
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">날짜</span>
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="text-sm text-gray-900 font-medium outline-none border border-gray-200 rounded-lg px-2.5 py-1.5"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">하루 종일</span>
+            <button
+              onClick={() => setIsAllDay(v => !v)}
+              className={`relative w-11 h-6 rounded-full transition-colors ${isAllDay ? "bg-[#3b5bdb]" : "bg-gray-200"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isAllDay ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
+          </div>
+
+          {!isAllDay && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">시간</span>
+              <input
+                type="time"
+                value={time}
+                onChange={e => setTime(e.target.value)}
+                className="text-sm text-gray-900 font-medium outline-none border border-gray-200 rounded-lg px-2.5 py-1.5"
+              />
+            </div>
+          )}
+
+          <div>
+            <span className="text-sm text-gray-500 block mb-2.5">카테고리</span>
+            <div className="flex gap-2">
+              {ALL_CATEGORIES.map(cat => {
+                const cfg = CATEGORY_CONFIG[cat];
+                const active = category === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setCategory(cat)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 text-xs font-medium transition-all"
+                    style={active
+                      ? { borderColor: cfg.color, background: cfg.bg, color: cfg.color }
+                      : { borderColor: "#e5e7eb", background: "white", color: "#9ca3af" }}
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ background: active ? cfg.dot : "#d1d5db" }} />
+                    {cfg.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {category === "personal" && (
+            <div>
+              <span className="text-sm text-gray-500 block mb-2.5">공개 여부</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setIsPrivate(false)}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-medium transition-all
+                    ${!isPrivate ? "border-[#3b5bdb] bg-[#3b5bdb18] text-[#3b5bdb]" : "border-gray-200 bg-white text-gray-400"}`}
+                >
+                  <Globe size={15} /> 공개
+                </button>
+                <button
+                  onClick={() => setIsPrivate(true)}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-medium transition-all
+                    ${isPrivate ? "border-gray-500 bg-gray-100 text-gray-700" : "border-gray-200 bg-white text-gray-400"}`}
+                >
+                  <Lock size={15} /> 비공개
+                </button>
+              </div>
+              {isPrivate && (
+                <p className="mt-2 text-[11px] text-gray-400 flex items-center gap-1">
+                  <Lock size={10} /> 나만 볼 수 있는 일정입니다
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
 
 export function CalendarView({
   scheduleCurrentDate,
   onScheduleCurrentDateChange,
   selectedCalendarDay,
   onSelectedCalendarDayChange,
-  googleCalendarConnected,
-  onGoogleCalendarConnectedChange,
 }: CalendarViewProps) {
-  const [showAllEvents, setShowAllEvents] = useState(false);
+  const [events, setEvents]               = useState<ScheduleEventItem[]>(INITIAL_EVENTS);
+  const [activeFilters, setActiveFilters] = useState<Category[]>([...ALL_CATEGORIES]);
+  const [showEventList, setShowEventList] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduleEventItem | null>(null);
+  const [showAddForm, setShowAddForm]     = useState(false);
 
-  const year = scheduleCurrentDate.getFullYear();
-  const month = scheduleCurrentDate.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, month, 1).getDay();
-
-  // 날짜 셀 구성
-  const allCells: (number | null)[] = [];
-  for (let i = 0; i < firstDayOfWeek; i++) allCells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) allCells.push(d);
-  while (allCells.length % 7 !== 0) allCells.push(null);
-
-  // 주 단위로 분리
-  const weeks: (number | null)[][] = [];
-  for (let i = 0; i < allCells.length; i += 7) {
-    weeks.push(allCells.slice(i, i + 7));
-  }
-
-  // 선택된 날짜가 속한 주 인덱스
-  const selectedWeekIdx = weeks.findIndex((w) => w.includes(selectedCalendarDay));
-  const selectedColIdx = selectedWeekIdx >= 0
-    ? weeks[selectedWeekIdx].indexOf(selectedCalendarDay)
-    : -1;
-
-  const selectedEvents = selectedCalendarDay ? (SCHEDULE_EVENTS[selectedCalendarDay] || []) : [];
   const today = new Date();
+  const year  = scheduleCurrentDate.getFullYear();
+  const month = scheduleCurrentDate.getMonth();
 
-  const displayEventTitle = (ev: ScheduleEventItem) => {
-    if (googleCalendarConnected && ev.isPrivate) return maskPrivateTitle(ev.title);
-    return ev.title;
+  const prevMonth = () => onScheduleCurrentDateChange(new Date(year, month - 1, 1));
+  const nextMonth = () => onScheduleCurrentDateChange(new Date(year, month + 1, 1));
+  const goToday   = () => {
+    onScheduleCurrentDateChange(new Date(today.getFullYear(), today.getMonth(), 1));
+    onSelectedCalendarDayChange(today.getDate());
   };
 
+  const selectedDate = new Date(year, month, selectedCalendarDay);
+
+  const toggleFilter = (cat: Category) =>
+    setActiveFilters(prev =>
+      prev.includes(cat)
+        ? prev.length === 1 ? prev : prev.filter(c => c !== cat)
+        : [...prev, cat]
+    );
+
+  const filteredEvents = useMemo(
+    () => events.filter(e => activeFilters.includes(e.category)),
+    [events, activeFilters]
+  );
+
+  const eventsOnDay = (d: Date) =>
+    filteredEvents.filter(e => isSameDate(new Date(e.date), d));
+
+  const selectedDayEvents = useMemo(
+    () => eventsOnDay(selectedDate),
+    [filteredEvents, selectedDate]
+  );
+
+  const monthEvents = useMemo(
+    () => filteredEvents
+      .filter(e => { const d = new Date(e.date); return d.getFullYear() === year && d.getMonth() === month; })
+      .sort((a, b) => a.date.localeCompare(b.date)),
+    [filteredEvents, year, month]
+  );
+
+  const firstDow    = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (Date | null)[] = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1)),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks: (Date | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  const selectedWeekIdx = weeks.findIndex(w => w.some(d => d && isSameDate(d, selectedDate)));
+  const selectedColIdx  = selectedWeekIdx >= 0
+    ? weeks[selectedWeekIdx].findIndex(d => d && isSameDate(d, selectedDate))
+    : -1;
+
   return (
-    <div className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-[#f5f5f5]">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between border-b border-[#e0e0e0] bg-white px-5 py-4">
-        <h1 className="m-0 text-lg font-bold text-[#1a1a1a]">일정</h1>
-        <button type="button" className="cursor-pointer border-none bg-transparent p-1.5" aria-label="일정 추가">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <line x1="12" y1="5" x2="12" y2="19" stroke="#333" strokeWidth="2.5" strokeLinecap="round"/>
-            <line x1="5" y1="12" x2="19" y2="12" stroke="#333" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
+    <div className="flex flex-col min-h-dvh bg-gray-50">
+
+      {/* 월 네비게이션 + 일정 추가 버튼 */}
+      <div className="bg-white px-4 py-2.5 flex items-center gap-2 border-b border-gray-100">
+        <button
+          onClick={goToday}
+          className="text-xs text-[#3b5bdb] font-medium border border-[#3b5bdb] rounded-md px-2.5 py-1.5 shrink-0"
+        >
+          오늘
+        </button>
+
+        <div className="flex-1 flex items-center justify-center gap-2">
+          <button onClick={prevMonth} className="p-1 text-gray-400">
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-sm font-bold text-gray-800 w-24 text-center">
+            {year}년 {month + 1}월
+          </span>
+          <button onClick={nextMonth} className="p-1 text-gray-400">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="flex items-center gap-1 bg-[#3b5bdb] text-white text-xs font-semibold px-3 py-1.5 rounded-lg shrink-0"
+        >
+          <Plus size={13} /> 추가
         </button>
       </div>
 
-      {/* Google Calendar 연동 배너 */}
-      <div className={googleCalendarConnected ? "bg-emerald-50 px-4 py-3" : "bg-orange-50 px-4 py-3"}>
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
-            <GoogleIcon size={18} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className={`text-[0.8125rem] font-bold ${googleCalendarConnected ? "text-[#2e7d32]" : "text-[#e65100]"}`}>
-              {googleCalendarConnected ? "Google Calendar 연동됨" : "Google Calendar 미연동"}
-            </div>
-            <div className="text-xs text-[#666]">
-              {googleCalendarConnected ? "jypark@somang.or.kr" : "실제 연동 시 GOOGLE_CALENDAR_API_KEY 설정 필요"}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => onGoogleCalendarConnectedChange(!googleCalendarConnected)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-              googleCalendarConnected
-                ? "border border-[#4285F4] bg-white text-[#4285F4]"
-                : "border-none bg-[#4285F4] text-white"
-            }`}
-          >
-            {googleCalendarConnected ? "연동 해제" : "연동하기"}
-          </button>
-        </div>
+      {/* 필터 탭 */}
+      <div className="bg-white px-4 py-2 flex gap-2 border-b border-gray-100 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+        {ALL_CATEGORIES.map(cat => {
+          const cfg = CATEGORY_CONFIG[cat];
+          const active = activeFilters.includes(cat);
+          return (
+            <button
+              key={cat}
+              onClick={() => toggleFilter(cat)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap border transition-colors shrink-0"
+              style={active
+                ? { background: cfg.bg, color: cfg.color, borderColor: "transparent" }
+                : { background: "white", color: "#9ca3af", borderColor: "#e5e7eb" }}
+            >
+              <span className="w-2 h-2 rounded-full" style={{ background: active ? cfg.dot : "#d1d5db" }} />
+              {cfg.label}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {/* 캘린더 카드 */}
-        <div className="m-4 overflow-hidden rounded-[20px] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-          {/* 월 네비게이션 */}
-          <div className="flex items-center justify-between px-5 pb-3 pt-4">
-            <button
-              type="button"
-              onClick={() => onScheduleCurrentDateChange(new Date(year, month - 1, 1))}
-              className="cursor-pointer border-none bg-transparent p-1.5"
+      {/* 캘린더 그리드 */}
+      <div className="bg-white shadow-sm">
+        <div className="grid grid-cols-7 border-b border-gray-200">
+          {DAY_NAMES.map((d, i) => (
+            <div
+              key={d}
+              className={`py-2 text-center text-xs font-medium border-r border-gray-100 last:border-r-0
+                ${i === 0 ? "text-red-400" : i === 6 ? "text-[#3b5bdb]" : "text-gray-400"}`}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18l-6-6 6-6" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            <div className="text-lg font-bold text-[#1a1a1a]">{year}년 {MONTH_NAMES[month]}</div>
-            <button
-              type="button"
-              onClick={() => onScheduleCurrentDateChange(new Date(year, month + 1, 1))}
-              className="cursor-pointer border-none bg-transparent p-1.5"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
+              {d}
+            </div>
+          ))}
+        </div>
 
-          {/* 요일 헤더 */}
-          <div className="grid grid-cols-7 border-b border-t border-[#e8e8e8]">
-            {DAY_NAMES.map((d, i) => (
-              <div
-                key={d}
-                className={`border-r border-[#e8e8e8] py-2 text-center text-xs font-semibold last:border-r-0 ${
-                  i === 0 ? "text-red-500" : i === 6 ? "text-[#3b5bdb]" : "text-[#888]"
-                }`}
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-
-          {/* 주 단위 그리드 + 말풍선 */}
-          <div className="border-l border-[#e8e8e8]">
-            {weeks.map((week, wIdx) => (
+        <div>
+          {weeks.map((week, wIdx) => {
+            const isSelectedWeek = wIdx === selectedWeekIdx;
+            return (
               <div key={wIdx}>
-                {/* 날짜 행 */}
-                <div className="grid grid-cols-7">
+                <div className="grid grid-cols-7 border-b border-gray-100">
                   {week.map((day, dIdx) => {
-                    const isToday = day !== null &&
-                      day === today.getDate() &&
-                      month === today.getMonth() &&
-                      year === today.getFullYear();
-                    const isSelected = day === selectedCalendarDay;
-                    const hasEvents = day !== null && !!SCHEDULE_EVENTS[day];
-
+                    if (!day) return (
+                      <div key={dIdx} className="min-h-[60px] border-r border-gray-100 last:border-r-0 bg-gray-50/50" />
+                    );
+                    const dayEvs     = eventsOnDay(day);
+                    const _isToday   = isSameDate(day, today);
+                    const isSelected = isSameDate(day, selectedDate);
                     return (
-                      <div
+                      <button
                         key={dIdx}
-                        role={day ? "button" : undefined}
-                        tabIndex={day ? 0 : -1}
-                        onClick={() => day && onSelectedCalendarDayChange(day)}
-                        onKeyDown={(e) => {
-                          if (day && (e.key === "Enter" || e.key === " "))
-                            onSelectedCalendarDayChange(day);
+                        onClick={() => {
+                          onSelectedCalendarDayChange(day.getDate());
+                          if (day.getMonth() !== month)
+                            onScheduleCurrentDateChange(new Date(day.getFullYear(), day.getMonth(), 1));
                         }}
-                        className={`flex min-h-[52px] flex-col items-center border-b border-r border-[#e8e8e8] p-0.5 pt-1 ${
-                          day ? "cursor-pointer" : "cursor-default"
-                        } ${isSelected ? "bg-[#eef1ff]" : "bg-white"}`}
+                        className="flex flex-col items-center pt-1 pb-1.5 border-r border-gray-100 last:border-r-0 min-h-[60px]"
                       >
-                        <div
-                          className={`flex h-[28px] w-[28px] items-center justify-center rounded-full text-sm ${
-                            isSelected
-                              ? "bg-[#3b5bdb] font-bold text-white"
-                              : isToday
-                              ? "bg-[#e8f0fe] font-bold text-[#3b5bdb]"
-                              : dIdx === 0
-                              ? "font-medium text-red-500"
-                              : dIdx === 6
-                              ? "font-medium text-[#3b5bdb]"
-                              : day
-                              ? "font-medium text-[#1a1a1a]"
-                              : "text-transparent"
-                          }`}
+                        <span
+                          className={`w-7 h-7 flex items-center justify-center rounded-full text-[13px] font-medium mb-0.5
+                            ${isSelected ? "bg-[#3b5bdb] text-white"
+                              : _isToday  ? "bg-blue-50 text-[#3b5bdb] font-bold"
+                              : dIdx === 0 ? "text-red-400"
+                              : dIdx === 6 ? "text-[#3b5bdb]"
+                              : "text-gray-700"}`}
                         >
-                          {day || ""}
+                          {day.getDate()}
+                        </span>
+                        <div className="w-full px-0.5 space-y-0.5">
+                          {dayEvs.slice(0, 2).map(e => (
+                            <div
+                              key={e.id}
+                              className="w-full rounded px-1 truncate text-[9px] font-medium leading-4"
+                              style={{ background: CATEGORY_CONFIG[e.category].bg, color: CATEGORY_CONFIG[e.category].color }}
+                            >
+                              {e.isPrivate ? "🔒 비공개" : e.title}
+                            </div>
+                          ))}
+                          {dayEvs.length > 2 && (
+                            <p className="text-[9px] text-gray-400 text-center leading-4">+{dayEvs.length - 2}</p>
+                          )}
                         </div>
-                        {hasEvents && (
-                          <div className="mt-0.5 flex gap-0.5">
-                            {SCHEDULE_EVENTS[day!].slice(0, 3).map((ev, ei) => (
-                              <div
-                                key={ei}
-                                className="h-1.5 w-1.5 rounded-full"
-                                style={{ background: isSelected ? "#3b5bdb" : ev.color }}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
 
-                {/* 말풍선: 선택된 날짜가 이 주에 있고 일정이 있을 때 */}
-                {wIdx === selectedWeekIdx && selectedEvents.length > 0 && (
-                  <div className="relative border-b border-[#e8e8e8] bg-[#f8f9ff] px-3 py-3">
-                    {/* 삼각형 포인터 */}
+                {isSelectedWeek && selectedDayEvents.length > 0 && (
+                  <div className="relative border-b border-gray-100 bg-gray-50 px-3 py-3">
                     <div
                       className="absolute -top-2 w-0 h-0"
                       style={{
                         left: `calc(${(selectedColIdx + 0.5) / 7 * 100}% - 8px)`,
                         borderLeft: "8px solid transparent",
                         borderRight: "8px solid transparent",
-                        borderBottom: "8px solid #e8e8e8",
+                        borderBottom: "8px solid #e5e7eb",
                       }}
                     />
                     <div
@@ -254,93 +407,134 @@ export function CalendarView({
                         left: `calc(${(selectedColIdx + 0.5) / 7 * 100}% - 7px)`,
                         borderLeft: "7px solid transparent",
                         borderRight: "7px solid transparent",
-                        borderBottom: "7px solid #f8f9ff",
+                        borderBottom: "7px solid #f9fafb",
                       }}
                     />
-
-                    <p className="mb-2 text-[11px] font-semibold text-[#3b5bdb]">
-                      {month + 1}월 {selectedCalendarDay}일 · {selectedEvents.length}건
+                    <p className="text-[10px] font-semibold text-gray-400 mb-1.5 ml-1">
+                      {month + 1}/{selectedCalendarDay} 일정
                     </p>
-                    <div className="flex flex-col gap-1.5">
-                      {selectedEvents.map((ev, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-2.5 rounded-xl bg-white px-3 py-2 shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
+                    <div className="space-y-1">
+                      {selectedDayEvents.map(e => (
+                        <button
+                          key={e.id}
+                          onClick={() => setSelectedEvent(e)}
+                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left"
+                          style={{ background: CATEGORY_CONFIG[e.category].bg }}
                         >
-                          <div className="h-7 w-1 shrink-0 rounded-full" style={{ background: ev.color }} />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[0.8125rem] font-semibold text-[#1a1a1a]">
-                              {displayEventTitle(ev)}
-                              {googleCalendarConnected && ev.isPrivate && (
-                                <span className="ml-1 text-[11px] font-normal text-[#999]">비공개</span>
-                              )}
-                            </p>
-                            <p className="text-[11px] text-[#888]">{ev.time}</p>
-                          </div>
-                          {googleCalendarConnected && (
-                            <GoogleIcon size={13} />
-                          )}
-                        </div>
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: CATEGORY_CONFIG[e.category].dot }} />
+                          <span className="text-xs font-medium truncate flex-1" style={{ color: CATEGORY_CONFIG[e.category].color }}>
+                            {e.isPrivate ? "🔒 비공개 일정" : e.title}
+                          </span>
+                          <span className="text-[10px] text-gray-400 shrink-0">
+                            {e.isAllDay ? "종일" : e.time ?? ""}
+                          </span>
+                        </button>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 전체 일정 토글 */}
-        <div className="mx-4 mb-4">
-          <button
-            type="button"
-            onClick={() => setShowAllEvents((v) => !v)}
-            className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
-          >
-            <span className="text-base font-bold text-[#1a1a1a]">
-              이번달 전체 일정
-              <span className="ml-2 text-sm font-normal text-[#999]">
-                {Object.values(SCHEDULE_EVENTS).flat().length}건
-              </span>
-            </span>
-            {showAllEvents
-              ? <ChevronUp size={18} className="text-[#999]" />
-              : <ChevronDown size={18} className="text-[#999]" />
-            }
-          </button>
-
-          {showAllEvents && (
-            <div className="mt-2 flex flex-col gap-2">
-              {Object.entries(SCHEDULE_EVENTS)
-                .sort(([a], [b]) => Number(a) - Number(b))
-                .flatMap(([day, events]) =>
-                  events.map((ev, ei) => (
-                    <button
-                      key={`${day}-${ei}`}
-                      type="button"
-                      onClick={() => onSelectedCalendarDayChange(Number(day))}
-                      className="flex w-full cursor-pointer items-center gap-3 rounded-xl border-none bg-white p-3 text-left shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
-                    >
-                      <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
-                        style={{ background: `${ev.color}20` }}
-                      >
-                        <span className="text-sm font-bold" style={{ color: ev.color }}>{day}</span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-[#1a1a1a]">{displayEventTitle(ev)}</div>
-                        <div className="mt-0.5 text-xs text-[#999]">{month + 1}월 {day}일 · {ev.time}</div>
-                      </div>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18l6-6-6-6" stroke="#ccc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                  ))
-                )}
-            </div>
-          )}
+            );
+          })}
         </div>
       </div>
+
+      {/* 전체 월 일정 토글 */}
+      <button
+        onClick={() => setShowEventList(v => !v)}
+        className="flex items-center justify-between w-full px-4 py-3 bg-white border-t border-b border-gray-200 mt-2"
+      >
+        <span className="text-sm font-semibold text-gray-700">
+          {year}년 {month + 1}월 전체 일정
+          <span className="ml-2 text-xs font-normal text-gray-400">{monthEvents.length}건</span>
+        </span>
+        {showEventList ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+      </button>
+
+      {showEventList && (
+        <div className="px-4 py-3 pb-32 space-y-2">
+          {monthEvents.map(e => (
+            <button
+              key={e.id}
+              onClick={() => setSelectedEvent(e)}
+              className="w-full flex items-start gap-3 bg-white rounded-xl px-4 py-3 shadow-sm text-left"
+            >
+              <div className="w-1 self-stretch rounded-full shrink-0 mt-0.5" style={{ background: CATEGORY_CONFIG[e.category].color }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate flex items-center gap-1">
+                  {e.isPrivate && <Lock size={11} className="text-gray-400 shrink-0" />}
+                  {e.isPrivate ? "비공개 일정" : e.title}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {new Date(e.date).getDate()}일
+                  {e.isAllDay ? " · 하루 종일" : e.time ? ` · ${e.time}` : ""}
+                </p>
+              </div>
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0"
+                style={{ background: CATEGORY_CONFIG[e.category].bg, color: CATEGORY_CONFIG[e.category].color }}
+              >
+                {CATEGORY_CONFIG[e.category].label}
+              </span>
+            </button>
+          ))}
+          {monthEvents.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-8">이달 일정이 없습니다.</p>
+          )}
+        </div>
+      )}
+      {!showEventList && <div className="pb-24" />}
+
+      {/* 일정 상세 바텀시트 */}
+      {selectedEvent && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setSelectedEvent(null)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl px-5 pt-4 pb-10">
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-1 rounded-full bg-gray-200" />
+            </div>
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ background: CATEGORY_CONFIG[selectedEvent.category].color }} />
+                <h2 className="text-base font-bold text-gray-900 truncate">
+                  {selectedEvent.isPrivate ? "비공개 일정" : selectedEvent.title}
+                </h2>
+                {selectedEvent.isPrivate && (
+                  <span className="flex items-center gap-0.5 text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">
+                    <Lock size={9} /> 비공개
+                  </span>
+                )}
+              </div>
+              <button onClick={() => setSelectedEvent(null)} className="p-1 text-gray-400 ml-2">
+                <X size={18} />
+              </button>
+            </div>
+            <span
+              className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full mb-4"
+              style={{ background: CATEGORY_CONFIG[selectedEvent.category].bg, color: CATEGORY_CONFIG[selectedEvent.category].color }}
+            >
+              {CATEGORY_CONFIG[selectedEvent.category].label}
+            </span>
+            <div className="text-sm text-gray-600 space-y-2">
+              <p>📅 {selectedEvent.date}</p>
+              <p>🕐 {selectedEvent.isAllDay ? "하루 종일" : selectedEvent.time ?? "-"}</p>
+              {selectedEvent.isPrivate && (
+                <p className="flex items-center gap-1 text-gray-400">
+                  <Lock size={13} /> 나만 볼 수 있는 일정
+                </p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {showAddForm && (
+        <AddEventForm
+          defaultDate={toDateString(selectedDate)}
+          onClose={() => setShowAddForm(false)}
+          onSave={ev => setEvents(prev => [...prev, { ...ev, id: Date.now() }])}
+        />
+      )}
     </div>
   );
 }
