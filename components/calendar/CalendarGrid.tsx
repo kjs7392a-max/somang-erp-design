@@ -44,12 +44,12 @@ export default function CalendarGrid({
   return (
     <div className="bg-white select-none">
       {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 border-b border-gray-100">
+      <div className="grid grid-cols-7 border-b border-gray-200">
         {WEEKDAYS.map((d, i) => (
           <div
             key={d}
             className={cn(
-              "py-2 text-center text-xs font-medium",
+              "py-2 text-center text-xs font-medium border-r border-gray-200 last:border-r-0",
               i === 0 ? "text-red-400" : i === 6 ? "text-[#2F80ED]" : "text-gray-400"
             )}
           >
@@ -59,7 +59,7 @@ export default function CalendarGrid({
       </div>
 
       {/* 날짜 그리드 */}
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 border-l border-gray-200">
         {days.map((day, idx) => {
           const dayEvents = eventsOnDay(day);
           const isCurrentMonth = isSameMonth(day, base);
@@ -72,7 +72,7 @@ export default function CalendarGrid({
               key={day.toISOString()}
               onClick={() => onSelectDate(day)}
               className={cn(
-                "relative flex flex-col items-center pt-1 pb-2 border-b border-gray-50 min-h-[64px]",
+                "relative flex flex-col items-center pt-1 pb-2 border-b border-r border-gray-200 min-h-[64px]",
                 !isCurrentMonth && "opacity-30"
               )}
             >
