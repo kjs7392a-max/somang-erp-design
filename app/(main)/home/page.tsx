@@ -1,7 +1,19 @@
 import AppHeader from "@/components/layout/AppHeader";
 import Badge from "@/components/ui/Badge";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell, ChevronRight, CheckSquare, Calendar, User } from "lucide-react";
 import Link from "next/link";
+
+function DraftIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4H14L20 10V20C20 20.55 19.55 21 19 21H5C4.45 21 4 20.55 4 20V4Z"/>
+      <path d="M14 4V10H20"/>
+      <path d="M8.2 14.8L15.9 7.1"/>
+      <path d="M14.9 6.1L16.9 8.1"/>
+      <path d="M7.7 16.7L10.8 16.1L8.3 13.6L7.7 16.7Z"/>
+    </svg>
+  );
+}
 
 const pendingApprovals = [
   { id: "1", title: "2024년 4분기 예산 집행 품의", type: "품의서", drafter: "김철수", createdAt: "2026-04-17" },
@@ -35,6 +47,26 @@ export default function HomePage() {
           <p className="text-lg font-bold mt-1">홍길동 님</p>
           <p className="text-sm opacity-80 mt-3">결재 대기 <span className="font-semibold text-white">{pendingApprovals.length}건</span>이 있습니다</p>
         </div>
+
+        {/* 코어액션 */}
+        <section>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">코어액션</h2>
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { href: "/draft", label: "기안하기", icon: <DraftIcon />, color: "text-[#2F80ED]", bg: "bg-blue-50" },
+              { href: "/approval", label: "결재함", icon: <CheckSquare size={24} />, color: "text-emerald-600", bg: "bg-emerald-50" },
+              { href: "/calendar", label: "일정", icon: <Calendar size={24} />, color: "text-violet-600", bg: "bg-violet-50" },
+              { href: "/mypage", label: "마이페이지", icon: <User size={24} />, color: "text-orange-500", bg: "bg-orange-50" },
+            ].map(({ href, label, icon, color, bg }) => (
+              <Link key={href} href={href} className="flex flex-col items-center gap-2">
+                <div className={`w-14 h-14 rounded-2xl ${bg} ${color} flex items-center justify-center shadow-sm`}>
+                  {icon}
+                </div>
+                <span className="text-xs text-gray-600 font-medium">{label}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* 결재 대기 */}
         <section>
