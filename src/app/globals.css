@@ -1,59 +1,42 @@
+@import "tailwindcss";
 @import "pretendard/dist/web/variable/pretendardvariable.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    color-scheme: light;
-  }
-
-  html {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  body {
-    @apply min-h-dvh bg-zinc-50 font-sans text-zinc-900 antialiased;
-  }
-
-  input::placeholder {
-    @apply text-[#b5c8d0];
-  }
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: "Paperlogy", "Pretendard Variable", Pretendard, system-ui, sans-serif;
 }
 
-@layer utilities {
-  @keyframes somang-fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes somang-slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-somang-fade-in {
-    animation: somang-fade-in 0.8s ease-out;
-  }
-
-  .animate-somang-slide-up {
-    animation: somang-slide-up 0.8s ease-out 0.2s both;
-  }
-
-  .animate-somang-slide-up-modal {
-    animation: somang-slide-up 0.3s ease-out;
-  }
+:root {
+  color-scheme: light;
 }
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  background: #fafafa;
+  color: #18181b;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+input::placeholder {
+  color: #b5c8d0;
+}
+
+@keyframes somang-fade-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes somang-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-somang-fade-in { animation: somang-fade-in 0.8s ease-out; }
+.animate-somang-slide-up { animation: somang-slide-up 0.8s ease-out 0.2s both; }
+.animate-somang-slide-up-modal { animation: somang-slide-up 0.3s ease-out; }
+.font-display { font-family: var(--font-display); }

@@ -1,186 +1,181 @@
 "use client";
 
-export type ApprovalListViewProps = {
-  onBack: () => void;
-  onOpenDetail: () => void;
+import { useState } from "react";
+import { ChevronRight, AlertCircle, CheckCircle2, PauseCircle } from "lucide-react";
+
+type TabKey = "pending" | "onhold" | "done";
+
+const TABS: { key: TabKey; label: string; count: number }[] = [
+  { key: "pending", label: "승인 대기", count: 7 },
+  { key: "onhold", label: "보류", count: 2 },
+  { key: "done", label: "완료", count: 45 },
+];
+
+type ApprovalItem = {
+  id: string;
+  title: string;
+  drafter: string;         // "박지영 간호사"
+  dept: string;            // "외과 2병동"
+  date: string;            // "2026-04-15"
+  urgent?: boolean;
+  dday?: string;           // "D-2"
+  status: TabKey;
 };
 
-export function ApprovalListView({ onBack, onOpenDetail }: ApprovalListViewProps) {
+const ITEMS: ApprovalItem[] = [
+  {
+    id: "a1",
+    title: "연차 신청서",
+    drafter: "박지영 간호사",
+    dept: "외과 2병동",
+    date: "2026-04-15",
+    urgent: true,
+    dday: "D-2",
+    status: "pending",
+  },
+  {
+    id: "a2",
+    title: "지출결의서",
+    drafter: "김민수 행정원",
+    dept: "총무과",
+    date: "2026-04-14",
+    dday: "D-3",
+    status: "pending",
+  },
+  {
+    id: "a3",
+    title: "품의서 (장비 구매)",
+    drafter: "이철수 과장",
+    dept: "시설관리팀",
+    date: "2026-04-13",
+    dday: "D-4",
+    status: "pending",
+  },
+  {
+    id: "a4",
+    title: "초과근무 신청서",
+    drafter: "최영희 수간호사",
+    dept: "내과 1병동",
+    date: "2026-04-12",
+    status: "onhold",
+  },
+  {
+    id: "a5",
+    title: "경비 청구 - 3월",
+    drafter: "박지영 간호사",
+    dept: "외과 2병동",
+    date: "2026-04-01",
+    status: "done",
+  },
+];
+
+export type ApprovalListViewProps = {
+  onOpenDetail: (id: string) => void;
+};
+
+export function ApprovalListView({ onOpenDetail }: ApprovalListViewProps) {
+  const [tab, setTab] = useState<TabKey>("pending");
+  const filtered = ITEMS.filter((i) => i.status === tab);
+
+  const EmptyIcon =
+    tab === "pending" ? AlertCircle : tab === "onhold" ? PauseCircle : CheckCircle2;
+  const emptyLabel =
+    tab === "pending"
+      ? "승인 대기 중인 결재가 없습니다"
+      : tab === "onhold"
+        ? "보류 중인 결재가 없습니다"
+        : "완료된 결재가 없습니다";
+
   return (
-    <div className="relative flex min-h-dvh w-full flex-col bg-[#f5f5f5]">
-      <div className="flex items-center justify-between border-b border-[#e0e0e0] bg-white px-5 py-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="cursor-pointer border-none bg-transparent p-2"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="#333"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <h1 className="text-lg font-bold text-[#1a1a1a]">결재함</h1>
-        <div className="w-10" />
+    <div className="flex flex-col">
+      {/* 탭 바 */}
+      <div className="sticky top-14 z-20 flex border-b border-zinc-200 bg-white">
+        {TABS.map((t) => {
+          const active = t.key === tab;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className="relative flex-1 py-3 text-center active:bg-zinc-50"
+            >
+              <span
+                className={`text-[0.9375rem] font-semibold ${
+                  active ? "text-[#3b5bdb]" : "text-zinc-500"
+                }`}
+              >
+                {t.label}
+              </span>
+              <span
+                className={`ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[0.6875rem] font-bold ${
+                  active
+                    ? "bg-[#3b5bdb] text-white"
+                    : "bg-zinc-100 text-zinc-500"
+                }`}
+              >
+                {t.count}
+              </span>
+              {active && (
+                <span className="absolute bottom-0 left-1/2 h-[3px] w-12 -translate-x-1/2 rounded-full bg-[#3b5bdb]" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5">
-        <div className="mb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-amber-500" />
-              <h2 className="text-[1.0625rem] font-bold text-[#1a1a1a]">승인 대기</h2>
-            </div>
-            <span className="text-sm text-[#999]">7건</span>
+      {/* 리스트 */}
+      <div className="px-5 py-4">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-white py-12 text-center text-zinc-400 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+            <EmptyIcon className="h-10 w-10" strokeWidth={1.5} />
+            <p className="text-sm">{emptyLabel}</p>
           </div>
+        ) : (
           <div className="space-y-3">
-            {[
-              {
-                title: "연차신청서",
-                sub: "박지영 간호사 · 내과 2병동",
-                date: "2026-04-15",
-                badge: "긴급",
-                badgeBg: "#fef3c7",
-                badgeColor: "#f59e0b",
-                dday: "D-2",
-                ddayColor: "#f59e0b",
-              },
-              {
-                title: "지출결의서",
-                sub: "김민수 행정팀 · 총무과",
-                date: "2026-04-14",
-                badge: "",
-                badgeBg: "",
-                badgeColor: "",
-                dday: "D-3",
-                ddayColor: "#999",
-              },
-              {
-                title: "품의서 (장비 구매)",
-                sub: "이준호 과장 · 시설관리팀",
-                date: "2026-04-13",
-                badge: "",
-                badgeBg: "",
-                badgeColor: "",
-                dday: "D-4",
-                ddayColor: "#999",
-              },
-            ].map((item, i) => (
+            {filtered.map((item) => (
               <button
-                key={i}
+                key={item.id}
                 type="button"
-                onClick={onOpenDetail}
-                className="w-full cursor-pointer rounded-xl border border-[#e0e0e0] bg-white p-4 text-left transition-transform active:scale-[0.98]"
+                onClick={() => onOpenDetail(item.id)}
+                className="block w-full rounded-2xl bg-white p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-transform active:scale-[0.98]"
               >
-                <div className="mb-2 flex items-start justify-between">
-                  <div className="text-base font-bold text-[#1a1a1a]">{item.title}</div>
-                  {item.badge ? (
-                    <div
-                      className="rounded-md px-2 py-1 text-xs font-semibold"
-                      style={{ background: item.badgeBg, color: item.badgeColor }}
-                    >
-                      {item.badge}
-                    </div>
-                  ) : null}
-                </div>
-                <div className="mb-2 text-sm text-[#666]">{item.sub}</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[0.8125rem] text-[#999]">{item.date}</span>
-                  <span
-                    className="text-[0.8125rem] font-semibold"
-                    style={{ color: item.ddayColor }}
-                  >
-                    {item.dday}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-indigo-500" />
-              <h2 className="text-[1.0625rem] font-bold text-[#1a1a1a]">보류</h2>
-            </div>
-            <span className="text-sm text-[#999]">2건</span>
-          </div>
-          <div className="space-y-3">
-            {[
-              {
-                title: "근무변경신청",
-                sub: "최서연 간호사 · 외과 1병동",
-                date: "2026-04-10",
-                reason: "대체 근무자 확인 필요",
-              },
-              {
-                title: "지출결의서 (교육비)",
-                sub: "정민지 주임 · 교육팀",
-                date: "2026-04-09",
-                reason: "예산 확인 중",
-              },
-            ].map((item, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={onOpenDetail}
-                className="w-full cursor-pointer rounded-xl border border-[#e0e0e0] bg-white p-4 text-left transition-transform active:scale-[0.98]"
-              >
-                <div className="mb-2 text-base font-bold text-[#1a1a1a]">{item.title}</div>
-                <div className="mb-2 text-sm text-[#666]">{item.sub}</div>
-                <div className="mb-2 text-[0.8125rem] text-[#999]">{item.date}</div>
-                <div className="rounded-lg bg-[#f0f0f0] px-3 py-2 text-[0.8125rem] text-[#666]">
-                  보류 사유: {item.reason}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-500" />
-              <h2 className="text-[1.0625rem] font-bold text-[#1a1a1a]">승인 완료</h2>
-            </div>
-            <span className="text-sm text-[#999]">45건</span>
-          </div>
-          <div className="space-y-3">
-            {[
-              {
-                title: "연차신청서",
-                sub: "강태희 간호사 · 응급실",
-                date: "2026-04-12",
-              },
-              {
-                title: "품의서 (사무용품)",
-                sub: "윤하영 사원 · 총무과",
-                date: "2026-04-11",
-              },
-            ].map((item, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={onOpenDetail}
-                className="w-full cursor-pointer rounded-xl border border-[#e0e0e0] bg-white p-4 text-left transition-transform active:scale-[0.98]"
-              >
-                <div className="mb-2 flex items-start justify-between">
-                  <div className="text-base font-bold text-[#1a1a1a]">{item.title}</div>
-                  <div className="rounded-md bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-500">
-                    승인
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    {item.urgent && (
+                      <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[0.6875rem] font-bold text-red-600">
+                        <AlertCircle className="h-3 w-3" strokeWidth={2.5} />
+                        긴급
+                      </span>
+                    )}
+                    <h3 className="text-[1rem] font-bold text-zinc-900">
+                      {item.title}
+                    </h3>
                   </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-zinc-400" strokeWidth={2} />
                 </div>
-                <div className="mb-2 text-sm text-[#666]">{item.sub}</div>
-                <div className="text-[0.8125rem] text-[#999]">{item.date}</div>
+
+                <p className="mb-3 text-sm text-zinc-600">
+                  {item.drafter} · {item.dept}
+                </p>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-400">{item.date}</span>
+                  {item.dday && item.status === "pending" && (
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-[0.6875rem] font-bold ${
+                        item.urgent
+                          ? "bg-red-50 text-red-600"
+                          : "bg-zinc-100 text-zinc-600"
+                      }`}
+                    >
+                      {item.dday}
+                    </span>
+                  )}
+                </div>
               </button>
             ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

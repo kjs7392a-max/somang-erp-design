@@ -1,18 +1,9 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SOMANG ERP",
-  description: "소망병원 ERP",
-  manifest: "/manifest.webmanifest",
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  viewportFit: "cover",
-  themeColor: "#fafafa",
+  title: "소망의료재단 ERP",
+  description: "소망의료재단 임직원 포털",
 };
 
 export default function RootLayout({
@@ -22,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="font-sans">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

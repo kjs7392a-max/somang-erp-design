@@ -6,8 +6,5 @@ import { ROUTES } from "@/lib/routes";
 
 export default function DraftPage() {
   const router = useRouter();
-
-  return (
-    <DraftView onBack={() => router.push(ROUTES.home)} />
-  );
+  return <DraftView onBack={() => router.push(ROUTES.home)} />;
 }

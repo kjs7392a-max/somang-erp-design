@@ -9,8 +9,7 @@ export default function ApprovalListPage() {
 
   return (
     <ApprovalListView
-      onBack={() => router.push(ROUTES.home)}
-      onOpenDetail={() => router.push(ROUTES.approvalDetail("1"))}
+      onOpenDetail={(id) => router.push(`${ROUTES.approval}/${id}`)}
     />
   );
 }

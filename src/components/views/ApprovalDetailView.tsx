@@ -29,42 +29,22 @@ export function ApprovalDetailView({
   onHoldReasonChange,
   onOpenRejectModal,
   onCloseRejectModal,
-  onOpenHoldModal,
+   onOpenHoldModal,
   onCloseHoldModal,
-  onBack,
+  onBack: _onBack,
 }: ApprovalDetailViewProps) {
   return (
-    <div className="relative flex min-h-dvh w-full flex-col bg-[#f5f5f5] pb-28">
-      <div className="flex items-center justify-between border-b border-[#e0e0e0] bg-white px-5 py-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="cursor-pointer border-none bg-transparent p-2"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="#333"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <h1 className="text-lg font-bold text-[#1a1a1a]">결재 상세</h1>
-        <div className="w-10" />
-      </div>
-
-      <div className="flex-1 overflow-y-auto pb-6">
+    <div className="relative flex w-full flex-col bg-[#f5f5f5] pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
+      <div className="flex-1 pb-6">
         <div className="px-5 py-4">
           <div className="rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-            <h2 className="mb-3 text-xl font-bold text-[#1a1a1a]">연차신청서</h2>
+             <h2 className="mb-3 text-xl font-bold text-[#1a1a1a]">연차 신청서</h2>
             <div className="flex items-center gap-2">
               <span className="text-[0.9375rem] font-semibold text-[#333]">
                 박지영 간호사
               </span>
               <div className="h-3 w-px bg-[#ddd]" />
-              <span className="text-sm text-[#666]">내과 2병동</span>
+              <span className="text-sm text-[#666]">외과 2병동</span>
             </div>
             <div className="mt-1.5 text-[0.8125rem] text-[#999]">작성일: 2026-04-15</div>
           </div>
@@ -83,7 +63,7 @@ export function ApprovalDetailView({
                     : "bg-transparent text-[#666]"
                 }`}
               >
-                {tab === "summary" ? "요약" : "원문 보기"}
+               {tab === "summary" ? "요약" : "원문 보기"}
               </button>
             ))}
           </div>
@@ -230,7 +210,7 @@ export function ApprovalDetailView({
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/[0.06] bg-white px-5 py-4 shadow-[0_-2px_8px_rgba(0,0,0,0.06)] pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+        <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 px-5 pb-3">
         <div className="flex gap-2">
           <button
             type="button"
