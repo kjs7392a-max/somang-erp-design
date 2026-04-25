@@ -14,8 +14,8 @@ const TABS: { key: TabKey; label: string; count: number }[] = [
 type ApprovalItem = {
   id: string;
   title: string;
-  drafter: string;         // "박지영 간호사"
-  dept: string;            // "외과 2병동"
+  drafter: string;
+  dept: string;
   date: string;            // "2026-04-15"
   urgent?: boolean;
   dday?: string;           // "D-2"
@@ -26,8 +26,8 @@ const ITEMS: ApprovalItem[] = [
   {
     id: "a1",
     title: "연차 신청서",
-    drafter: "박지영 간호사",
-    dept: "외과 2병동",
+    drafter: "윤민주 간호사",
+    dept: "간호과",
     date: "2026-04-15",
     urgent: true,
     dday: "D-2",
@@ -62,8 +62,8 @@ const ITEMS: ApprovalItem[] = [
   {
     id: "a5",
     title: "경비 청구 - 3월",
-    drafter: "박지영 간호사",
-    dept: "외과 2병동",
+    drafter: "윤민주 간호사",
+    dept: "간호과",
     date: "2026-04-01",
     status: "done",
   },

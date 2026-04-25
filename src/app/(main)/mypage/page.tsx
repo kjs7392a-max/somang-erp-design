@@ -12,12 +12,12 @@ export default function MypagePage() {
 
   // 관리자 배정 (읽기 전용)
   const [userPosition] = useState("간호사");
-  const [userDepartment] = useState("외과 2병동");
+  const [userDepartment] = useState("간호과");
 
   // 본인 수정 가능
-  const [editName, setEditName] = useState("박지영");
+  const [editName, setEditName] = useState("윤민주");
   const [editPhone, setEditPhone] = useState("010-1234-5678");
-  const [editEmail, setEditEmail] = useState("jypark@somang.or.kr");
+  const [editEmail, setEditEmail] = useState("mjyoon@somang.or.kr");
 
   return (
     <MyInfoView

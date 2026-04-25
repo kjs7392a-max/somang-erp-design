@@ -21,7 +21,7 @@ export default function HomePage() {
 
   return (
     <HomeView
-      editName="박지영"
+      editName="윤민주"
       role={role}
       onNavigate={(p) => router.push(NAV[p])}
       onLogout={() => router.push(ROUTES.login)}
