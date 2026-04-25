@@ -10,11 +10,10 @@ function getWeekday(day: number) {
   return WEEKDAY[(3 + day - 1) % 7];
 }
 
-const TODAY_DAY = new Date().getDate(); // 실제 오늘 날짜 사용
-
 export function ShiftTable() {
+  const TODAY_DAY = new Date().getDate();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const me = SHIFT_2026_04.find((m) => m.isMe)!;
+  const me = SHIFT_2026_04.find((m) => m.isMe) ?? SHIFT_2026_04[0];
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const day = TODAY_DAY + i;
