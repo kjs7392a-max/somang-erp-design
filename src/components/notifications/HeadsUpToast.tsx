@@ -55,10 +55,8 @@ export function HeadsUpToast() {
           : "notifSlideDown 0.3s ease-out forwards",
       }}
     >
-      <button
-        type="button"
-        onClick={handleTap}
-        className="flex w-full overflow-hidden rounded-2xl text-left"
+      <div
+        className="flex w-full overflow-hidden rounded-2xl"
         style={{
           background: "rgba(255,255,255,0.97)",
           backdropFilter: "blur(20px)",
@@ -66,22 +64,26 @@ export function HeadsUpToast() {
           borderLeft: `4px solid ${barColor}`,
         }}
       >
-        <div className="flex flex-1 items-center gap-3 px-4 py-3.5">
+        <button
+          type="button"
+          onClick={handleTap}
+          className="flex flex-1 items-center gap-3 px-4 py-3.5 text-left"
+        >
           <span className="text-xl">{meta.icon}</span>
           <div className="flex-1 min-w-0">
             <p className="truncate text-[0.875rem] font-bold text-zinc-900">{headsUp.title}</p>
             <p className="mt-0.5 truncate text-[0.75rem] font-medium text-zinc-500">{headsUp.body}</p>
           </div>
-        </div>
+        </button>
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); close(); }}
+          onClick={close}
           className="flex items-center px-4 text-lg text-zinc-400 active:text-zinc-600"
           aria-label="닫기"
         >
           ✕
         </button>
-      </button>
+      </div>
     </div>
   );
 }
