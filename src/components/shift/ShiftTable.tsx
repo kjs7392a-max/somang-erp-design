@@ -33,7 +33,7 @@ export function ShiftTable() {
         <div className="flex items-center gap-2">
           <span className="text-base">🏥</span>
           <div>
-            <p className="text-[0.9375rem] font-bold text-zinc-900">외과 2병동</p>
+            <p className="text-[0.9375rem] font-bold text-zinc-900">소망병원 간호과</p>
             <p className="text-xs text-zinc-500">7명 · 2026년 4월 · 최종 4/15</p>
           </div>
         </div>

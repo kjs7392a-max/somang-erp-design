@@ -21,13 +21,13 @@ export const SHIFT_CODE_META: Record<
 };
 
 const BASE_MEMBERS = [
-  { id: "E001", name: "박지영", role: "간호사",   isMe: true  },
-  { id: "N002", name: "김수민", role: "수간호사"               },
-  { id: "N003", name: "이연주", role: "간호사"                 },
-  { id: "N004", name: "최유진", role: "간호사"                 },
-  { id: "N005", name: "한가은", role: "간호사"                 },
-  { id: "N006", name: "조민서", role: "간호사"                 },
-  { id: "N007", name: "윤서아", role: "간호사"                 },
+  { id: "N001", name: "윤민주", role: "간호사",     isMe: true  },
+  { id: "N002", name: "김미현", role: "수간호사"                },
+  { id: "N003", name: "함수정", role: "수간호사"                },
+  { id: "N004", name: "사은경", role: "주임간호사"              },
+  { id: "N005", name: "최중선", role: "주임간호사"              },
+  { id: "N006", name: "임보람", role: "주임간호사"              },
+  { id: "N007", name: "신채영", role: "주임간호사"              },
 ];
 
 const PATTERNS: ShiftCode[][] = [

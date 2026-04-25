@@ -20,13 +20,13 @@ export function PdfBody({ kind }: Props) {
         <tbody>
           <tr>
             <th style={TH}>소속</th>
-            <td style={TD}>외과 2병동</td>
+            <td style={TD}>간호과</td>
             <th style={{ ...TH, width: "20%" }}>직책</th>
             <td style={TD}>간호사</td>
           </tr>
           <tr>
             <th style={TH}>성명</th>
-            <td style={TD}>박지영</td>
+            <td style={TD}>윤민주</td>
             <th style={{ ...TH, width: "20%" }}>연락처</th>
             <td style={TD}>010-1234-5678</td>
           </tr>
@@ -81,8 +81,8 @@ export function PdfBody({ kind }: Props) {
     <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}>
       <tbody>
         {[
-          ["소속", "외과 2병동"],
-          ["성명", "박지영"],
+          ["소속", "간호과"],
+          ["성명", "윤민주"],
           ["사직 희망일", "2026년 6월 30일"],
           ["사유", "개인 사정으로 인한 사직"],
         ].map(([label, value]) => (

@@ -94,8 +94,8 @@ export function PdfPreviewSheet({ docId, kind, status, stages, onClose }: Props)
           {/* 종이 헤더 */}
           <div className="mb-5 flex items-start justify-between border-b-2 border-[#2a2418] pb-3">
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#7a6a4f" }}>의료법인 소망의료재단</p>
-              <p style={{ fontSize: 14, fontWeight: 800, color: "#2a2418" }}>소망요양병원</p>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#7a6a4f" }}>음성소망의료재단</p>
+              <p style={{ fontSize: 14, fontWeight: 800, color: "#2a2418" }}>소망병원</p>
             </div>
 
             {/* 결재 박스 */}
@@ -103,9 +103,9 @@ export function PdfPreviewSheet({ docId, kind, status, stages, onClose }: Props)
               {/* 기안자 */}
               <div style={{ borderRight: "1px solid #d8c8a8", display: "flex", flexDirection: "column" }}>
                 <div style={{ background: "#faf3e3", padding: "5px 8px", fontSize: 9, fontWeight: 700, color: "#7a6a4f", borderBottom: "1px solid #d8c8a8", textAlign: "center" }}>기안</div>
-                <div style={{ padding: "4px 8px", fontSize: 9, color: "#5a4a30", borderBottom: "1px solid #d8c8a8", textAlign: "center" }}>박지영</div>
+                <div style={{ padding: "4px 8px", fontSize: 9, color: "#5a4a30", borderBottom: "1px solid #d8c8a8", textAlign: "center" }}>윤민주</div>
                 <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "center", background: "#fffaf0", borderBottom: "1px solid #d8c8a8", padding: "4px 8px" }}>
-                  <ApprovalStamp name="박지영" size={40} rotate={-6} />
+                  <ApprovalStamp name="윤민주" size={40} rotate={-6} />
                 </div>
                 <div style={{ padding: "3px 8px", fontSize: 8, color: "#7a6a4f", background: "#faf3e3", textAlign: "center" }}>26.04.15</div>
               </div>

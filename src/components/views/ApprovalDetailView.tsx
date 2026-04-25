@@ -47,10 +47,10 @@ export function ApprovalDetailView({
              <h2 className="mb-3 text-xl font-bold text-[#1a1a1a]">연차 신청서</h2>
             <div className="flex items-center gap-2">
               <span className="text-[0.9375rem] font-semibold text-[#333]">
-                박지영 간호사
+                윤민주 간호사
               </span>
               <div className="h-3 w-px bg-[#ddd]" />
-              <span className="text-sm text-[#666]">외과 2병동</span>
+              <span className="text-sm text-[#666]">간호과</span>
             </div>
             <div className="mt-1.5 text-[0.8125rem] text-[#999]">작성일: 2026-04-15</div>
           </div>
@@ -105,30 +105,14 @@ export function ApprovalDetailView({
             <div className="rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <h3 className="mb-4 text-[1.0625rem] font-bold text-[#1a1a1a]">결재선</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-2">
+                <div className="flex items-center justify-between rounded-lg bg-amber-100 px-3 py-2">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
                       1
                     </div>
                     <div>
                       <div className="text-[0.9375rem] font-semibold text-[#333]">
-                        이미선 수간호사
-                      </div>
-                      <div className="text-xs text-[#999]">담당</div>
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-500">
-                    승인완료
-                  </div>
-                </div>
-                <div className="flex items-center justify-between rounded-lg bg-amber-100 px-3 py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
-                      2
-                    </div>
-                    <div>
-                      <div className="text-[0.9375rem] font-semibold text-[#333]">
-                        최민호 총무과장
+                        한기석 총무과장
                       </div>
                       <div className="text-xs text-[#999]">총무과</div>
                     </div>
@@ -140,10 +124,10 @@ export function ApprovalDetailView({
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-white">
-                      3
+                      2
                     </div>
                     <div>
-                      <div className="text-[0.9375rem] font-semibold text-[#333]">이사장</div>
+                      <div className="text-[0.9375rem] font-semibold text-[#333]">이강표 이사장</div>
                       <div className="text-xs text-[#999]">이사장실</div>
                     </div>
                   </div>
@@ -165,7 +149,7 @@ export function ApprovalDetailView({
               <table className="mb-6 w-full border-collapse border border-[#ddd] text-[0.8125rem]">
                 <tbody>
                   <tr>
-                    {["담당", "총무과장", "이사장"].map((role) => (
+                    {["총무과장", "이사장"].map((role) => (
                       <td
                         key={role}
                         className="w-20 border border-[#ddd] bg-[#f8f9fa] p-2 text-center font-semibold"
@@ -175,10 +159,7 @@ export function ApprovalDetailView({
                     ))}
                   </tr>
                   <tr>
-                    <td className="h-[60px] border border-[#ddd] p-2 text-center align-middle">
-                      <div className="font-semibold text-emerald-500">승인</div>
-                    </td>
-                    <td className="border border-[#ddd] p-2" />
+                    <td className="h-[60px] border border-[#ddd] p-2" />
                     <td className="border border-[#ddd] p-2" />
                   </tr>
                 </tbody>
@@ -186,8 +167,8 @@ export function ApprovalDetailView({
               <table className="w-full border-collapse border border-[#ddd] text-sm">
                 <tbody>
                   {[
-                    { label: "소속", value: "외과 2병동" },
-                    { label: "성명", value: "박지영" },
+                    { label: "소속", value: "간호과" },
+                    { label: "성명", value: "윤민주" },
                     { label: "직책", value: "간호사" },
                     {
                       label: "기간",
@@ -209,7 +190,7 @@ export function ApprovalDetailView({
               <div className="mt-8 text-center text-sm text-[#666]">
                 <p>위와 같이 연차를 신청하오니 승인하여 주시기 바랍니다.</p>
                 <p className="mt-8">2026년 04월 15일</p>
-                <p className="mt-4 font-semibold">신청자: 박지영 (인)</p>
+                <p className="mt-4 font-semibold">신청자: 윤민주 (인)</p>
               </div>
             </div>
           </div>
@@ -325,9 +306,8 @@ export function ApprovalDetailView({
           kind="vacation"
           status={docStatus as "approved" | "rejected"}
           stages={[
-            { title: "팀장",    name: "이미선", acted: true,  action: "approve" },
-            { title: "총무과장", name: "최민호", acted: docStatus === "approved", action: "approve" },
-            { title: "이사장",   name: "김소망", acted: docStatus === "approved", action: "approve" },
+            { title: "총무과장", name: "한기석", acted: true,  action: "approve" },
+            { title: "이사장",   name: "이강표", acted: docStatus === "approved", action: "approve" },
           ]}
           onClose={() => setShowPdf(false)}
         />
