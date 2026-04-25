@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Plane, Clock, Receipt, ShoppingCart, HeartPulse, FileText,
   Plus, ChevronRight,
@@ -41,15 +41,12 @@ const RECENT_DRAFTS = [
 ];
 
 export function DraftView({ prefill }: DraftViewProps) {
-  const [composeKind, setComposeKind] = useState<FormKind | null>(null);
-  const [activePrefill, setActivePrefill] = useState<{ start?: string; end?: string } | null>(null);
-
-  useEffect(() => {
-    if (prefill) {
-      setActivePrefill({ start: prefill.startDate, end: prefill.endDate });
-      setComposeKind(prefill.formKind);
-    }
-  }, []);
+  const [composeKind, setComposeKind] = useState<FormKind | null>(
+    prefill?.formKind ?? null
+  );
+  const [activePrefill, setActivePrefill] = useState<{ start?: string; end?: string } | null>(
+    prefill ? { start: prefill.startDate, end: prefill.endDate } : null
+  );
 
   if (composeKind) {
     return (
