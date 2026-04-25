@@ -62,15 +62,15 @@ export default function AppHeader({ title, mode }: AppHeaderProps) {
         </h1>
 
         {/* 오른쪽 — 벨 아이콘 */}
-        <div className="relative min-w-[44px] flex justify-end">
+        <div className="min-w-[44px] flex justify-end">
           <button
             onClick={() => setNotifOpen(true)}
-            className="flex h-11 w-11 items-center justify-center rounded-full text-zinc-600 active:bg-zinc-100"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full text-zinc-600 active:bg-zinc-100"
             aria-label="알림"
           >
             <Bell className="h-5 w-5" strokeWidth={2} />
             {unreadCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[0.5625rem] font-bold leading-none text-white">
+              <span className="absolute right-0 top-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[0.5625rem] font-bold leading-none text-white">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}

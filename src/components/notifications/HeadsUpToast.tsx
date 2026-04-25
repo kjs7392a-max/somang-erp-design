@@ -10,11 +10,12 @@ export function HeadsUpToast() {
   const { headsUp, dismissHeadsUp, markRead } = useNotifications();
   const [closing, setClosing] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
   const close = useCallback(() => {
     setClosing(true);
-    setTimeout(() => {
+    closeTimerRef.current = setTimeout(() => {
       dismissHeadsUp();
       setClosing(false);
     }, 220);
@@ -22,6 +23,7 @@ export function HeadsUpToast() {
 
   useEffect(() => {
     if (!headsUp) return;
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     setClosing(false);
     timerRef.current = setTimeout(close, 4500);
     return () => {

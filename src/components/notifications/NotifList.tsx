@@ -30,6 +30,7 @@ export function NotifList({ onClose }: { onClose: () => void }) {
           type="button"
           onClick={onClose}
           className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 active:bg-zinc-100"
+          aria-label="닫기"
         >
           <X className="h-5 w-5" strokeWidth={2} />
         </button>
