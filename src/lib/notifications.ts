@@ -26,14 +26,9 @@ export const NOTIF_KIND_META: Record<NotifKind, { icon: string; label: string; c
   shift:     { icon: "🕐", label: "근무 변경", color: "#0891b2" },
 };
 
-export const NOTIF_KIND_BAR: Record<NotifKind, string> = {
-  approved:  "#16a34a",
-  rejected:  "#dc2626",
-  approval:  "#2563eb",
-  notice:    "#f59e0b",
-  withdraw:  "#8b5cf6",
-  shift:     "#0891b2",
-};
+export const NOTIF_KIND_BAR = Object.fromEntries(
+  Object.entries(NOTIF_KIND_META).map(([k, v]) => [k, v.color]),
+) as Record<NotifKind, string>;
 
 export function notifTimeAgo(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
