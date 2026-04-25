@@ -40,3 +40,12 @@ input::placeholder {
 .animate-somang-slide-up { animation: somang-slide-up 0.8s ease-out 0.2s both; }
 .animate-somang-slide-up-modal { animation: somang-slide-up 0.3s ease-out; }
 .font-display { font-family: var(--font-display); }
+
+@keyframes notifSlideDown {
+  from { opacity: 0; transform: translateY(-100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes notifSlideUp {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-100%); }
+}
