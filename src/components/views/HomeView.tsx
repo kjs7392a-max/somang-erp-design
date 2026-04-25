@@ -8,6 +8,7 @@ import { ApprovalStatusCard, ApprovalStatusDonut } from "@/components/home/Appro
 import { DraftStatusCard } from "@/components/home/DraftStatusCard";
 import { LeaveCard } from "@/components/home/LeaveCard";
 import { TodayTasksCard } from "@/components/home/TodayTasksCard";
+import { useNotifications } from "@/context/NotificationsContext";
 
 export type HomeViewProps = {
   editName: string;
@@ -19,6 +20,7 @@ export type HomeViewProps = {
 export function HomeView({ editName, role = "staff", onNavigate }: HomeViewProps) {
   const goApproval = () => onNavigate("approvalList");
   const goCalendar = () => onNavigate("schedule");
+  const { push } = useNotifications();
 
   return (
     <div className="px-5 py-5">
@@ -31,6 +33,20 @@ export function HomeView({ editName, role = "staff", onNavigate }: HomeViewProps
           {ROLE_META[role]?.short ?? "직원"}
         </span>
       </div>
+
+      {/* 알림 토스트 데모 */}
+      <button
+        type="button"
+        onClick={() => push({
+          kind: "approval",
+          title: "이재훈 — 연차 신청서",
+          body: "결재가 도착했어요. 4/22~4/24 (3일)",
+          deeplink: { type: "approval", docId: "D-0421-01" },
+        })}
+        className="mb-4 w-full rounded-xl bg-[#2d5c6e] py-2 text-sm font-semibold text-white"
+      >
+        [테스트] 알림 토스트 발송
+      </button>
 
       {/* 공지 */}
       <AnnouncementSection scope="company" />
