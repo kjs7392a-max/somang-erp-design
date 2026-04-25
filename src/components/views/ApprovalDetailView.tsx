@@ -186,7 +186,7 @@ export function ApprovalDetailView({
               <table className="w-full border-collapse border border-[#ddd] text-sm">
                 <tbody>
                   {[
-                    { label: "소속", value: "내과 2병동" },
+                    { label: "소속", value: "외과 2병동" },
                     { label: "성명", value: "박지영" },
                     { label: "직책", value: "간호사" },
                     {
@@ -234,30 +234,32 @@ export function ApprovalDetailView({
         </div>
       )}
 
+      {(docStatus === "pending" || docStatus === undefined) && (
         <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 px-5 pb-3">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="flex-1 cursor-pointer rounded-xl border-none bg-emerald-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
-          >
-            승인
-          </button>
-          <button
-            type="button"
-            onClick={onOpenRejectModal}
-            className="flex-1 cursor-pointer rounded-xl border-none bg-red-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
-          >
-            반려
-          </button>
-          <button
-            type="button"
-            onClick={onOpenHoldModal}
-            className="flex-1 cursor-pointer rounded-xl border-none bg-amber-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
-          >
-            보류
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="flex-1 cursor-pointer rounded-xl border-none bg-emerald-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
+            >
+              승인
+            </button>
+            <button
+              type="button"
+              onClick={onOpenRejectModal}
+              className="flex-1 cursor-pointer rounded-xl border-none bg-red-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
+            >
+              반려
+            </button>
+            <button
+              type="button"
+              onClick={onOpenHoldModal}
+              className="flex-1 cursor-pointer rounded-xl border-none bg-amber-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
+            >
+              보류
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {showRejectModal ? (
         <div className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/50 sm:items-center">

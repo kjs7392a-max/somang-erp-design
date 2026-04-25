@@ -13,7 +13,7 @@ export function ApprovalStamp({ name, size = 56, rotate = -7, isRejected = false
           width: size, height: size * 0.6,
           border: `${Math.max(2, Math.floor(size * 0.04))}px solid #c1272d`,
           color: "#c1272d", display: "flex", alignItems: "center", justifyContent: "center",
-          transform: `rotate(-7deg)`, opacity: 0.88,
+          transform: `rotate(${rotate}deg)`, opacity: 0.88,
           fontFamily: '"Noto Serif KR", serif', fontWeight: 800,
           fontSize: size * 0.28, letterSpacing: "0.05em",
         }}

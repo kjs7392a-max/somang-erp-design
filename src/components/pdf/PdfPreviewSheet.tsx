@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Download, Share2 } from "lucide-react";
 import { ApprovalStamp } from "./ApprovalStamp";
 import { PdfBody } from "./PdfBody";
@@ -19,11 +19,15 @@ const ROTATE_BY_IDX = [-8, 6, -8, 6];
 
 export function PdfPreviewSheet({ docId, kind, status, stages, onClose }: Props) {
   const [downloaded, setDownloaded] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleDownload = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     setDownloaded(true);
-    setTimeout(() => setDownloaded(false), 2500);
+    timerRef.current = setTimeout(() => setDownloaded(false), 2500);
   };
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   const kindLabel = kind === "vacation" ? "연차 신청서" : kind === "proposal" ? "품의서" : "사직원";
 
