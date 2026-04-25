@@ -11,6 +11,7 @@ export type DayBottomSheetProps = {
   events: CalendarEvent[];
   onAdd: () => void;
   onEditPersonal: (evt: CalendarEvent) => void;
+  onStartLeave?: (date: string) => void;
 };
 
 export function DayBottomSheet({
@@ -20,6 +21,7 @@ export function DayBottomSheet({
   events,
   onAdd,
   onEditPersonal,
+  onStartLeave,
 }: DayBottomSheetProps) {
   if (!open) return null;
 
@@ -125,6 +127,18 @@ export function DayBottomSheet({
             </div>
           )}
         </div>
+        {onStartLeave && (
+          <div className="px-5 pt-0 pb-4">
+            <button
+              type="button"
+              onClick={() => { onClose(); onStartLeave(date); }}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold text-white"
+              style={{ background: "linear-gradient(135deg, #2d5c6e, #1e4554)" }}
+            >
+              🌴 이 날짜로 휴가 신청
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
