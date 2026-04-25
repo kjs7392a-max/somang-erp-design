@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import type { ApprovalDetailTab } from "@/types/navigation";
+import { PdfPreviewSheet } from "@/components/pdf/PdfPreviewSheet";
 
 export type ApprovalDetailViewProps = {
   activeTab: ApprovalDetailTab;
@@ -16,6 +18,7 @@ export type ApprovalDetailViewProps = {
   onOpenHoldModal: () => void;
   onCloseHoldModal: () => void;
   onBack: () => void;
+  docStatus?: "pending" | "approved" | "rejected";
 };
 
 export function ApprovalDetailView({
@@ -32,7 +35,10 @@ export function ApprovalDetailView({
    onOpenHoldModal,
   onCloseHoldModal,
   onBack: _onBack,
+  docStatus = "approved",
 }: ApprovalDetailViewProps) {
+  const [showPdf, setShowPdf] = useState(false);
+
   return (
     <div className="relative flex w-full flex-col bg-[#f5f5f5] pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       <div className="flex-1 pb-6">
@@ -210,6 +216,24 @@ export function ApprovalDetailView({
         )}
       </div>
 
+      {(docStatus === "approved" || docStatus === "rejected") && (
+        <div className="fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom,0px))] left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 px-5">
+          <div className="flex gap-2">
+            <button type="button" className="flex-1 rounded-xl border border-zinc-200 bg-white py-2.5 text-sm font-semibold text-zinc-700">
+              📄 원본 양식
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPdf(true)}
+              className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white"
+              style={{ background: "linear-gradient(135deg, #c1272d, #8b1a1a)" }}
+            >
+              🔴 PDF (도장)
+            </button>
+          </div>
+        </div>
+      )}
+
         <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 px-5 pb-3">
         <div className="flex gap-2">
           <button
@@ -292,6 +316,20 @@ export function ApprovalDetailView({
           </div>
         </div>
       ) : null}
+
+      {showPdf && (
+        <PdfPreviewSheet
+          docId="D-0421-01"
+          kind="vacation"
+          status={docStatus as "approved" | "rejected"}
+          stages={[
+            { title: "팀장",    name: "이미선", acted: true,  action: "approve" },
+            { title: "총무과장", name: "최민호", acted: docStatus === "approved", action: "approve" },
+            { title: "이사장",   name: "김소망", acted: docStatus === "approved", action: "approve" },
+          ]}
+          onClose={() => setShowPdf(false)}
+        />
+      )}
     </div>
   );
 }
