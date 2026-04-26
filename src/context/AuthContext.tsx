@@ -28,16 +28,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function fetchProfile(userId: string): Promise<Profile | null> {
-    const { data } = await supabase
+    const { data: profileData } = await supabase
       .from("profiles")
-      .select("*, departments!department_id(name)")
+      .select("*")
       .eq("id", userId)
       .single();
-    if (!data) return null;
-    const { departments, ...rest } = data as typeof data & {
-      departments: { name: string } | null;
-    };
-    return { ...rest, department_name: departments?.name ?? null };
+    if (!profileData) return null;
+
+    const { data: gvData } = await supabase
+      .from("global_viewers")
+      .select("id")
+      .eq("profile_id", userId)
+      .maybeSingle();
+
+    return { ...profileData, is_global_viewer: !!gvData };
   }
 
   async function handleSession(s: Session | null) {

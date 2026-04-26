@@ -25,7 +25,7 @@ export default function HomePage() {
 
   return (
     <HomeView
-      editName={profile.name}
+      editName={profile.full_name}
       role={role}
       onNavigate={(p) => router.push(NAV[p])}
       onLogout={() => router.push(ROUTES.login)}
