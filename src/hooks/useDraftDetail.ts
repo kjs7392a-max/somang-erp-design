@@ -52,8 +52,8 @@ export function useDraftDetail(draftId: string) {
     setLoading(false);
     if (dbError || !data) { setError(dbError?.message ?? "조회 실패"); return; }
 
-    const drafter = data.profiles as { full_name: string; department: string } | null;
-    const contents = data.document_contents as { body: Record<string, unknown> } | null;
+    const drafter = data.profiles as unknown as { full_name: string; department: string } | null;
+    const contents = data.document_contents as unknown as { body: Record<string, unknown> } | null;
     const rawSteps = (data.draft_approval_steps as any[]) ?? [];
 
     setDetail({

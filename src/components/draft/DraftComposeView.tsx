@@ -12,16 +12,18 @@ import {
 import { AttachmentPicker, type AttachmentItem } from "./AttachmentPicker";
 import { ApprovalLineView } from "./ApprovalLineView";
 import { SubmitConfirmModal } from "./SubmitConfirmModal";
+import type { DraftSubmitData } from "@/hooks/useDraftSubmit";
 
 type Props = {
   kind: FormKind;
   onBack: () => void;
   onSubmitted: () => void;
+  onSubmit?: (data: DraftSubmitData) => Promise<{ error?: string }>;
   initialStartDate?: string;
   initialEndDate?: string;
 };
 
-export function DraftComposeView({ kind, onBack, onSubmitted, initialStartDate, initialEndDate }: Props) {
+export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialStartDate, initialEndDate }: Props) {
   const meta = FORMS[kind];
 
   // 공통
@@ -86,8 +88,27 @@ export function DraftComposeView({ kind, onBack, onSubmitted, initialStartDate, 
     setShowConfirm(true);
   };
 
-  const handleSubmit = () => {
+  const buildPayload = (): DraftSubmitData => {
+    const bodyJson: Record<string, unknown> = { formKind: kind };
+    if (kind === "vacation") {
+      Object.assign(bodyJson, { vacationType: vacType, startDate, endDate, reason: body, contact });
+    } else if (kind === "proposal") {
+      Object.assign(bodyJson, { coopDept, amount, description: body });
+    } else {
+      Object.assign(bodyJson, { resignDate, note: body });
+    }
+    return { title, docType: kind, body: bodyJson };
+  };
+
+  const handleSubmit = async () => {
     setShowConfirm(false);
+    if (onSubmit) {
+      const result = await onSubmit(buildPayload());
+      if (result?.error) {
+        alert(result.error);
+        return;
+      }
+    }
     setSubmitted(true);
     setTimeout(() => {
       onSubmitted();
@@ -296,7 +317,7 @@ export function DraftComposeView({ kind, onBack, onSubmitted, initialStartDate, 
         approvalLine={meta.approvalLine}
         attachmentCount={attachments.length}
         onClose={() => setShowConfirm(false)}
-        onConfirm={handleSubmit}
+        onConfirm={() => { void handleSubmit(); }}
       />
 
       {/* Submitted toast */}

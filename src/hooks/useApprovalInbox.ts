@@ -67,7 +67,7 @@ export function useApprovalInbox() {
 
     const result: InboxItem[] = myTurnSteps.map((step) => {
       const draft = (drafts ?? []).find((d) => d.id === step.draft_id);
-      const drafter = draft?.profiles as { full_name: string; department: string } | null;
+      const drafter = draft?.profiles as unknown as { full_name: string; department: string } | null;
       return {
         draftId: step.draft_id,
         stepId: step.id,

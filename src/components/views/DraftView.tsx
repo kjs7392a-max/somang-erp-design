@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { FormKind } from "@/lib/draft-forms";
 import { DraftComposeView } from "@/components/draft/DraftComposeView";
+import type { DraftSubmitData } from "@/hooks/useDraftSubmit";
 
 export type DraftPrefill = {
   formKind: FormKind;
@@ -14,7 +15,12 @@ export type DraftPrefill = {
   endDate?: string;
 };
 
-export type DraftViewProps = { onBack?: () => void; prefill?: DraftPrefill };
+export type DraftViewProps = {
+  onBack?: () => void;
+  prefill?: DraftPrefill;
+  onSubmit?: (data: DraftSubmitData) => Promise<{ error?: string }>;
+  onAfterSubmit?: () => void;
+};
 
 type QuickDraft = {
   key: string;
@@ -40,7 +46,7 @@ const RECENT_DRAFTS = [
   { id: 2, title: "경비 청구 - 3월", date: "2026.04.02", status: "임시저장" },
 ];
 
-export function DraftView({ prefill }: DraftViewProps) {
+export function DraftView({ prefill, onSubmit, onAfterSubmit }: DraftViewProps) {
   const [composeKind, setComposeKind] = useState<FormKind | null>(
     prefill?.formKind ?? null
   );
@@ -53,7 +59,12 @@ export function DraftView({ prefill }: DraftViewProps) {
       <DraftComposeView
         kind={composeKind}
         onBack={() => { setComposeKind(null); setActivePrefill(null); }}
-        onSubmitted={() => { setComposeKind(null); setActivePrefill(null); }}
+        onSubmitted={() => {
+          setComposeKind(null);
+          setActivePrefill(null);
+          onAfterSubmit?.();
+        }}
+        onSubmit={onSubmit}
         initialStartDate={activePrefill?.start}
         initialEndDate={activePrefill?.end}
       />
