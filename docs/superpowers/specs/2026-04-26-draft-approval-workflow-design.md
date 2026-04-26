@@ -119,10 +119,12 @@ DraftView (폼 작성)
       1. getApproverByPosition() 호출 → placeholder이면 throw
       2. steps 필터 (null 제거)
       3. steps.length === 0 → return { error: "결재자가 지정되지 않았습니다" }
-      4. drafts INSERT
-      5. document_contents INSERT
-      6. draft_approval_steps INSERT (order_index 순서대로)
-      7. 완료 → router.push(ROUTES.approval)
+      4. drafts INSERT → 실패 시 error 반환 + 중단
+      5. document_contents INSERT → 실패 시 error 반환 + 중단
+      6. draft_approval_steps INSERT (order_index 순서대로) → 실패 시 error 반환 + 중단
+      7. 1~6 모두 성공 시에만 완료로 간주 → router.push(ROUTES.approval)
+      ※ Supabase client는 트랜잭션 미지원 → 각 단계 실패 시 이후 INSERT 중단
+         (부분 삽입이 남을 수 있으나 MVP에서는 허용, 추후 DB 함수로 원자성 보장 가능)
 ```
 
 **document_contents.body JSONB 구조:**
@@ -148,8 +150,11 @@ approval/page.tsx
   └─ useApprovalInbox()
        Step 1: SELECT draft_approval_steps
                 WHERE approver_id = me AND action = 'pending'
-       Step 2: 위 draft_id 목록으로 해당 drafts의 전체 pending steps 조회
-       Step 3: 클라이언트 필터
+       Step 2: draft_id 목록을 Set으로 dedupe
+       Step 3: dedupe된 draft_id[] 로 단일 IN query
+                SELECT * FROM draft_approval_steps
+                WHERE draft_id IN (...) AND action = 'pending'
+       Step 4: 클라이언트 필터
                 내 step.order_index === min(pending order_index) 인 것만 표시
 ```
 
