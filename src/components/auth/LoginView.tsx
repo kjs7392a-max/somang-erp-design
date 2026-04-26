@@ -10,7 +10,8 @@ export type LoginViewProps = {
   onUserIdChange: (v: string) => void;
   onPasswordChange: (v: string) => void;
   onSubmit: (e: React.FormEvent) => void;
-  userName?: string;
+  error?: string | null;
+  loading?: boolean;
 };
 
 export function LoginView({
@@ -19,7 +20,8 @@ export function LoginView({
   onUserIdChange,
   onPasswordChange,
   onSubmit,
-  userName = "김소망",
+  error = null,
+  loading = false,
 }: LoginViewProps) {
   const [logoOk, setLogoOk] = useState(true);
   const [welcome, setWelcome] = useState<string>("");
@@ -29,14 +31,13 @@ export function LoginView({
       const { message } = resolveWelcomeMessage({
         useSpecials: true,
         useRandom: true,
-        userName,
       });
       setWelcome(message);
     };
     tick();
     const id = setInterval(tick, 60 * 1000);
     return () => clearInterval(id);
-  }, [userName]);
+  }, []);
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-gradient-to-b from-[#dbeafe] to-[#3b82f6]">
@@ -73,7 +74,7 @@ export function LoginView({
                 "0 1px 3px rgba(30,41,91,0.35), 0 2px 12px rgba(30,41,91,0.18)",
             }}
           >
-            {welcome || "\u00A0\n\u00A0"}
+            {welcome || " \n "}
           </p>
         </div>
 
@@ -127,11 +128,18 @@ export function LoginView({
                 </label>
               </div>
 
+              {error && (
+                <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600">
+                  {error}
+                </p>
+              )}
+
               <button
                 type="submit"
-                className="mt-4 w-full cursor-pointer rounded-2xl border-none bg-[#3b82f6] py-4 text-[1.0625rem] font-semibold text-white shadow-[0_4px_12px_rgba(59,130,246,0.35)] transition-all duration-200 hover:bg-[#2563eb] active:scale-[0.98]"
+                disabled={loading}
+                className="mt-4 w-full cursor-pointer rounded-2xl border-none bg-[#3b82f6] py-4 text-[1.0625rem] font-semibold text-white shadow-[0_4px_12px_rgba(59,130,246,0.35)] transition-all duration-200 hover:bg-[#2563eb] active:scale-[0.98] disabled:opacity-60"
               >
-                로그인
+                {loading ? "로그인 중..." : "로그인"}
               </button>
 
               <div className="flex items-center justify-center gap-8 pt-2">
