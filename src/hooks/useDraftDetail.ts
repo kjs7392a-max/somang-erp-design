@@ -7,6 +7,7 @@ export type StepDetail = {
   approver_id: string;
   approverName: string;
   approverDept: string;
+  approverPosition: string;
   action: string;
   comment: string | null;
   acted_at: string | null;
@@ -20,6 +21,7 @@ export type DraftDetail = {
   created_at: string;
   drafterName: string;
   drafterDept: string;
+  drafterPosition: string;
   body: Record<string, unknown>;
   steps: StepDetail[];
 };
@@ -39,11 +41,11 @@ export function useDraftDetail(draftId: string) {
       .from("drafts")
       .select(`
         id, title, doc_type, status, created_at,
-        profiles!drafter_id(full_name, department),
+        profiles!drafter_id(full_name, department, position),
         document_contents(body),
         draft_approval_steps(
           id, order_index, approver_id, action, comment, acted_at,
-          profiles!approver_id(full_name, department)
+          profiles!approver_id(full_name, department, position)
         )
       `)
       .eq("id", draftId)
@@ -52,7 +54,7 @@ export function useDraftDetail(draftId: string) {
     setLoading(false);
     if (dbError || !data) { setError(dbError?.message ?? "조회 실패"); return; }
 
-    const drafter = data.profiles as unknown as { full_name: string; department: string } | null;
+    const drafter = data.profiles as unknown as { full_name: string; department: string; position: string } | null;
     const contents = data.document_contents as unknown as { body: Record<string, unknown> } | null;
     const rawSteps = (data.draft_approval_steps as any[]) ?? [];
 
@@ -64,17 +66,19 @@ export function useDraftDetail(draftId: string) {
       created_at: data.created_at,
       drafterName: drafter?.full_name ?? "",
       drafterDept: drafter?.department ?? "",
+      drafterPosition: drafter?.position ?? "",
       body: contents?.body ?? {},
       steps: rawSteps
         .sort((a: any, b: any) => a.order_index - b.order_index)
         .map((s: any) => {
-          const approver = s.profiles as { full_name: string; department: string } | null;
+          const approver = s.profiles as { full_name: string; department: string; position: string } | null;
           return {
             id: s.id,
             order_index: s.order_index,
             approver_id: s.approver_id,
             approverName: approver?.full_name ?? "",
             approverDept: approver?.department ?? "",
+            approverPosition: approver?.position ?? "",
             action: s.action,
             comment: s.comment ?? null,
             acted_at: s.acted_at ?? null,
