@@ -1,33 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import type { Profile } from "@/types/profile";
 import type { UserRole } from "@/types/role";
 
-const STORAGE_KEY = "somang-user-role";
-const DEFAULT_ROLE: UserRole = "staff";
+export function deriveDisplayRole(profile: Profile): UserRole {
+  if (profile.is_global_viewer) return "exec";
+  if (profile.is_approver || profile.is_department_head) return "manager";
+  return "staff";
+}
 
-export function useUserRole() {
-  const [role, setRoleState] = useState<UserRole>(DEFAULT_ROLE);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY) as UserRole | null;
-      if (raw === "staff" || raw === "manager" || raw === "exec") {
-        setRoleState(raw);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const setRole = useCallback((r: UserRole) => {
-    setRoleState(r);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, r);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  return { role, setRole };
+export function useUserRole(): { role: UserRole } {
+  const { profile } = useAuth();
+  const role: UserRole = profile ? deriveDisplayRole(profile) : "staff";
+  return { role };
 }
