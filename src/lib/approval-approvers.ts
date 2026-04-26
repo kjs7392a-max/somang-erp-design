@@ -1,8 +1,8 @@
 const PLACEHOLDER = /^<.+>$/;
 
 const POSITION_MAP: Record<string, string | null> = {
-  "총무과장": "<h001-uuid>",
-  "이사장":   "<e001-uuid>",
+  "총무과장": "0cab6761-8cb2-44ab-bb24-00acebe9dfde",
+  "이사장":   "271b25cb-84d5-43ea-9056-559fd75f4de5",
   "팀장":     null,
   "부서장":   null,
   "담당":     null,
