@@ -19,6 +19,9 @@ export type ApprovalDetailViewProps = {
   onCloseHoldModal: () => void;
   onBack: () => void;
   docStatus?: "pending" | "approved" | "rejected";
+  onApprove?: () => void;
+  onConfirmReject?: () => void;
+  onConfirmHold?: () => void;
 };
 
 export function ApprovalDetailView({
@@ -32,10 +35,13 @@ export function ApprovalDetailView({
   onHoldReasonChange,
   onOpenRejectModal,
   onCloseRejectModal,
-   onOpenHoldModal,
+  onOpenHoldModal,
   onCloseHoldModal,
   onBack: _onBack,
   docStatus = "approved",
+  onApprove,
+  onConfirmReject,
+  onConfirmHold,
 }: ApprovalDetailViewProps) {
   const [showPdf, setShowPdf] = useState(false);
 
@@ -220,6 +226,7 @@ export function ApprovalDetailView({
           <div className="flex gap-2">
             <button
               type="button"
+              onClick={onApprove}
               className="flex-1 cursor-pointer rounded-xl border-none bg-emerald-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
             >
               승인
@@ -262,6 +269,7 @@ export function ApprovalDetailView({
               </button>
               <button
                 type="button"
+                onClick={onConfirmReject}
                 className="flex-1 cursor-pointer rounded-xl border-none bg-red-500 py-3 text-base font-bold text-white"
               >
                 확인
@@ -291,6 +299,7 @@ export function ApprovalDetailView({
               </button>
               <button
                 type="button"
+                onClick={onConfirmHold}
                 className="flex-1 cursor-pointer rounded-xl border-none bg-amber-500 py-3 text-base font-bold text-white"
               >
                 확인
