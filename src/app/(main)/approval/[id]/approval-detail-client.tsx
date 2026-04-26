@@ -80,6 +80,7 @@ export function ApprovalDetailClient({ id }: { id: string }) {
 
   return (
     <ApprovalDetailView
+      draft={detail}
       activeTab={activeTab}
       onActiveTabChange={setActiveTab}
       showRejectModal={showRejectModal}

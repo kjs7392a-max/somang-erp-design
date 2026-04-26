@@ -3,8 +3,11 @@
 import { useState } from "react";
 import type { ApprovalDetailTab } from "@/types/navigation";
 import { PdfPreviewSheet } from "@/components/pdf/PdfPreviewSheet";
+import type { DraftDetail } from "@/hooks/useDraftDetail";
+import { VACATION_TYPES } from "@/lib/draft-forms";
 
 export type ApprovalDetailViewProps = {
+  draft: DraftDetail;
   activeTab: ApprovalDetailTab;
   onActiveTabChange: (tab: ApprovalDetailTab) => void;
   showRejectModal: boolean;
@@ -24,7 +27,100 @@ export type ApprovalDetailViewProps = {
   onConfirmHold?: () => void;
 };
 
+const ACTION_STYLE: Record<string, { textCls: string; label: string; numBg: string }> = {
+  pending: { textCls: "text-amber-500", label: "대기중", numBg: "bg-amber-500" },
+  approve: { textCls: "text-green-600", label: "승인",   numBg: "bg-green-500" },
+  reject:  { textCls: "text-red-500",   label: "반려",   numBg: "bg-red-500"   },
+  hold:    { textCls: "text-gray-400",  label: "보류",   numBg: "bg-gray-300"  },
+};
+
+function toKoreanDate(d: string): string {
+  const [y, m, day] = d.split("-");
+  return `${y}년 ${m}월 ${day}일`;
+}
+
+function VacationBodySection({ body }: { body: Record<string, unknown> }) {
+  const vacationLabel =
+    VACATION_TYPES.find((t) => t.value === body.vacationType)?.label ??
+    String(body.vacationType ?? "");
+  const rows = [
+    { label: "휴가 종류",   value: vacationLabel },
+    { label: "기간",        value: `${body.startDate ?? ""} ~ ${body.endDate ?? ""}` },
+    { label: "사유",        value: String(body.reason ?? "") },
+    { label: "비상연락처",  value: String(body.contact ?? "") },
+  ];
+  return (
+    <>
+      {rows.map(({ label, value }, i, arr) => (
+        <div key={label} className={`flex py-2 ${i < arr.length - 1 ? "border-b border-gray-100" : ""}`}>
+          <span className="w-[90px] flex-shrink-0 text-sm text-[#666]">{label}</span>
+          <span className="text-[0.9375rem] font-semibold text-[#333]">{value}</span>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function VacationOriginalSection({ draft }: { draft: DraftDetail }) {
+  const { body, steps } = draft;
+  const start = String(body.startDate ?? "");
+  const end   = String(body.endDate   ?? "");
+  const dayCount = start && end
+    ? `(${Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1}일)`
+    : "";
+  const periodStr = start && end
+    ? `${toKoreanDate(start)} ~ ${toKoreanDate(end)} ${dayCount}`
+    : "";
+  const detailRows = [
+    { label: "소속",       value: draft.drafterDept },
+    { label: "성명",       value: draft.drafterName },
+    { label: "직책",       value: draft.drafterPosition },
+    { label: "기간",       value: periodStr },
+    { label: "사유",       value: String(body.reason ?? "") },
+    { label: "비상연락처", value: String(body.contact ?? "") },
+  ];
+  return (
+    <>
+      <h3 className="mb-6 border-b-2 border-[#333] pb-4 text-center text-xl font-bold text-[#1a1a1a]">
+        연 차 신 청 서
+      </h3>
+      <table className="mb-6 w-full border-collapse border border-[#ddd] text-[0.8125rem]">
+        <tbody>
+          <tr>
+            {steps.map((s) => (
+              <td key={s.id} className="w-20 border border-[#ddd] bg-[#f8f9fa] p-2 text-center font-semibold">
+                {s.approverPosition || s.approverDept}
+              </td>
+            ))}
+          </tr>
+          <tr>
+            {steps.map((s) => (
+              <td key={s.id} className="h-[60px] border border-[#ddd] p-2" />
+            ))}
+          </tr>
+        </tbody>
+      </table>
+      <table className="w-full border-collapse border border-[#ddd] text-sm">
+        <tbody>
+          {detailRows.map(({ label, value }) => (
+            <tr key={label}>
+              <td className="w-[100px] border border-[#ddd] bg-[#f8f9fa] p-2.5 font-semibold">{label}</td>
+              <td className="border border-[#ddd] p-2.5">{value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="mt-8 text-center text-sm text-[#666]">
+        <p>위와 같이 연차를 신청하오니 승인하여 주시기 바랍니다.</p>
+        <p className="mt-8">{toKoreanDate(draft.created_at.slice(0, 10))}</p>
+        <p className="mt-4 font-semibold">신청자: {draft.drafterName} (인)</p>
+      </div>
+    </>
+  );
+}
+
 export function ApprovalDetailView({
+  draft,
   activeTab,
   onActiveTabChange,
   showRejectModal,
@@ -45,20 +141,31 @@ export function ApprovalDetailView({
 }: ApprovalDetailViewProps) {
   const [showPdf, setShowPdf] = useState(false);
 
+  const pdfStages = draft.steps.map((s) => ({
+    title: s.approverPosition || s.approverDept,
+    name:  s.approverName,
+    acted: s.action !== "pending",
+    action: (s.action === "approve" ? "approve"
+           : s.action === "reject"  ? "reject"
+           : undefined) as "approve" | "reject" | undefined,
+  }));
+
   return (
     <div className="relative flex w-full flex-col bg-[#f5f5f5] pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       <div className="flex-1 pb-6">
         <div className="px-5 py-4">
           <div className="rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-             <h2 className="mb-3 text-xl font-bold text-[#1a1a1a]">연차 신청서</h2>
+            <h2 className="mb-3 text-xl font-bold text-[#1a1a1a]">{draft.title}</h2>
             <div className="flex items-center gap-2">
               <span className="text-[0.9375rem] font-semibold text-[#333]">
-                윤민주 간호사
+                {draft.drafterName} {draft.drafterPosition}
               </span>
               <div className="h-3 w-px bg-[#ddd]" />
-              <span className="text-sm text-[#666]">간호과</span>
+              <span className="text-sm text-[#666]">{draft.drafterDept}</span>
             </div>
-            <div className="mt-1.5 text-[0.8125rem] text-[#999]">작성일: 2026-04-15</div>
+            <div className="mt-1.5 text-[0.8125rem] text-[#999]">
+              작성일: {draft.created_at.slice(0, 10)}
+            </div>
           </div>
         </div>
 
@@ -75,7 +182,7 @@ export function ApprovalDetailView({
                     : "bg-transparent text-[#666]"
                 }`}
               >
-               {tab === "summary" ? "요약" : "원문 보기"}
+                {tab === "summary" ? "요약" : "원문 보기"}
               </button>
             ))}
           </div>
@@ -87,60 +194,50 @@ export function ApprovalDetailView({
               <h3 className="mb-4 text-[1.0625rem] font-bold text-[#1a1a1a]">
                 문서 내용
               </h3>
-              {[
-                { label: "휴가 종류", value: "연차" },
-                { label: "기간", value: "2026-04-20 ~ 2026-04-21" },
-                { label: "사유", value: "개인 사유" },
-                { label: "대체자", value: "김수진 간호사" },
-                { label: "비상연락처", value: "010-1234-5678" },
-              ].map(({ label, value }, i, arr) => (
-                <div
-                  key={label}
-                  className={`flex py-2 ${i < arr.length - 1 ? "border-b border-gray-100" : ""}`}
-                >
-                  <span className="w-[90px] flex-shrink-0 text-sm text-[#666]">
-                    {label}
-                  </span>
-                  <span className="text-[0.9375rem] font-semibold text-[#333]">
-                    {value}
-                  </span>
-                </div>
-              ))}
+              {draft.doc_type === "vacation" ? (
+                <VacationBodySection body={draft.body} />
+              ) : (
+                <p className="text-sm text-[#999]">이 양식의 미리보기는 준비 중입니다.</p>
+              )}
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <h3 className="mb-4 text-[1.0625rem] font-bold text-[#1a1a1a]">결재선</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-lg bg-amber-100 px-3 py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
-                      1
-                    </div>
-                    <div>
-                      <div className="text-[0.9375rem] font-semibold text-[#333]">
-                        한기석 총무과장
+                {(() => {
+                  const firstPendingIdx = draft.steps.findIndex((s) => s.action === "pending");
+                  return draft.steps.map((step, i) => {
+                    const isActivePending = step.action === "pending" && i === firstPendingIdx;
+                    const style = ACTION_STYLE[step.action] ?? ACTION_STYLE.pending;
+                    return (
+                      <div
+                        key={step.id}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                          isActivePending ? "bg-amber-100" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white ${style.numBg}`}>
+                            {i + 1}
+                          </div>
+                          <div>
+                            <div className="text-[0.9375rem] font-semibold text-[#333]">
+                              {step.approverName} {step.approverPosition}
+                            </div>
+                            <div className="text-xs text-[#999]">{step.approverDept}</div>
+                          </div>
+                        </div>
+                        <div className={`rounded-xl px-3 py-1 text-xs font-semibold ${
+                          isActivePending
+                            ? "bg-white text-amber-500"
+                            : `bg-gray-100 ${style.textCls}`
+                        }`}>
+                          {style.label}
+                        </div>
                       </div>
-                      <div className="text-xs text-[#999]">총무과</div>
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-white px-3 py-1 text-xs font-semibold text-amber-500">
-                    대기중
-                  </div>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-xs font-bold text-white">
-                      2
-                    </div>
-                    <div>
-                      <div className="text-[0.9375rem] font-semibold text-[#333]">이강표 이사장</div>
-                      <div className="text-xs text-[#999]">이사장실</div>
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-400">
-                    대기중
-                  </div>
-                </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
@@ -149,55 +246,13 @@ export function ApprovalDetailView({
         {activeTab === "original" && (
           <div className="px-5">
             <div className="rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-              <h3 className="mb-6 border-b-2 border-[#333] pb-4 text-center text-xl font-bold text-[#1a1a1a]">
-                연 차 신 청 서
-              </h3>
-              <table className="mb-6 w-full border-collapse border border-[#ddd] text-[0.8125rem]">
-                <tbody>
-                  <tr>
-                    {["총무과장", "이사장"].map((role) => (
-                      <td
-                        key={role}
-                        className="w-20 border border-[#ddd] bg-[#f8f9fa] p-2 text-center font-semibold"
-                      >
-                        {role}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="h-[60px] border border-[#ddd] p-2" />
-                    <td className="border border-[#ddd] p-2" />
-                  </tr>
-                </tbody>
-              </table>
-              <table className="w-full border-collapse border border-[#ddd] text-sm">
-                <tbody>
-                  {[
-                    { label: "소속", value: "간호과" },
-                    { label: "성명", value: "윤민주" },
-                    { label: "직책", value: "간호사" },
-                    {
-                      label: "기간",
-                      value: "2026년 04월 20일 ~ 2026년 04월 21일 (2일)",
-                    },
-                    { label: "사유", value: "개인 사유" },
-                    { label: "대체 근무자", value: "김수진 간호사" },
-                    { label: "비상연락처", value: "010-1234-5678" },
-                  ].map(({ label, value }) => (
-                    <tr key={label}>
-                      <td className="w-[100px] border border-[#ddd] bg-[#f8f9fa] p-2.5 font-semibold">
-                        {label}
-                      </td>
-                      <td className="border border-[#ddd] p-2.5">{value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="mt-8 text-center text-sm text-[#666]">
-                <p>위와 같이 연차를 신청하오니 승인하여 주시기 바랍니다.</p>
-                <p className="mt-8">2026년 04월 15일</p>
-                <p className="mt-4 font-semibold">신청자: 윤민주 (인)</p>
-              </div>
+              {draft.doc_type === "vacation" ? (
+                <VacationOriginalSection draft={draft} />
+              ) : (
+                <p className="py-8 text-center text-sm text-[#999]">
+                  원문 보기는 준비 중입니다.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -311,13 +366,10 @@ export function ApprovalDetailView({
 
       {showPdf && (
         <PdfPreviewSheet
-          docId="D-0421-01"
-          kind="vacation"
+          docId={draft.id}
+          kind={draft.doc_type as "vacation" | "proposal" | "resignation"}
           status={docStatus as "approved" | "rejected"}
-          stages={[
-            { title: "총무과장", name: "한기석", acted: true,  action: "approve" },
-            { title: "이사장",   name: "이강표", acted: docStatus === "approved", action: "approve" },
-          ]}
+          stages={pdfStages}
           onClose={() => setShowPdf(false)}
         />
       )}
