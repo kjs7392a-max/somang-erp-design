@@ -23,7 +23,7 @@ export default function LoginPage() {
     setLoading(true);
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithPassword({
-      email: `${userId.trim()}@somang.internal`,
+      email: `${userId.trim().toLowerCase()}@somang.internal`,
       password,
     });
     setLoading(false);
