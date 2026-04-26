@@ -28,10 +28,10 @@ export type ApprovalDetailViewProps = {
 };
 
 const ACTION_STYLE: Record<string, { textCls: string; label: string; numBg: string }> = {
-  pending: { textCls: "text-amber-500", label: "대기중", numBg: "bg-amber-500" },
-  approve: { textCls: "text-green-600", label: "승인",   numBg: "bg-green-500" },
-  reject:  { textCls: "text-red-500",   label: "반려",   numBg: "bg-red-500"   },
-  hold:    { textCls: "text-gray-400",  label: "보류",   numBg: "bg-gray-300"  },
+  pending:  { textCls: "text-amber-500", label: "대기중", numBg: "bg-amber-500" },
+  approved: { textCls: "text-green-600", label: "승인",   numBg: "bg-green-500" },
+  rejected: { textCls: "text-red-500",   label: "반려",   numBg: "bg-red-500"   },
+  held:     { textCls: "text-gray-400",  label: "보류",   numBg: "bg-gray-300"  },
 };
 
 function toKoreanDate(d: string): string {
@@ -145,8 +145,8 @@ export function ApprovalDetailView({
     title: s.approverPosition || s.approverDept,
     name:  s.approverName,
     acted: s.action !== "pending",
-    action: (s.action === "approve" ? "approve"
-           : s.action === "reject"  ? "reject"
+    action: (s.action === "approved" ? "approve"
+           : s.action === "rejected" ? "reject"
            : undefined) as "approve" | "reject" | undefined,
   }));
 
