@@ -91,6 +91,7 @@ export function LoginView({
                 </label>
                 <input
                   id="userId"
+                  name="userId"
                   type="text"
                   value={userId}
                   onChange={(e) => onUserIdChange(e.target.value)}
@@ -108,6 +109,7 @@ export function LoginView({
                 </label>
                 <input
                   id="password"
+                  name="password"
                   type="password"
                   value={password}
                   onChange={(e) => onPasswordChange(e.target.value)}

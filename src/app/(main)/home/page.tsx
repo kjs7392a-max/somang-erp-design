@@ -18,7 +18,7 @@ const NAV: Record<AppPage, string> = {
 
 export default function HomePage() {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const { role } = useUserRole();
 
   if (!profile) return null;
@@ -28,7 +28,7 @@ export default function HomePage() {
       editName={profile.full_name}
       role={role}
       onNavigate={(p) => router.push(NAV[p])}
-      onLogout={() => router.push(ROUTES.login)}
+      onLogout={signOut}
     />
   );
 }

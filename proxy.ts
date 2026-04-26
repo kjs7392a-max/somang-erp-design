@@ -3,7 +3,12 @@ import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isLoggedIn = request.cookies.get("somang_auth")?.value === "1";
+
+  // Optimistic check: any Supabase auth token cookie = authenticated.
+  // Actual session validation is handled by AuthContext + Supabase RLS.
+  const isLoggedIn = request.cookies
+    .getAll()
+    .some((c) => c.name.endsWith("-auth-token") && c.value.length > 0);
 
   if (!isLoggedIn && pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", request.url));

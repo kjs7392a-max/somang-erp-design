@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { LogOut, Home, ChevronLeft, Bell } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
+import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationsContext";
 import { NotifList } from "@/components/notifications/NotifList";
 
@@ -18,6 +19,7 @@ export default function AppHeader({ title, mode }: AppHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [notifOpen, setNotifOpen] = useState(false);
+  const { signOut } = useAuth();
   const { unreadCount } = useNotifications();
 
   const resolvedMode: HeaderMode =
@@ -30,7 +32,7 @@ export default function AppHeader({ title, mode }: AppHeaderProps) {
         ? "tab"
         : "detail");
 
-  const handleLogout = () => router.replace(ROUTES.login);
+  const handleLogout = () => signOut();
   const handleGoHome = () => router.push(ROUTES.home);
   const handleBack   = () => router.back();
 

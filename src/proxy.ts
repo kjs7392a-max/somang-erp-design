@@ -1,23 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const SUPABASE_PROJECT_REF = "bnlybtvdqyfxmbrcvcnv";
+export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (pathname.startsWith("/login")) {
-    return NextResponse.next();
-  }
-
-  const hasAuthCookie = request.cookies.getAll().some(
-    (c) => c.name.startsWith(`sb-${SUPABASE_PROJECT_REF}-auth-token`)
-  );
-
-  if (!hasAuthCookie) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  return NextResponse.next();
+  // DIAGNOSTIC: pass everything through, no auth check
+  return NextResponse.next({ request });
 }
 
 export const config = {
