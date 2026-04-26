@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { HomeView } from "@/components/views/HomeView";
+import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/lib/role";
 import { ROUTES } from "@/lib/routes";
 import type { AppPage } from "@/types/navigation";
@@ -17,11 +18,14 @@ const NAV: Record<AppPage, string> = {
 
 export default function HomePage() {
   const router = useRouter();
+  const { profile } = useAuth();
   const { role } = useUserRole();
+
+  if (!profile) return null;
 
   return (
     <HomeView
-      editName="윤민주"
+      editName={profile.name}
       role={role}
       onNavigate={(p) => router.push(NAV[p])}
       onLogout={() => router.push(ROUTES.login)}
