@@ -35,6 +35,10 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "app_old_backup",
+    "components",
+    "lib",
+    "types"
   ]
 }
