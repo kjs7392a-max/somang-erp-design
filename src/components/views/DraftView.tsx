@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Plane, Clock, Receipt, ShoppingCart, HeartPulse, FileText,
-  Plus, ChevronRight,
+  Plus,
 } from "lucide-react";
 import type { FormKind } from "@/lib/draft-forms";
 import { DraftComposeView } from "@/components/draft/DraftComposeView";
@@ -41,10 +41,6 @@ const QUICK_DRAFTS: QuickDraft[] = [
   { key: "medical",  formKind: null,          label: "의료 행위 보고", Icon: HeartPulse,   bg: "#f3f0ff", tint: "#7048e8" },
 ];
 
-const RECENT_DRAFTS = [
-  { id: 1, title: "연차 신청서", date: "2026.04.15", status: "임시저장" },
-  { id: 2, title: "경비 청구 - 3월", date: "2026.04.02", status: "임시저장" },
-];
 
 export function DraftView({ prefill, onSubmit, onAfterSubmit }: DraftViewProps) {
   const [composeKind, setComposeKind] = useState<FormKind | null>(
@@ -110,36 +106,10 @@ export function DraftView({ prefill, onSubmit, onAfterSubmit }: DraftViewProps) 
       </section>
 
       <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[1.0625rem] font-bold text-zinc-900">임시 저장</h2>
-          <span className="text-sm text-zinc-400">{RECENT_DRAFTS.length}</span>
-        </div>
-        {RECENT_DRAFTS.length === 0 ? (
-          <p className="rounded-2xl bg-white p-6 text-center text-sm text-zinc-400">
-            임시 저장된 기안이 없습니다
-          </p>
-        ) : (
-          <div className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
-            {RECENT_DRAFTS.map((d, i) => (
-              <button
-                key={d.id}
-                type="button"
-                className={`flex w-full items-center gap-3 px-5 py-4 text-left active:bg-zinc-50 ${
-                  i < RECENT_DRAFTS.length - 1 ? "border-b border-zinc-100" : ""
-                }`}
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-100">
-                  <FileText className="h-4 w-4 text-zinc-500" strokeWidth={2} />
-                </span>
-                <div className="flex-1">
-                  <p className="text-[0.9375rem] font-semibold text-zinc-900">{d.title}</p>
-                  <p className="mt-0.5 text-xs text-zinc-500">{d.date} · {d.status}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-zinc-400" strokeWidth={2} />
-              </button>
-            ))}
-          </div>
-        )}
+        <h2 className="mb-3 text-[1.0625rem] font-bold text-zinc-900">임시 저장</h2>
+        <p className="rounded-2xl bg-white p-6 text-center text-sm text-zinc-400">
+          임시 저장 기능은 준비 중입니다
+        </p>
       </section>
     </div>
   );

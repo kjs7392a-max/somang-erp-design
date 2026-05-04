@@ -5,13 +5,9 @@ import { ChevronDown } from "lucide-react";
 
 export type AccordionCardProps = {
   title: string;
-  /** 접힌 상태에 타이틀 오른쪽 표시될 요약 */
   summary?: React.ReactNode;
-  /** 아이콘 (왼쪽) */
   icon?: React.ReactNode;
-  /** 펼친 상태 내용 */
   children: React.ReactNode;
-  /** 초기 펼침 여부 */
   defaultOpen?: boolean;
 };
 
@@ -29,6 +25,7 @@ export function AccordionCard({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         className="flex w-full items-center gap-3 px-5 py-4 text-left active:bg-zinc-50"
       >
         {icon && (
@@ -43,15 +40,31 @@ export function AccordionCard({
           )}
         </div>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform ${
+          className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform duration-300 ${
             open ? "rotate-180" : ""
           }`}
           strokeWidth={2}
         />
       </button>
-      {open && (
-        <div className="border-t border-zinc-100 px-5 py-4">{children}</div>
-      )}
+
+      {/* Smooth expand/collapse with CSS grid-rows trick */}
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+          open
+            ? "grid-rows-[1fr] opacity-100"
+            : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div
+            className={`border-t border-zinc-100 px-5 py-4 transition-transform duration-300 ease-out ${
+              open ? "translate-y-0" : "-translate-y-1"
+            }`}
+          >
+            {children}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
