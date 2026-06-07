@@ -10,7 +10,10 @@ export function proxy(request: NextRequest) {
     .getAll()
     .some((c) => c.name.endsWith("-auth-token") && c.value.length > 0);
 
-  if (!isLoggedIn && pathname !== "/login") {
+  const isPublic =
+    pathname === "/login" || pathname.startsWith("/api/auth/");
+
+  if (!isLoggedIn && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   if (isLoggedIn && pathname === "/login") {
