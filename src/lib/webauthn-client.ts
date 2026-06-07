@@ -37,7 +37,7 @@ export async function registerBiometric(employeeId: string): Promise<void> {
   const optRes = await fetch("/api/auth/webauthn/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "options" }),
+    body: JSON.stringify({ action: "options", employeeId }),
     credentials: "include",
   });
   if (!optRes.ok) {

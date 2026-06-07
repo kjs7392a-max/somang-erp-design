@@ -46,14 +46,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const employeeIdFromOptions = (body.employeeId as string | undefined)?.trim() ?? null;
     const admin = createAdminClient();
     const { data: existing } = await admin
       .from("webauthn_credentials")
-      .select("credential_id")
+      .select("credential_id, employee_id")
       .eq("user_id", user.id);
 
-    // 이미 등록된 credential이 있으면 클라이언트에 알려 localStorage만 복원
+    // 이미 등록된 credential이 있으면 employee_id를 동기화하고 클라이언트에 알려 localStorage만 복원
     if (existing && existing.length > 0) {
+      if (employeeIdFromOptions) {
+        const needsUpdate = existing.some((c) => !c.employee_id);
+        if (needsUpdate) {
+          await admin
+            .from("webauthn_credentials")
+            .update({ employee_id: employeeIdFromOptions })
+            .eq("user_id", user.id)
+            .is("employee_id", null);
+        }
+      }
       return NextResponse.json({ alreadyRegistered: true });
     }
 

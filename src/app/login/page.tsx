@@ -49,7 +49,7 @@ export default function LoginPage() {
         return;
       }
       setSubmittedUserId(actualUserId);
-      if (isSupported && !hasRegistered) {
+      if (isSupported) {
         setShowPrompt(true);
       } else {
         window.location.href = ROUTES.home;
