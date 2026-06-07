@@ -7,11 +7,10 @@ import {
   clearRegistered,
   getRegisteredEmployeeId,
   isWebAuthnSupported,
-  registerBiometric,
 } from "@/lib/webauthn-client";
 import { ROUTES } from "@/lib/routes";
 
-export function useWebAuthn(employeeId?: string) {
+export function useWebAuthn() {
   const [isSupported, setIsSupported] = useState(false);
   const [hasRegistered, setHasRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,37 +19,14 @@ export function useWebAuthn(employeeId?: string) {
   useEffect(() => {
     setHasRegistered(!!getRegisteredEmployeeId());
     if (!isWebAuthnSupported()) return;
-    // 기기에 실제 생체인식 인증기가 있는지 확인
     PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
       .then((available) => setIsSupported(available))
-      .catch(() => setIsSupported(true)); // 에러 시 지원으로 간주
+      .catch(() => setIsSupported(true));
   }, []);
 
   /**
-   * 지문 등록. employeeId prop이 없으면 no-op.
-   * 사용자 취소(NotAllowedError)는 에러 없이 무시.
-   */
-  async function register() {
-    if (!employeeId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await registerBiometric(employeeId);
-      setHasRegistered(true);
-    } catch (e) {
-      const isDomCancel =
-        e instanceof DOMException && e.name === "NotAllowedError";
-      if (!isDomCancel) {
-        setError(e instanceof Error ? e.message : "등록 중 오류가 발생했습니다.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  /**
    * 지문 인증 후 Supabase 세션 설정 → 홈 이동.
-   * 사용자 취소는 에러 없이 무시. NO_CREDENTIAL이면 로컬 플래그 제거.
+   * 사용자 취소(NotAllowedError)는 에러 없이 무시.
    */
   async function authenticate() {
     setLoading(true);
@@ -69,7 +45,9 @@ export function useWebAuthn(employeeId?: string) {
       window.location.href = ROUTES.home;
     } catch (e) {
       if (e instanceof Error && e.message.startsWith("NO_CREDENTIAL")) {
-        setError(e.message);
+        clearRegistered();
+        setHasRegistered(false);
+        setError("지문 인증 정보가 없습니다. 비밀번호로 로그인 후 다시 등록해주세요.");
         return;
       }
       const isDomCancel =
@@ -82,5 +60,5 @@ export function useWebAuthn(employeeId?: string) {
     }
   }
 
-  return { isSupported, hasRegistered, loading, error, register, authenticate };
+  return { isSupported, hasRegistered, loading, error, authenticate };
 }
