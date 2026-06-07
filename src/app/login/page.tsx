@@ -23,11 +23,6 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn(userId);
 
-  // DEBUG: 임시 — 확인 후 제거
-  const debugInfo = typeof window !== "undefined"
-    ? `sup:${isSupported} reg:${hasRegistered} ls:${localStorage.getItem("wn_registered")}`
-    : "";
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.currentTarget as HTMLFormElement;
@@ -66,8 +61,13 @@ export default function LoginPage() {
 
   const handleRegister = async () => {
     await register();
-    setShowPrompt(false);
-    window.location.href = ROUTES.home;
+    // register()가 성공하면 hasRegistered=true가 됨 — 실패하면 bioError가 설정되고 머무름
+    // hasRegistered 상태 변화는 다음 렌더 후 반영되므로 getRegisteredEmployeeId()로 직접 확인
+    const { getRegisteredEmployeeId } = await import("@/lib/webauthn-client");
+    if (getRegisteredEmployeeId()) {
+      setShowPrompt(false);
+      window.location.href = ROUTES.home;
+    }
   };
 
   const handleSkip = () => {
@@ -77,11 +77,6 @@ export default function LoginPage() {
 
   return (
     <>
-      {debugInfo && (
-        <div style={{position:"fixed",top:0,left:0,right:0,background:"red",color:"white",fontSize:12,padding:"4px 8px",zIndex:9999,textAlign:"center"}}>
-          {debugInfo}
-        </div>
-      )}
       <LoginView
         userId={userId}
         password={password}

@@ -133,10 +133,10 @@ export async function POST(request: NextRequest) {
         requireUserVerification: true,
       });
     } catch (e) {
-      console.error("[webauthn/register] verifyRegistrationResponse failed:", e);
-      console.error("[webauthn/register] expectedOrigin:", origin, "rpId:", rpId);
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[webauthn/register] verifyRegistrationResponse failed:", msg, "| origin:", origin, "| rpId:", rpId);
       return NextResponse.json(
-        { error: "Verification failed" },
+        { error: `Verification failed: ${msg}` },
         { status: 400 }
       );
     }
