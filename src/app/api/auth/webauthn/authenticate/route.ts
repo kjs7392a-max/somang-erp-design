@@ -28,24 +28,36 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient();
 
-    // 이메일로 auth 유저 조회 (profiles 테이블 의존 없음)
-    const email = `${employeeId.toLowerCase()}@somang.internal`;
-    const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
-    const authUser = usersPage?.users?.find((u) => u.email === email);
-    if (!authUser) {
-      return NextResponse.json({ error: `User not found: ${email}` }, { status: 404 });
+    // profiles.id = auth.users.id (Supabase 표준 구조)
+    // ilike로 대소문자 차이 방지. 실패 시 이메일 기반 fallback.
+    let userId: string | null = null;
+
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("id")
+      .ilike("employee_id", employeeId)
+      .single();
+
+    if (profile) {
+      userId = profile.id;
+    } else {
+      const email = `${employeeId.toLowerCase()}@somang.internal`;
+      const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      const authUser = usersPage?.users?.find((u) => u.email === email);
+      if (authUser) userId = authUser.id;
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const { data: creds } = await admin
       .from("webauthn_credentials")
       .select("credential_id")
-      .eq("user_id", authUser.id);
+      .eq("user_id", userId);
 
     if (!creds || creds.length === 0) {
-      return NextResponse.json(
-        { error: "No registered fingerprint. Please log in with password first." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "No registered fingerprint" }, { status: 404 });
     }
 
     const challenge = generateChallenge();
