@@ -28,12 +28,24 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient();
 
-    // 이메일 → auth.users.id 직접 조회 (인덱스 단건 쿼리, listUsers 불필요)
     const email = `${employeeId.toLowerCase()}@somang.internal`;
-    const { data: userIdRow } = await admin.rpc("get_user_id_by_email", {
-      p_email: email,
-    });
-    const userId: string | null = userIdRow ?? null;
+    let userId: string | null = null;
+
+    // 빠른 경로: RPC 함수 (Supabase에 get_user_id_by_email 함수가 있으면 사용)
+    const { data: rpcResult, error: rpcError } = await admin.rpc(
+      "get_user_id_by_email",
+      { p_email: email }
+    );
+    if (!rpcError && rpcResult) {
+      userId = rpcResult as string;
+    } else {
+      // fallback: 전체 목록에서 이메일로 검색
+      const { data: usersPage } = await admin.auth.admin.listUsers({
+        perPage: 1000,
+      });
+      const authUser = usersPage?.users?.find((u) => u.email === email);
+      if (authUser) userId = authUser.id;
+    }
 
     if (!userId) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
