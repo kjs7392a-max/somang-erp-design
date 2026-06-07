@@ -41,7 +41,7 @@ export function useWebAuthn(employeeId?: string) {
       const isDomCancel =
         e instanceof DOMException && e.name === "NotAllowedError";
       if (!isDomCancel) {
-        setError("등록 중 오류가 발생했습니다.");
+        setError(e instanceof Error ? e.message : "등록 중 오류가 발생했습니다.");
       }
     } finally {
       setLoading(false);
