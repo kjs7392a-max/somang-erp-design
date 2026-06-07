@@ -28,14 +28,22 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient();
 
+    // 이메일로 auth 유저 조회 (profiles 테이블 의존 없음)
+    const email = `${employeeId.toLowerCase()}@somang.internal`;
+    const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    const authUser = usersPage?.users?.find((u) => u.email === email);
+    if (!authUser) {
+      return NextResponse.json({ error: `User not found: ${email}` }, { status: 404 });
+    }
+
     const { data: creds } = await admin
       .from("webauthn_credentials")
       .select("credential_id")
-      .eq("employee_id", employeeId);
+      .eq("user_id", authUser.id);
 
     if (!creds || creds.length === 0) {
       return NextResponse.json(
-        { error: "No registered fingerprint found. Please register again." },
+        { error: "No registered fingerprint. Please log in with password first." },
         { status: 404 }
       );
     }
