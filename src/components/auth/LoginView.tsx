@@ -12,6 +12,9 @@ export type LoginViewProps = {
   onSubmit: (e: React.FormEvent) => void;
   error?: string | null;
   loading?: boolean;
+  showBiometric?: boolean;
+  biometricLoading?: boolean;
+  onBiometricLogin?: () => void;
 };
 
 export function LoginView({
@@ -22,6 +25,9 @@ export function LoginView({
   onSubmit,
   error = null,
   loading = false,
+  showBiometric = false,
+  biometricLoading = false,
+  onBiometricLogin,
 }: LoginViewProps) {
   const [logoOk, setLogoOk] = useState(true);
   const [welcome, setWelcome] = useState<string>("");
@@ -143,6 +149,25 @@ export function LoginView({
               >
                 {loading ? "로그인 중..." : "로그인"}
               </button>
+
+              {showBiometric && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-[#c5d2ec]" />
+                    <span className="text-xs font-medium text-[#9bafd5]">또는</span>
+                    <div className="h-px flex-1 bg-[#c5d2ec]" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onBiometricLogin}
+                    disabled={biometricLoading}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-[#3b82f6] bg-white py-4 text-[1.0625rem] font-semibold text-[#3b82f6] transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
+                  >
+                    <span className="text-xl leading-none">👆</span>
+                    {biometricLoading ? "인증 중..." : "지문으로 로그인"}
+                  </button>
+                </>
+              )}
 
               <div className="flex items-center justify-center gap-8 pt-2">
                 <a

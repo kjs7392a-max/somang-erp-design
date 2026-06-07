@@ -1,17 +1,26 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LoginView } from "@/components/auth/LoginView";
+import { WebAuthnPrompt } from "@/components/auth/WebAuthnPrompt";
 import { createClient } from "@/lib/supabase";
 import { ROUTES } from "@/lib/routes";
+import { useWebAuthn } from "@/hooks/useWebAuthn";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  const {
+    isSupported,
+    hasRegistered,
+    loading: bioLoading,
+    register,
+    authenticate,
+  } = useWebAuthn(userId);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,22 +45,49 @@ export default function LoginPage() {
         setError("사번 또는 비밀번호가 올바르지 않습니다.");
         return;
       }
-      window.location.href = ROUTES.home;
+      if (isSupported && !hasRegistered) {
+        setShowPrompt(true);
+      } else {
+        window.location.href = ROUTES.home;
+      }
     } catch {
       setLoading(false);
       setError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   };
 
+  const handleRegister = async () => {
+    await register();
+    setShowPrompt(false);
+    window.location.href = ROUTES.home;
+  };
+
+  const handleSkip = () => {
+    setShowPrompt(false);
+    window.location.href = ROUTES.home;
+  };
+
   return (
-    <LoginView
-      userId={userId}
-      password={password}
-      onUserIdChange={setUserId}
-      onPasswordChange={setPassword}
-      onSubmit={handleLogin}
-      error={error}
-      loading={loading}
-    />
+    <>
+      <LoginView
+        userId={userId}
+        password={password}
+        onUserIdChange={setUserId}
+        onPasswordChange={setPassword}
+        onSubmit={handleLogin}
+        error={error}
+        loading={loading}
+        showBiometric={isSupported && hasRegistered}
+        biometricLoading={bioLoading}
+        onBiometricLogin={authenticate}
+      />
+      {showPrompt && (
+        <WebAuthnPrompt
+          onRegister={handleRegister}
+          onSkip={handleSkip}
+          loading={bioLoading}
+        />
+      )}
+    </>
   );
 }
