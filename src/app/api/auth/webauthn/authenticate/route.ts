@@ -28,24 +28,12 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient();
 
-    // profiles.id = auth.users.id (Supabase 표준 구조)
-    // ilike로 대소문자 차이 방지. 실패 시 이메일 기반 fallback.
-    let userId: string | null = null;
-
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("id")
-      .ilike("employee_id", employeeId)
-      .single();
-
-    if (profile) {
-      userId = profile.id;
-    } else {
-      const email = `${employeeId.toLowerCase()}@somang.internal`;
-      const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
-      const authUser = usersPage?.users?.find((u) => u.email === email);
-      if (authUser) userId = authUser.id;
-    }
+    // 이메일 → auth.users.id 직접 조회 (인덱스 단건 쿼리, listUsers 불필요)
+    const email = `${employeeId.toLowerCase()}@somang.internal`;
+    const { data: userIdRow } = await admin.rpc("get_user_id_by_email", {
+      p_email: email,
+    });
+    const userId: string | null = userIdRow ?? null;
 
     if (!userId) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
