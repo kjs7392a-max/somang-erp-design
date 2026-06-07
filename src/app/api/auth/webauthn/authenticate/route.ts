@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const challenge = generateChallenge();
     const options = await generateAuthenticationOptions({
       rpID: getRpId(),
-      challenge,
+      challenge: Buffer.from(challenge, "base64url"),
       allowCredentials: creds.map((c) => ({
         id: c.credential_id,
         type: "public-key" as const,

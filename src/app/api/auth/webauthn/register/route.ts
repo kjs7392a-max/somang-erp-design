@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       rpName: "소망의료재단",
       rpID: getRpId(),
       userName: user.email ?? user.id,
-      challenge,
+      challenge: Buffer.from(challenge, "base64url"),
       excludeCredentials: (existing ?? []).map((c) => ({
         id: c.credential_id,
         type: "public-key" as const,
