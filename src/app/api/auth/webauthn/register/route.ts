@@ -121,16 +121,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const origin = getAppOrigin();
+    const rpId = getRpId();
     let verification;
     try {
       verification = await verifyRegistrationResponse({
         response: body.credential,
         expectedChallenge: challenge,
-        expectedOrigin: getAppOrigin(),
-        expectedRPID: getRpId(),
+        expectedOrigin: origin,
+        expectedRPID: rpId,
         requireUserVerification: true,
       });
-    } catch {
+    } catch (e) {
+      console.error("[webauthn/register] verifyRegistrationResponse failed:", e);
+      console.error("[webauthn/register] expectedOrigin:", origin, "rpId:", rpId);
       return NextResponse.json(
         { error: "Verification failed" },
         { status: 400 }

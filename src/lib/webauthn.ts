@@ -5,7 +5,16 @@ export const REG_CHALLENGE_COOKIE = "wn_reg_challenge";
 export const AUTH_CHALLENGE_COOKIE = "wn_auth_challenge";
 
 export function getAppOrigin(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const configured = process.env.NEXT_PUBLIC_APP_URL;
+  // If explicitly set to a non-localhost URL, use it
+  if (configured && !/localhost|127\.0\.0\.1/.test(configured)) {
+    return configured;
+  }
+  // On Vercel, use the canonical production domain regardless of NEXT_PUBLIC_APP_URL
+  if (process.env.VERCEL_ENV || process.env.VERCEL_URL) {
+    return "https://somang-erp.vercel.app";
+  }
+  return "http://localhost:3000";
 }
 
 export function getRpId(): string {

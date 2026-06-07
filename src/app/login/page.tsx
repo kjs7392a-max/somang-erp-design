@@ -18,9 +18,15 @@ export default function LoginPage() {
     isSupported,
     hasRegistered,
     loading: bioLoading,
+    error: bioError,
     register,
     authenticate,
   } = useWebAuthn(userId);
+
+  // DEBUG: 임시 — 확인 후 제거
+  const debugInfo = typeof window !== "undefined"
+    ? `sup:${isSupported} reg:${hasRegistered} ls:${localStorage.getItem("wn_registered")}`
+    : "";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +34,8 @@ export default function LoginPage() {
     const fd = new FormData(form);
     const actualUserId = (fd.get("userId") as string | null) || userId;
     const actualPassword = (fd.get("password") as string | null) || password;
+    // Sync state so useWebAuthn(userId) gets the correct employeeId even on mobile autofill
+    if (actualUserId !== userId) setUserId(actualUserId);
     if (!actualUserId.trim() || !actualPassword) {
       setError("사번과 비밀번호를 입력하세요.");
       return;
@@ -69,6 +77,11 @@ export default function LoginPage() {
 
   return (
     <>
+      {debugInfo && (
+        <div style={{position:"fixed",top:0,left:0,right:0,background:"red",color:"white",fontSize:12,padding:"4px 8px",zIndex:9999,textAlign:"center"}}>
+          {debugInfo}
+        </div>
+      )}
       <LoginView
         userId={userId}
         password={password}
@@ -86,6 +99,7 @@ export default function LoginPage() {
           onRegister={handleRegister}
           onSkip={handleSkip}
           loading={bioLoading}
+          error={bioError}
         />
       )}
     </>

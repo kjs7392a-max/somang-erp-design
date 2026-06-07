@@ -4,12 +4,14 @@ export type WebAuthnPromptProps = {
   onRegister: () => void;
   onSkip: () => void;
   loading?: boolean;
+  error?: string | null;
 };
 
 export function WebAuthnPrompt({
   onRegister,
   onSkip,
   loading = false,
+  error = null,
 }: WebAuthnPromptProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
@@ -24,6 +26,11 @@ export function WebAuthnPrompt({
           지문(또는 Face ID)으로 다음부터 비밀번호 없이 바로 로그인할 수
           있습니다.
         </p>
+        {error && (
+          <p className="mb-4 rounded-xl bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600">
+            {error}
+          </p>
+        )}
         <div className="flex gap-3">
           <button
             type="button"
