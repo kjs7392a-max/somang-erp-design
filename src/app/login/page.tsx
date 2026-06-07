@@ -13,6 +13,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  // submittedUserId: 로그인 성공 시 확정된 사번 — autofill 문제 없이 WebAuthn에 전달
+  const [submittedUserId, setSubmittedUserId] = useState("");
 
   const {
     isSupported,
@@ -21,17 +23,15 @@ export default function LoginPage() {
     error: bioError,
     register,
     authenticate,
-  } = useWebAuthn(userId);
+  } = useWebAuthn(submittedUserId);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.currentTarget as HTMLFormElement;
     const fd = new FormData(form);
-    const actualUserId = (fd.get("userId") as string | null) || userId;
+    const actualUserId = ((fd.get("userId") as string | null) || userId).trim();
     const actualPassword = (fd.get("password") as string | null) || password;
-    // Sync state so useWebAuthn(userId) gets the correct employeeId even on mobile autofill
-    if (actualUserId !== userId) setUserId(actualUserId);
-    if (!actualUserId.trim() || !actualPassword) {
+    if (!actualUserId || !actualPassword) {
       setError("사번과 비밀번호를 입력하세요.");
       return;
     }
@@ -40,7 +40,7 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: `${actualUserId.trim().toLowerCase()}@somang.internal`,
+        email: `${actualUserId.toLowerCase()}@somang.internal`,
         password: actualPassword,
       });
       setLoading(false);
@@ -48,6 +48,7 @@ export default function LoginPage() {
         setError("사번 또는 비밀번호가 올바르지 않습니다.");
         return;
       }
+      setSubmittedUserId(actualUserId);
       if (isSupported && !hasRegistered) {
         setShowPrompt(true);
       } else {
@@ -61,10 +62,7 @@ export default function LoginPage() {
 
   const handleRegister = async () => {
     await register();
-    // register()가 성공하면 hasRegistered=true가 됨 — 실패하면 bioError가 설정되고 머무름
-    // hasRegistered 상태 변화는 다음 렌더 후 반영되므로 getRegisteredEmployeeId()로 직접 확인
-    const { getRegisteredEmployeeId } = await import("@/lib/webauthn-client");
-    if (getRegisteredEmployeeId()) {
+    if (localStorage.getItem("wn_registered")) {
       setShowPrompt(false);
       window.location.href = ROUTES.home;
     }

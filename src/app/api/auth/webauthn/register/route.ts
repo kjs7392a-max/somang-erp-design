@@ -52,6 +52,11 @@ export async function POST(request: NextRequest) {
       .select("credential_id")
       .eq("user_id", user.id);
 
+    // 이미 등록된 credential이 있으면 클라이언트에 알려 localStorage만 복원
+    if (existing && existing.length > 0) {
+      return NextResponse.json({ alreadyRegistered: true });
+    }
+
     const challenge = generateChallenge();
     const options = await generateRegistrationOptions({
       rpName: "소망의료재단",

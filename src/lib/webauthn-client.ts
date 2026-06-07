@@ -46,12 +46,18 @@ export async function registerBiometric(employeeId: string): Promise<void> {
   }
   const options = await optRes.json();
 
+  // 서버에 이미 credential이 있음 → localStorage만 복원하고 완료
+  if ((options as { alreadyRegistered?: boolean }).alreadyRegistered) {
+    setRegistered(employeeId);
+    return;
+  }
+
   // 브라우저 지문인식 (사용자 취소 시 NotAllowedError throw)
   let credential;
   try {
     credential = await startRegistration({ optionsJSON: options });
   } catch (e) {
-    // 이미 같은 패스키가 기기에 있음 → localStorage만 복원하고 완료 처리
+    // 기기에 동일 패스키 존재 (excludeCredentials) → localStorage만 복원
     if (e instanceof DOMException && e.name === "InvalidStateError") {
       setRegistered(employeeId);
       return;
