@@ -18,8 +18,12 @@ export function useWebAuthn(employeeId?: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsSupported(isWebAuthnSupported());
     setHasRegistered(!!getRegisteredEmployeeId());
+    if (!isWebAuthnSupported()) return;
+    // 기기에 실제 생체인식 인증기가 있는지 확인
+    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+      .then((available) => setIsSupported(available))
+      .catch(() => setIsSupported(true)); // 에러 시 지원으로 간주
   }, []);
 
   /**
