@@ -86,6 +86,7 @@ export default function LoginPage() {
         showBiometric={isSupported && hasRegistered}
         biometricLoading={bioLoading}
         onBiometricLogin={authenticate}
+        biometricError={bioError}
       />
       {showPrompt && (
         <WebAuthnPrompt

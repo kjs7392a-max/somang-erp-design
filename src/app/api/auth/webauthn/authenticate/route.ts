@@ -28,24 +28,14 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient();
 
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("id")
-      .eq("employee_id", employeeId)
-      .single();
-
-    if (!profile) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
     const { data: creds } = await admin
       .from("webauthn_credentials")
       .select("credential_id")
-      .eq("user_id", profile.id);
+      .eq("employee_id", employeeId);
 
     if (!creds || creds.length === 0) {
       return NextResponse.json(
-        { error: "No credentials registered" },
+        { error: "No registered fingerprint found. Please register again." },
         { status: 404 }
       );
     }

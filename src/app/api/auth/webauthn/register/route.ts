@@ -154,11 +154,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { credential } = verification.registrationInfo;
+    const employeeIdFromBody = (body.employeeId as string | undefined)?.trim() ?? null;
     const admin = createAdminClient();
     const { error: insertError } = await admin
       .from("webauthn_credentials")
       .insert({
         user_id: user.id,
+        employee_id: employeeIdFromBody,
         credential_id: credential.id,
         public_key: Buffer.from(credential.publicKey).toString("base64url"),
         counter: credential.counter,

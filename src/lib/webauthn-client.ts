@@ -68,7 +68,7 @@ export async function registerBiometric(employeeId: string): Promise<void> {
   const verRes = await fetch("/api/auth/webauthn/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "verify", credential }),
+    body: JSON.stringify({ action: "verify", credential, employeeId }),
     credentials: "include",
   });
   if (!verRes.ok) {
@@ -98,9 +98,10 @@ export async function authenticateBiometric(): Promise<{ token_hash: string }> {
     credentials: "include",
   });
   if (!optRes.ok) {
-    if (optRes.status === 404) throw new Error("NO_CREDENTIAL");
     const err = await optRes.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error ?? "Failed to get authentication options");
+    const msg = (err as { error?: string }).error ?? "Failed to get authentication options";
+    if (optRes.status === 404) throw new Error(`NO_CREDENTIAL: ${msg}`);
+    throw new Error(msg);
   }
   const options = await optRes.json();
 

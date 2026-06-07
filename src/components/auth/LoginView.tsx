@@ -15,6 +15,7 @@ export type LoginViewProps = {
   showBiometric?: boolean;
   biometricLoading?: boolean;
   onBiometricLogin?: () => void;
+  biometricError?: string | null;
 };
 
 export function LoginView({
@@ -28,6 +29,7 @@ export function LoginView({
   showBiometric = false,
   biometricLoading = false,
   onBiometricLogin,
+  biometricError = null,
 }: LoginViewProps) {
   const [logoOk, setLogoOk] = useState(true);
   const [welcome, setWelcome] = useState<string>("");
@@ -139,6 +141,12 @@ export function LoginView({
               {error && (
                 <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600">
                   {error}
+                </p>
+              )}
+
+              {biometricError && (
+                <p className="rounded-xl bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700">
+                  지문 인증 오류: {biometricError.replace(/^NO_CREDENTIAL:\s*/, "")}
                 </p>
               )}
 

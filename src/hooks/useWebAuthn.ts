@@ -68,9 +68,8 @@ export function useWebAuthn(employeeId?: string) {
       }
       window.location.href = ROUTES.home;
     } catch (e) {
-      if (e instanceof Error && e.message === "NO_CREDENTIAL") {
-        clearRegistered();
-        setHasRegistered(false);
+      if (e instanceof Error && e.message.startsWith("NO_CREDENTIAL")) {
+        setError(e.message);
         return;
       }
       const isDomCancel =
