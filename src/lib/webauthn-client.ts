@@ -6,6 +6,9 @@ import {
 const LS_KEY = "wn_registered";   // employeeId
 const LS_CRED_KEY = "wn_cred_id"; // credential_id (빠른 인증 경로용)
 
+// 잠금화면 렌더와 동시에 미리 시작한 options fetch 결과를 여기에 보관
+let _prefetchedOptions: Promise<Response> | null = null;
+
 /** WebAuthn Platform Authenticator 지원 여부 확인 */
 export function isWebAuthnSupported(): boolean {
   return (
@@ -40,11 +43,27 @@ export function clearRegistered(): void {
 }
 
 /**
- * 지문 등록 전체 흐름:
- * 1) POST /api/auth/webauthn/register { action: "options" }
- * 2) startRegistration (브라우저 지문인식)
- * 3) POST /api/auth/webauthn/register { action: "verify", credential }
+ * 잠금화면 렌더 시점에 호출 — options fetch를 미리 시작해서
+ * authenticate() 호출 시 대기 시간을 제거한다.
  */
+export function prefetchAuthOptions(): void {
+  if (typeof window === "undefined") return;
+  const credentialId = getRegisteredCredentialId();
+  const employeeId = getRegisteredEmployeeId();
+  if (!credentialId && !employeeId) return;
+
+  _prefetchedOptions = fetch("/api/auth/webauthn/authenticate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      credentialId
+        ? { action: "options", credentialId }
+        : { action: "options", employeeId }
+    ),
+    credentials: "include",
+  });
+}
+
 /**
  * force=true: 기존 credential 삭제 후 재등록 (클라우드 패스키 → 기기 로컬 마이그레이션)
  */
@@ -61,7 +80,6 @@ export async function registerBiometric(employeeId: string, force = false): Prom
   }
   const options = await optRes.json();
 
-  // 서버에 이미 credential이 있음 → localStorage만 복원하고 완료
   if ((options as { alreadyRegistered?: boolean }).alreadyRegistered) {
     setRegistered(employeeId);
     const credId = (options as { credentialId?: string }).credentialId;
@@ -69,12 +87,10 @@ export async function registerBiometric(employeeId: string, force = false): Prom
     return;
   }
 
-  // 브라우저 지문인식 (사용자 취소 시 NotAllowedError throw)
   let credential;
   try {
     credential = await startRegistration({ optionsJSON: options });
   } catch (e) {
-    // 기기에 동일 패스키 존재 (excludeCredentials) → localStorage만 복원
     if (e instanceof DOMException && e.name === "InvalidStateError") {
       setRegistered(employeeId);
       return;
@@ -93,36 +109,36 @@ export async function registerBiometric(employeeId: string, force = false): Prom
     throw new Error((err as { error?: string }).error ?? "Registration verification failed");
   }
 
-  // credential.id는 startRegistration 결과에서 바로 사용 (서버 응답 불필요)
   setRegistered(employeeId);
   setRegisteredCredentialId(credential.id);
 }
 
 /**
- * 지문 인증 전체 흐름:
- * 1) POST /api/auth/webauthn/authenticate { action: "options", credentialId } (빠른 경로)
- *    또는 { action: "options", employeeId } (구버전 fallback)
- * 2) startAuthentication (브라우저 지문인식)
- * 3) POST /api/auth/webauthn/authenticate { action: "verify", credential }
- * @returns Supabase magic link token_hash (클라이언트에서 verifyOtp로 세션 생성)
- * @throws "NO_CREDENTIAL" — 서버에 credential 없음 (재등록 필요)
+ * 지문 인증:
+ * 1) pre-fetch된 options 사용 (없으면 즉시 fetch)
+ * 2) startAuthentication → 브라우저 지문인식
+ * 3) verify → token_hash 반환
  */
 export async function authenticateBiometric(): Promise<{ token_hash: string }> {
   const credentialId = getRegisteredCredentialId();
   const employeeId = getRegisteredEmployeeId();
   if (!credentialId && !employeeId) throw new Error("No registered credential");
 
-  // credentialId 있으면 빠른 경로, 없으면 구버전 employeeId 경로
-  const optBody = credentialId
-    ? { action: "options", credentialId }
-    : { action: "options", employeeId };
+  // pre-fetch 결과 소비 (없으면 지금 fetch)
+  const prefetched = _prefetchedOptions;
+  _prefetchedOptions = null;
 
-  const optRes = await fetch("/api/auth/webauthn/authenticate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(optBody),
-    credentials: "include",
-  });
+  let optRes: Response;
+  if (prefetched) {
+    optRes = await prefetched;
+    // pre-fetch가 실패한 경우 재시도
+    if (!optRes.ok && optRes.status !== 404) {
+      optRes = await fetchAuthOptions(credentialId, employeeId);
+    }
+  } else {
+    optRes = await fetchAuthOptions(credentialId, employeeId);
+  }
+
   if (!optRes.ok) {
     const err = await optRes.json().catch(() => ({}));
     const msg = (err as { error?: string }).error ?? "Failed to get authentication options";
@@ -144,4 +160,17 @@ export async function authenticateBiometric(): Promise<{ token_hash: string }> {
     throw new Error((err as { error?: string }).error ?? "Authentication verification failed");
   }
   return verRes.json();
+}
+
+function fetchAuthOptions(credentialId: string | null, employeeId: string | null): Promise<Response> {
+  return fetch("/api/auth/webauthn/authenticate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      credentialId
+        ? { action: "options", credentialId }
+        : { action: "options", employeeId }
+    ),
+    credentials: "include",
+  });
 }

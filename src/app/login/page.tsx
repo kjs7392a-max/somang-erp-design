@@ -6,7 +6,7 @@ import { BiometricLockScreen } from "@/components/auth/BiometricLockScreen";
 import { createClient } from "@/lib/supabase";
 import { ROUTES } from "@/lib/routes";
 import { useWebAuthn } from "@/hooks/useWebAuthn";
-import { registerBiometric, getRegisteredEmployeeId } from "@/lib/webauthn-client";
+import { registerBiometric, getRegisteredEmployeeId, prefetchAuthOptions } from "@/lib/webauthn-client";
 
 export default function LoginPage() {
   const [userId, setUserId] = useState("");
@@ -15,8 +15,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
 
-  // localStorage 동기 체크 — 첫 렌더 전에 확정되므로 화면 깜빡임 없음
-  const [initiallyRegistered] = useState(() => !!getRegisteredEmployeeId());
+  // localStorage 동기 체크 & options fetch 즉시 시작 — 첫 렌더 시점에 실행
+  const [initiallyRegistered] = useState(() => {
+    const registered = !!getRegisteredEmployeeId();
+    if (registered) prefetchAuthOptions(); // 잠금화면 렌더와 동시에 서버 요청 시작
+    return registered;
+  });
 
   const {
     isSupported,
