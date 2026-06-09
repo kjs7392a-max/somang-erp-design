@@ -45,11 +45,14 @@ export function clearRegistered(): void {
  * 2) startRegistration (브라우저 지문인식)
  * 3) POST /api/auth/webauthn/register { action: "verify", credential }
  */
-export async function registerBiometric(employeeId: string): Promise<void> {
+/**
+ * force=true: 기존 credential 삭제 후 재등록 (클라우드 패스키 → 기기 로컬 마이그레이션)
+ */
+export async function registerBiometric(employeeId: string, force = false): Promise<void> {
   const optRes = await fetch("/api/auth/webauthn/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "options", employeeId }),
+    body: JSON.stringify({ action: "options", employeeId, force }),
     credentials: "include",
   });
   if (!optRes.ok) {

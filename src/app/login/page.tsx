@@ -56,10 +56,10 @@ export default function LoginPage() {
         setError("사번 또는 비밀번호가 올바르지 않습니다.");
         return;
       }
-      // 지문 미등록 기기면 바로 지문 스캔 팝업
-      if (isSupported && !hasRegistered) {
+      // ID/PW 로그인 시 항상 재등록 (기존 클라우드 패스키 → 기기 로컬 자동 마이그레이션)
+      if (isSupported) {
         try {
-          await registerBiometric(actualUserId);
+          await registerBiometric(actualUserId, true);
         } catch {
           // 취소 또는 실패 → 홈으로
         }

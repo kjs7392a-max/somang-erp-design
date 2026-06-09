@@ -52,9 +52,13 @@ export async function POST(request: NextRequest) {
       .select("credential_id")
       .eq("user_id", user.id);
 
-    // 이미 등록된 credential이 있으면 클라이언트에 알려 localStorage만 복원
+    // force=true면 기존 credential 삭제 후 재등록 (클라우드 패스키 → 기기 로컬 마이그레이션)
+    const force = body.force === true;
     if (existing && existing.length > 0) {
-      return NextResponse.json({ alreadyRegistered: true, credentialId: existing[0].credential_id });
+      if (!force) {
+        return NextResponse.json({ alreadyRegistered: true, credentialId: existing[0].credential_id });
+      }
+      await admin.from("webauthn_credentials").delete().eq("user_id", user.id);
     }
 
     const challenge = generateChallenge();
