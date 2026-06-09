@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { LoginView } from "@/components/auth/LoginView";
+import { BiometricLockScreen } from "@/components/auth/BiometricLockScreen";
 import { createClient } from "@/lib/supabase";
 import { ROUTES } from "@/lib/routes";
 import { useWebAuthn } from "@/hooks/useWebAuthn";
-import { registerBiometric } from "@/lib/webauthn-client";
+import { registerBiometric, getRegisteredEmployeeId } from "@/lib/webauthn-client";
 
 export default function LoginPage() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const autoTriggered = useRef(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+
+  // localStorage 동기 체크 — 첫 렌더 전에 확정되므로 화면 깜빡임 없음
+  const [initiallyRegistered] = useState(() => !!getRegisteredEmployeeId());
 
   const {
     isSupported,
@@ -22,13 +26,12 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn();
 
-  // 지문 등록된 기기면 앱 시작 시 즉시 지문 인증 팝업
+  // 지문 등록 기기: isSupported 대기 없이 마운트 즉시 인증 시작
   useEffect(() => {
-    if (!autoTriggered.current && isSupported && hasRegistered) {
-      autoTriggered.current = true;
+    if (initiallyRegistered) {
       authenticate();
     }
-  }, [isSupported, hasRegistered]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +56,12 @@ export default function LoginPage() {
         setError("사번 또는 비밀번호가 올바르지 않습니다.");
         return;
       }
-      // 지문 미등록 기기면 바로 지문 스캔 팝업 (모달 없음)
+      // 지문 미등록 기기면 바로 지문 스캔 팝업
       if (isSupported && !hasRegistered) {
         try {
           await registerBiometric(actualUserId);
         } catch {
-          // 취소 또는 실패 → 그냥 홈으로 (다음 로그인 때 다시 시도)
+          // 취소 또는 실패 → 홈으로
         }
       }
       window.location.href = ROUTES.home;
@@ -67,6 +70,19 @@ export default function LoginPage() {
       setError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   };
+
+  // 지문 등록된 기기 & 폼 미표시 → 잠금화면
+  if (initiallyRegistered && !showLoginForm) {
+    return (
+      <BiometricLockScreen
+        loading={bioLoading}
+        error={bioError}
+        canRetry={hasRegistered}
+        onRetry={authenticate}
+        onFallback={() => setShowLoginForm(true)}
+      />
+    );
+  }
 
   return (
     <LoginView
