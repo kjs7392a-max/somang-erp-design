@@ -32,13 +32,11 @@ export function useWebAuthn() {
     setLoading(true);
     setError(null);
     try {
-      const { token_hash } = await authenticateBiometric();
+      const { access_token, refresh_token } = await authenticateBiometric();
       const supabase = createClient();
-      const { error: otpError } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: "magiclink",
-      });
-      if (otpError) {
+      // setSession은 유효한 토큰이면 로컬 처리만 함 (네트워크 왕복 없음)
+      const { error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
+      if (sessionError) {
         setError("지문 인증에 실패했습니다.");
         return;
       }

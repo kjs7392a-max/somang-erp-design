@@ -119,7 +119,7 @@ export async function registerBiometric(employeeId: string, force = false): Prom
  * 2) startAuthentication → 브라우저 지문인식
  * 3) verify → token_hash 반환
  */
-export async function authenticateBiometric(): Promise<{ token_hash: string }> {
+export async function authenticateBiometric(): Promise<{ access_token: string; refresh_token: string; expires_at: number }> {
   const credentialId = getRegisteredCredentialId();
   const employeeId = getRegisteredEmployeeId();
   if (!credentialId && !employeeId) throw new Error("No registered credential");

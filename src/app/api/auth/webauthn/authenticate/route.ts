@@ -3,6 +3,7 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
+import { createClient as createAnonClient } from "@supabase/supabase-js";
 import {
   AUTH_CHALLENGE_COOKIE,
   createAdminClient,
@@ -194,8 +195,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const res = NextResponse.json({
+    // 서버에서 직접 verifyOtp → 세션 토큰 반환 (클라이언트 왕복 1회 제거)
+    const anonClient = createAnonClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+    const { data: otpData, error: otpError } = await anonClient.auth.verifyOtp({
       token_hash: linkData.properties.hashed_token,
+      type: "magiclink",
+    });
+    if (otpError || !otpData.session) {
+      return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
+    }
+
+    const res = NextResponse.json({
+      access_token: otpData.session.access_token,
+      refresh_token: otpData.session.refresh_token,
+      expires_at: otpData.session.expires_at,
     });
     res.cookies.delete(AUTH_CHALLENGE_COOKIE);
     return res;
