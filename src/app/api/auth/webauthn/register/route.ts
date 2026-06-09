@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     // 이미 등록된 credential이 있으면 클라이언트에 알려 localStorage만 복원
     if (existing && existing.length > 0) {
-      return NextResponse.json({ alreadyRegistered: true });
+      return NextResponse.json({ alreadyRegistered: true, credentialId: existing[0].credential_id });
     }
 
     const challenge = generateChallenge();
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       authenticatorSelection: {
         authenticatorAttachment: "platform",
         userVerification: "required",
-        residentKey: "preferred",
+        residentKey: "discouraged",
       },
     });
 

@@ -18,56 +18,68 @@ export async function POST(request: NextRequest) {
 
   // ── options ──────────────────────────────────────────────────────────
   if (body.action === "options") {
+    const credentialId = (body.credentialId as string | undefined)?.trim();
     const employeeId = (body.employeeId as string | undefined)?.trim();
-    if (!employeeId) {
+
+    if (!credentialId && !employeeId) {
       return NextResponse.json(
-        { error: "Missing employeeId" },
+        { error: "Missing credentialId or employeeId" },
         { status: 400 }
       );
     }
 
     const admin = createAdminClient();
+    let allowCredentials: { id: string; type: "public-key" }[];
 
-    const email = `${employeeId.toLowerCase()}@somang.internal`;
-    let userId: string | null = null;
+    if (credentialId) {
+      // 빠른 경로: credentialId 직접 조회 (DB 1회, listUsers 불필요)
+      const { data: cred } = await admin
+        .from("webauthn_credentials")
+        .select("credential_id")
+        .eq("credential_id", credentialId)
+        .single();
 
-    // 빠른 경로: RPC 함수 (Supabase에 get_user_id_by_email 함수가 있으면 사용)
-    const { data: rpcResult, error: rpcError } = await admin.rpc(
-      "get_user_id_by_email",
-      { p_email: email }
-    );
-    if (!rpcError && rpcResult) {
-      userId = rpcResult as string;
+      if (!cred) {
+        return NextResponse.json({ error: "No registered fingerprint" }, { status: 404 });
+      }
+      allowCredentials = [{ id: credentialId, type: "public-key" }];
     } else {
-      // fallback: 전체 목록에서 이메일로 검색
-      const { data: usersPage } = await admin.auth.admin.listUsers({
-        perPage: 1000,
-      });
-      const authUser = usersPage?.users?.find((u) => u.email === email);
-      if (authUser) userId = authUser.id;
-    }
+      // 구버전 fallback: employeeId → userId → credentials
+      const email = `${employeeId!.toLowerCase()}@somang.internal`;
+      let userId: string | null = null;
 
-    if (!userId) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+      const { data: rpcResult, error: rpcError } = await admin.rpc(
+        "get_user_id_by_email",
+        { p_email: email }
+      );
+      if (!rpcError && rpcResult) {
+        userId = rpcResult as string;
+      } else {
+        const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
+        const authUser = usersPage?.users?.find((u) => u.email === email);
+        if (authUser) userId = authUser.id;
+      }
 
-    const { data: creds } = await admin
-      .from("webauthn_credentials")
-      .select("credential_id")
-      .eq("user_id", userId);
+      if (!userId) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
 
-    if (!creds || creds.length === 0) {
-      return NextResponse.json({ error: "No registered fingerprint" }, { status: 404 });
+      const { data: creds } = await admin
+        .from("webauthn_credentials")
+        .select("credential_id")
+        .eq("user_id", userId);
+
+      if (!creds || creds.length === 0) {
+        return NextResponse.json({ error: "No registered fingerprint" }, { status: 404 });
+      }
+      allowCredentials = creds.map((c) => ({ id: c.credential_id, type: "public-key" as const }));
     }
 
     const challenge = generateChallenge();
     const options = await generateAuthenticationOptions({
       rpID: getRpId(),
       challenge: Buffer.from(challenge, "base64url"),
-      allowCredentials: creds.map((c) => ({
-        id: c.credential_id,
-        type: "public-key" as const,
-      })),
+      allowCredentials,
       userVerification: "required",
     });
 
