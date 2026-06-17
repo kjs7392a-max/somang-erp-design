@@ -1,4 +1,4 @@
-const CACHE = "erp-v1";
+const CACHE = "erp-v2";
 const APP_SHELL = ["/", "/login"];
 
 // 설치 시 앱 쉘 캐싱
@@ -47,8 +47,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body ?? "",
-      icon: "/somang-logo.svg",
-      badge: "/somang-logo.svg",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       data: { url: data.url ?? "/" },
       requireInteraction: false,
     })
