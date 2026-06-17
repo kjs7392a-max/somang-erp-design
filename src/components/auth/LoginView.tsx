@@ -69,7 +69,7 @@ export function LoginView({
           </div>
 
           <h1 className="font-display mb-2 text-center text-[1.8rem] font-bold tracking-[0.088em] text-[#1e293b]">
-            소망의료재단
+            {process.env.NEXT_PUBLIC_CORP_NAME ?? "소망의료재단"}
           </h1>
 
           <p
@@ -169,7 +169,7 @@ export function LoginView({
         {/* 하단 저작권 */}
         <div className="pt-4 text-center">
           <p className="text-[0.6875rem] font-normal text-white/85">
-            © 2026 소망의료재단. All rights reserved.
+            © 2026 {process.env.NEXT_PUBLIC_CORP_NAME ?? "소망의료재단"}. All rights reserved.
           </p>
         </div>
       </div>
