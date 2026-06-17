@@ -55,10 +55,11 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    // @ 포함 시 이메일 그대로, 없으면 @somang.internal 추가
+    // @ 포함 시 이메일 그대로, 없으면 법인별 도메인 추가
+    const domain = process.env.NEXT_PUBLIC_CORP_EMAIL_DOMAIN ?? "somang.internal";
     const email = rawId.includes("@")
       ? rawId.toLowerCase()
-      : `${rawId.toLowerCase()}@somang.internal`;
+      : `${rawId.toLowerCase()}@${domain}`;
 
     try {
       const supabase = createClient();
@@ -70,6 +71,23 @@ export default function LoginPage() {
         setLoading(false);
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");
         return;
+      }
+      // 로그인한 계정이 이 법인 소속인지 검증
+      const { data: { user } } = await supabase.auth.getUser();
+      const userDomain = user?.email?.split("@")[1];
+      if (userDomain && userDomain !== domain) {
+        // is_global_employee 확인
+        const { data: staff } = await supabase
+          .from("staff_directory")
+          .select("is_global_employee")
+          .eq("profile_id", user.id)
+          .single();
+        if (!staff?.is_global_employee) {
+          await supabase.auth.signOut();
+          setLoading(false);
+          setError("이 앱에 접근 권한이 없습니다.");
+          return;
+        }
       }
       // ID/PW 로그인 시 항상 재등록 (클라우드 패스키 → 기기 로컬 마이그레이션)
       if (isSupported) {
