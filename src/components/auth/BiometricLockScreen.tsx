@@ -27,13 +27,13 @@ export function BiometricLockScreen({
         <div className="flex flex-col items-center pt-6">
           {logoOk ? (
             <Image
-              src="/somang-logo.svg"
+              src="/icon-192.png"
               alt="소망병원 로고"
               width={72}
               height={72}
               priority
               unoptimized
-              className="mb-3 h-[72px] w-[72px] object-contain"
+              className="mb-3 h-[72px] w-[72px] rounded-2xl object-contain"
               onError={() => setLogoOk(false)}
             />
           ) : (

@@ -52,13 +52,13 @@ export function LoginView({
           <div className="mb-3">
             {logoOk ? (
               <Image
-                src="/somang-logo.svg"
+                src="/icon-192.png"
                 alt="소망병원 로고"
                 width={88}
                 height={88}
                 priority
                 unoptimized
-                className="h-[88px] w-[88px] object-contain"
+                className="h-[88px] w-[88px] rounded-2xl object-contain"
                 onError={() => setLogoOk(false)}
               />
             ) : (
