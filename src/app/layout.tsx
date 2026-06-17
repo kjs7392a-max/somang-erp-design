@@ -33,7 +33,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;800;900&display=swap"
           rel="stylesheet"
         />
-        <link rel="apple-touch-icon" href="/somang-logo.svg" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body>
         <Providers>{children}</Providers>
