@@ -1,0 +1,27 @@
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  return NextResponse.json(
+    {
+      name: "소망의료재단 ERP",
+      short_name: "소망ERP",
+      description: "소망의료재단 임직원 전자결재 포털",
+      start_url: "/home",
+      display: "standalone",
+      orientation: "portrait",
+      background_color: "#dbeafe",
+      theme_color: "#3b82f6",
+      lang: "ko",
+      icons: [
+        { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      ],
+    },
+    {
+      headers: {
+        "Content-Type": "application/manifest+json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    }
+  );
+}
