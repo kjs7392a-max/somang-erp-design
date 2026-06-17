@@ -6,5 +6,7 @@ export const ROUTES = {
   calendar: "/calendar",
   mypage: "/mypage",
   draft: "/draft",
+  meal: "/meal",
   login: "/login",
+  ward: "/ward",
 } as const;

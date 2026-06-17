@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>직원관리 mockup</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: #E8E5E0;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 24px; min-height: 100vh;
+}
+.frame {
+  width: 100%; max-width: 1100px;
+  background: #FAF9F6;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+  display: flex; height: 680px;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 210px; flex-shrink: 0;
+  background: #1C1C1E;
+  display: flex; flex-direction: column;
+}
+.logo {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.logo-title { font-size: 14px; font-weight: 700; color: #FFF; letter-spacing: -0.3px; }
+.logo-sub { font-size: 10px; color: #636366; margin-top: 2px; }
+
+.nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+.nav-section { padding: 14px 14px 4px; font-size: 9px; font-weight: 700; color: #48484A; letter-spacing: 1px; text-transform: uppercase; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px; margin: 1px 8px;
+  border-radius: 8px; font-size: 12.5px; color: #EBEBF5;
+  cursor: pointer;
+}
+.nav-item .ico { font-size: 14px; width: 18px; text-align: center; }
+.nav-item:hover { background: rgba(255,255,255,0.05); }
+.nav-item.active { background: #CC7854; color: #FFF; font-weight: 600; }
+.nav-item.parent { color: #FFF; font-weight: 600; }
+
+/* 서브메뉴 */
+.subnav { margin: 2px 0; }
+.subnav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px 6px 40px; margin: 1px 8px;
+  border-radius: 7px; font-size: 12px; color: #8E8E93;
+  cursor: pointer;
+}
+.subnav-item:hover { background: rgba(255,255,255,0.05); color: #EBEBF5; }
+.subnav-item.active { color: #E5A88A; font-weight: 600; background: rgba(204,120,84,0.12); }
+.subnav-item::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+.nav-item.coming { color: #3A3A3C; }
+.coming-badge {
+  margin-left: auto; font-size: 9px; color: #3A3A3C;
+  background: #2C2C2E; padding: 1px 6px; border-radius: 4px;
+}
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 8px;
+}
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: #CC7854; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #FFF; flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 12px; font-weight: 600; color: #EBEBF5; }
+.user-role { font-size: 10px; color: #636366; }
+.logout-btn { font-size: 10px; color: #636366; cursor: pointer; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar {
+  height: 52px; background: #FFF;
+  border-bottom: 1px solid #E5E7EB;
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 8px; flex-shrink: 0;
+}
+.breadcrumb { font-size: 12px; color: #9CA3AF; }
+.breadcrumb .sep { margin: 0 6px; }
+.breadcrumb .current { color: #1A1A1A; font-weight: 600; }
+
+.content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+
+/* 통계 카드 */
+.stats { display: flex; gap: 12px; }
+.stat-card {
+  flex: 1; background: #FFF; border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.stat-label { font-size: 11px; color: #9CA3AF; margin-bottom: 6px; }
+.stat-val { font-size: 26px; font-weight: 700; color: #1A1A1A; }
+.stat-val.accent { color: #CC7854; }
+.stat-sub { font-size: 11px; color: #6B7280; margin-top: 3px; }
+
+/* 툴바 */
+.toolbar {
+  display: flex; align-items: center; gap: 10px;
+  background: #FFF; border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.search-box {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: #F9FAFB; border: 1px solid #E5E7EB;
+  border-radius: 8px; padding: 7px 12px;
+  font-size: 13px; color: #9CA3AF;
+}
+.filter-btn {
+  font-size: 12px; color: #374151;
+  background: #F9FAFB; border: 1px solid #E5E7EB;
+  border-radius: 8px; padding: 7px 14px; cursor: pointer;
+  white-space: nowrap;
+}
+.add-btn {
+  font-size: 12px; font-weight: 600; color: #FFF;
+  background: #CC7854; border-radius: 8px;
+  padding: 7px 16px; cursor: pointer; white-space: nowrap;
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* 테이블 */
+.table-wrap { background: #FFF; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); flex: 1; }
+.table-head {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 1fr 90px 80px 60px;
+  gap: 0; padding: 10px 16px;
+  background: #F9FAFB; border-bottom: 1px solid #F3F4F6;
+}
+.table-head span { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; }
+.table-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 1fr 90px 80px 60px;
+  gap: 0; padding: 11px 16px;
+  border-bottom: 1px solid #F9FAFB;
+  align-items: center;
+}
+.table-row:last-child { border-bottom: none; }
+.table-row:hover { background: #FAFAFA; }
+.emp-num { font-size: 11px; color: #9CA3AF; font-variant-numeric: tabular-nums; }
+.emp-name { font-size: 13px; font-weight: 600; color: #1A1A1A; }
+.emp-dept { font-size: 12px; color: #374151; }
+.emp-pos { font-size: 12px; color: #374151; }
+
+.badge {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+}
+.badge-active { background: #ECFDF5; color: #059669; }
+.badge-admin  { background: #FFF0EB; color: #CC7854; }
+.badge-leave  { background: #F3F4F6; color: #6B7280; }
+
+.row-actions { display: flex; gap: 4px; }
+.action-btn {
+  font-size: 10px; color: #6B7280;
+  background: #F3F4F6; border-radius: 6px;
+  padding: 3px 8px; cursor: pointer;
+}
+.action-btn:hover { background: #E5E7EB; }
+
+/* 페이지네이션 */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; border-top: 1px solid #F3F4F6;
+}
+.pag-info { font-size: 11px; color: #9CA3AF; }
+.pag-btns { display: flex; gap: 4px; }
+.pag-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #374151; background: #F9FAFB; cursor: pointer;
+}
+.pag-btn.active { background: #CC7854; color: #FFF; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-title">소망병원 ERP</div>
+      <div class="logo-sub">관리자 패널</div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-section">메인</div>
+      <div class="nav-item"><span class="ico">🏠</span> 대시보드</div>
+
+      <div class="nav-section">총무과</div>
+      <div class="nav-item parent"><span class="ico">📋</span> 총무과</div>
+      <div class="subnav">
+        <div class="subnav-item active">직원관리</div>
+        <div class="subnav-item">부서관리</div>
+        <div class="subnav-item">권한관리</div>
+        <div class="subnav-item">공지관리</div>
+        <div class="subnav-item">결재현황</div>
+      </div>
+
+      <div class="nav-section">부서</div>
+      <div class="nav-item coming"><span class="ico">🏥</span> 간호과 <span class="coming-badge">준비중</span></div>
+      <div class="nav-item coming"><span class="ico">📑</span> 원무과 <span class="coming-badge">준비중</span></div>
+      <div class="nav-item coming"><span class="ico">🩺</span> 진료부 <span class="coming-badge">준비중</span></div>
+      <div class="nav-item coming"><span class="ico">🔧</span> 시설/관리 <span class="coming-badge">준비중</span></div>
+      <div class="nav-item coming"><span class="ico">⚙️</span> 행정/공통 <span class="coming-badge">준비중</span></div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="avatar">김</div>
+      <div class="user-info">
+        <div class="user-name">김진석</div>
+        <div class="user-role">최고관리자</div>
+      </div>
+      <div class="logout-btn">로그아웃</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb">
+        총무과 <span class="sep">›</span> <span class="current">직원관리</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- 통계 -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">전체 직원</div>
+          <div class="stat-val">142</div>
+          <div class="stat-sub">재직 중</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">부서 수</div>
+          <div class="stat-val">6</div>
+          <div class="stat-sub">개 부서</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">관리자</div>
+          <div class="stat-val accent">4</div>
+          <div class="stat-sub">명</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">이번 달 신규</div>
+          <div class="stat-val">3</div>
+          <div class="stat-sub">명 등록</div>
+        </div>
+      </div>
+
+      <!-- 툴바 -->
+      <div class="toolbar">
+        <div class="search-box">🔍 &nbsp;이름, 사번, 부서 검색...</div>
+        <div class="filter-btn">부서 ▾</div>
+        <div class="filter-btn">직책 ▾</div>
+        <div class="add-btn">＋ 직원 등록</div>
+      </div>
+
+      <!-- 테이블 -->
+      <div class="table-wrap">
+        <div class="table-head">
+          <span>#</span>
+          <span>이름</span>
+          <span>부서</span>
+          <span>직책</span>
+          <span>상태</span>
+          <span>관리자</span>
+          <span></span>
+        </div>
+        <div class="table-row">
+          <span class="emp-num">001</span>
+          <span class="emp-name">이재훈</span>
+          <span class="emp-dept">간호과</span>
+          <span class="emp-pos">수간호사</span>
+          <span class="badge badge-active">재직</span>
+          <span>—</span>
+          <div class="row-actions"><div class="action-btn">수정</div></div>
+        </div>
+        <div class="table-row">
+          <span class="emp-num">002</span>
+          <span class="emp-name">박소연</span>
+          <span class="emp-dept">원무과</span>
+          <span class="emp-pos">주임</span>
+          <span class="badge badge-active">재직</span>
+          <span class="badge badge-admin">관리자</span>
+          <div class="row-actions"><div class="action-btn">수정</div></div>
+        </div>
+        <div class="table-row">
+          <span class="emp-num">003</span>
+          <span class="emp-name">최민준</span>
+          <span class="emp-dept">진료부</span>
+          <span class="emp-pos">전문의</span>
+          <span class="badge badge-active">재직</span>
+          <span>—</span>
+          <div class="row-actions"><div class="action-btn">수정</div></div>
+        </div>
+        <div class="table-row">
+          <span class="emp-num">004</span>
+          <span class="emp-name">정유진</span>
+          <span class="emp-dept">총무과</span>
+          <span class="emp-pos">과장</span>
+          <span class="badge badge-leave">휴직</span>
+          <span>—</span>
+          <div class="row-actions"><div class="action-btn">수정</div></div>
+        </div>
+        <div class="table-row">
+          <span class="emp-num">005</span>
+          <span class="emp-name">김도현</span>
+          <span class="emp-dept">시설/관리</span>
+          <span class="emp-pos">대리</span>
+          <span class="badge badge-active">재직</span>
+          <span>—</span>
+          <div class="row-actions"><div class="action-btn">수정</div></div>
+        </div>
+
+        <div class="pagination">
+          <div class="pag-info">142명 중 1-5 표시</div>
+          <div class="pag-btns">
+            <div class="pag-btn active">1</div>
+            <div class="pag-btn">2</div>
+            <div class="pag-btn">3</div>
+            <div class="pag-btn">…</div>
+            <div class="pag-btn">29</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

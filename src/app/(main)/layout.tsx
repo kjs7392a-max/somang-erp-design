@@ -1,5 +1,8 @@
-import { MainShell } from "@/components/layout/MainShell";
 import { AuthProvider } from "@/context/AuthContext";
+import { LangBridge } from "@/context/LangContext";
+import { MainShell } from "@/components/layout/MainShell";
+
+export const dynamic = "force-dynamic";
 
 export default function MainGroupLayout({
   children,
@@ -8,7 +11,9 @@ export default function MainGroupLayout({
 }>) {
   return (
     <AuthProvider>
-      <MainShell>{children}</MainShell>
+      <LangBridge>
+        <MainShell>{children}</MainShell>
+      </LangBridge>
     </AuthProvider>
   );
 }

@@ -1,0 +1,436 @@
+/* ─────────────────────────────────────────────────────────
+ * LoginView.module.css — SOMANG ERP 로그인 (v4 split design)
+ * 무드(mood) · 레이아웃(layout) · 질감(shape) 3축 토큰 시스템.
+ * .root[data-mood] / [data-layout] / [data-shape] 로 전환.
+ * ───────────────────────────────────────────────────────── */
+
+.root {
+  --font-display: "Paperlogy", "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* ── MOOD tokens (default: 청록 / calm teal) ───────── */
+  --brand-bg:      #9bcdfb;  /* v4 직접수정 반영 (rgb 155,205,251) */
+  --brand-grid:    rgba(91,181,207,0.06);
+  --primary:       #5bb5cf;
+  --primary-deep:  #00a0c6;
+  --text-dark:     #2d5c6e;
+  --text-muted:    #6b8c9a;
+  --text-faint:    #8ba8b3;
+  --divider:       #d0dfe5;
+  --page-bg:       #ffffff;
+  --ink:           #14232b;
+  --field-bg:      #ffffff;
+  --field-border:  #dfe4e7;
+  --field-text:    #14232b;
+  --field-ph:      #aab6bc;
+  --focus-ring:    rgba(91,181,207,0.16);
+  --btn-bg:        #14232b;
+  --btn-hover:     #0c1a20;
+  --btn-text:      #ffffff;
+  --logo-shadow:   rgba(45,92,110,0.18);
+  --card-bg:       #ffffff;
+  --card-border:   #e6eef1;
+
+  /* ── SHAPE tokens (default: 부드럼 / soft) ──────────── */
+  --r-field: 12px;
+  --r-btn:   12px;
+  --r-card:  22px;
+  --field-pad: 14px 16px;
+  --border-w: 1.5px;
+  --card-shadow: 0 30px 80px -28px rgba(20,35,43,0.30);
+  --logo-blur: 40px;
+  --track: -0.025em;
+
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--page-bg);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══ MOOD: 미색 / warm clinical ═══ */
+.root[data-mood="warm"] {
+  --brand-bg:     #ecdfce;
+  --brand-grid:   rgba(176,140,98,0.08);
+  --primary:      #cf9b67;
+  --primary-deep: #b9763b;
+  --text-dark:    #6e5439;
+  --text-muted:   #9a836b;
+  --text-faint:   #b5a48d;
+  --divider:      #e2d6c4;
+  --page-bg:      #fbf7f1;
+  --ink:          #2a2018;
+  --field-bg:     #ffffff;
+  --field-border: #e7ddcd;
+  --field-text:   #2a2018;
+  --field-ph:     #bcb0a0;
+  --focus-ring:   rgba(207,155,103,0.20);
+  --btn-bg:       #2a2018;
+  --btn-hover:    #16100b;
+  --btn-text:     #fbf7f1;
+  --logo-shadow:  rgba(110,84,57,0.20);
+  --card-bg:      #fffdf9;
+  --card-border:  #ece2d3;
+}
+
+/* ═══ MOOD: 야간 / deep trust (dark) ═══ */
+.root[data-mood="night"] {
+  --brand-bg:     #0e2630;
+  --brand-grid:   rgba(123,212,234,0.09);
+  --primary:      #5bb5cf;
+  --primary-deep: #7fd4ea;
+  --text-dark:    #cfeaf2;
+  --text-muted:   #8fb3c0;
+  --text-faint:   #6f93a0;
+  --divider:      #2c4350;
+  --page-bg:      #102029;
+  --ink:          #eaf4f8;
+  --field-bg:     #182c36;
+  --field-border: #2c4350;
+  --field-text:   #eaf4f8;
+  --field-ph:     #6f93a0;
+  --focus-ring:   rgba(127,212,234,0.22);
+  --btn-bg:       #5bb5cf;
+  --btn-hover:    #7fd4ea;
+  --btn-text:     #07212c;
+  --logo-shadow:  rgba(0,0,0,0.45);
+  --card-bg:      rgba(22,38,46,0.82);
+  --card-border:  rgba(123,212,234,0.18);
+}
+
+/* ═══ SHAPE: 또렷 / crisp ═══ */
+.root[data-shape="crisp"] {
+  --r-field: 3px;
+  --r-btn:   3px;
+  --r-card:  5px;
+  --field-pad: 13px 14px;
+  --border-w: 1.5px;
+  --card-shadow: 0 1px 0 var(--card-border), 0 0 0 1px var(--card-border);
+  --logo-blur: 0px;
+  --track: -0.04em;
+}
+/* ═══ SHAPE: 둥글 / pill ═══ */
+.root[data-shape="pill"] {
+  --r-field: 999px;
+  --r-btn:   999px;
+  --r-card:  34px;
+  --field-pad: 15px 24px;
+  --border-w: 1.5px;
+  --card-shadow: 0 36px 90px -26px rgba(20,35,43,0.30);
+  --logo-blur: 52px;
+  --track: -0.01em;
+}
+
+.root *,
+.root *::before,
+.root *::after { box-sizing: border-box; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+/* ── shell ────────────────────────────────────────── */
+.split {
+  display: grid;
+  grid-template-columns: 1fr minmax(420px, 34%);
+  min-height: 100dvh;
+}
+
+/* ── LEFT — brand panel (symbol-forward, no photo) ── */
+.brandSide {
+  position: relative;
+  background-color: var(--brand-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 56px;
+  overflow: hidden;
+}
+.brandSide::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--brand-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--brand-grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 30%, transparent 78%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 30%, transparent 78%);
+  pointer-events: none;
+}
+.brandStack {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.brandSymbol {
+  width: 320px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 18px var(--logo-blur) var(--logo-shadow));
+}
+.brandWordmark {
+  font-family: var(--font-sans);  /* v4 직접수정 반영 (Pretendard Variable) */
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-dark);
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ── RIGHT — clean login ──────────────────────────── */
+.loginSide {
+  display: flex;
+  flex-direction: column;
+  padding: 40px 56px;
+}
+.loginBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 360px;
+  width: 100%;
+  margin: 0 auto;
+}
+.subhead {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0 0 36px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+.field { margin-bottom: 18px; }
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.input {
+  width: 100%;
+  padding: var(--field-pad);
+  font-size: 15px;
+  color: var(--field-text);
+  background-color: var(--field-bg);
+  border: var(--border-w) solid var(--field-border);
+  border-radius: var(--r-field);
+  outline: none;
+  font-family: inherit;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.input::placeholder { color: var(--field-ph); }
+.input:hover { border-color: var(--primary); }
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--focus-ring);
+}
+.input.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220,38,38,0.12);
+  animation: shake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+}
+.errMsg {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 26px;
+}
+.keep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.keep input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.keep span {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.forgot {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--primary-deep);
+  text-decoration: none;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.forgot:hover { text-decoration: underline; }
+
+.submit {
+  width: 100%;
+  padding: 15px;
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: var(--r-btn);
+  font-size: 15.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .18s ease, background-color .2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.submit:hover { background-color: var(--btn-hover); transform: translateY(-1px); }
+.submit:active { transform: translateY(0); }
+.submit.loading { pointer-events: none; opacity: 0.85; }
+.submit.success { background-color: #0a8f5b; color: #fff; }
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.altFind {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+.altFind button {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+}
+.altFind button:hover { color: var(--primary-deep); }
+
+.loginFoot {
+  font-size: 12px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+/* ── centered brand mark (shown in center / immersive) ── */
+.loginBrand {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 30px;
+}
+.loginBrand img {
+  width: 78px;
+  height: auto;
+  filter: drop-shadow(0 10px 22px var(--logo-shadow));
+}
+.loginBrand span {
+  font-family: "Gowun Dodum", var(--font-sans);
+  font-size: 1.25rem;
+  color: var(--text-dark);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* ════════ LAYOUT: 중앙 / center ════════ */
+.root[data-layout="center"] .split {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.root[data-layout="center"] .brandSide { display: none; }
+.root[data-layout="center"] .loginSide {
+  flex: none;
+  width: min(420px, 92vw);
+  padding: 32px;
+  align-items: center;
+}
+.root[data-layout="center"] .loginBody {
+  flex: none;
+  width: 100%;
+  max-width: 360px;
+  background-color: var(--card-bg);
+  border: var(--border-w) solid var(--card-border);
+  border-radius: var(--r-card);
+  padding: 44px 40px;
+  box-shadow: var(--card-shadow);
+}
+.root[data-layout="center"] .loginBrand { display: flex; }
+.root[data-layout="center"] .loginFoot { margin-top: 26px; }
+
+/* ════════ LAYOUT: 몰입 / immersive ════════ */
+.root[data-layout="immersive"] .split {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.root[data-layout="immersive"] .brandSide {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+}
+.root[data-layout="immersive"] .brandStack { display: none; }
+.root[data-layout="immersive"] .loginSide {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: min(430px, 92vw);
+  padding: 0;
+  align-items: center;
+}
+.root[data-layout="immersive"] .loginBody {
+  flex: none;
+  width: 100%;
+  max-width: 372px;
+  background-color: var(--card-bg);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  border: var(--border-w) solid var(--card-border);
+  border-radius: var(--r-card);
+  padding: 46px 42px;
+  box-shadow: var(--card-shadow);
+}
+.root[data-layout="immersive"] .loginBrand { display: flex; }
+.root[data-layout="immersive"] .loginFoot {
+  margin-top: 22px;
+  color: var(--text-dark);
+  opacity: .8;
+}
+
+@media (max-width: 900px) {
+  .split { grid-template-columns: 1fr; }
+  .root[data-layout="split"] .brandSide { display: none; }
+}

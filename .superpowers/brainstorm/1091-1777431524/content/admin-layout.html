@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>소망병원 ERP — 어드민 대시보드 레이아웃 옵션</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: #F0EDE8;
+    color: #1A1A1A;
+    padding: 32px 24px;
+  }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: #6B7280; margin-bottom: 28px; }
+  .options-row { display: flex; gap: 24px; flex-wrap: wrap; }
+
+  /* ────── CARD WRAPPER ────── */
+  .opt-card {
+    flex: 1; min-width: 280px; max-width: 420px;
+    background: #FFF;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    cursor: pointer;
+    border: 2.5px solid transparent;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .opt-card:hover { box-shadow: 0 6px 28px rgba(0,0,0,0.13); }
+  .opt-card.selected { border-color: #CC7854; }
+
+  .opt-label {
+    padding: 14px 18px 10px;
+    font-size: 13px; font-weight: 700; color: #1A1A1A;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .opt-badge {
+    font-size: 11px; font-weight: 600;
+    background: #FFF0EB; color: #CC7854;
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .opt-desc { padding: 0 18px 14px; font-size: 12px; color: #6B7280; }
+
+  /* ────── MOCKUP FRAME ────── */
+  .mockup { width: 100%; position: relative; }
+
+  /* === A: 사이드바 + 콘텐츠 === */
+  .layout-a {
+    display: flex; height: 320px;
+    background: #FAF9F6;
+  }
+  .layout-a .sidebar {
+    width: 188px; background: #1C1C1E;
+    display: flex; flex-direction: column;
+    padding: 0; flex-shrink: 0;
+  }
+  .layout-a .sidebar-logo {
+    padding: 16px 16px 12px;
+    font-size: 13px; font-weight: 700; color: #FFF;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    letter-spacing: -0.3px;
+  }
+  .layout-a .sidebar-logo span {
+    display: block; font-size: 10px; font-weight: 400; color: #8E8E93; margin-top: 1px;
+  }
+  .sidebar-section { padding: 10px 10px 4px; font-size: 9px; font-weight: 700; color: #636366; letter-spacing: 0.8px; text-transform: uppercase; }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; margin: 1px 6px;
+    border-radius: 7px; font-size: 12px; color: #EBEBF5;
+    cursor: pointer;
+  }
+  .sidebar-item.active { background: #CC7854; color: #FFF; font-weight: 600; }
+  .sidebar-item.coming { color: #636366; }
+  .sidebar-item .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .sidebar-item .icon { font-size: 13px; width: 16px; text-align: center; }
+
+  .layout-a .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .layout-a .topbar {
+    height: 46px; background: #FFF;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; flex-shrink: 0;
+  }
+  .topbar-left { font-size: 13px; font-weight: 600; color: #1A1A1A; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #6B7280; }
+  .topbar-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #CC7854; color: #FFF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .layout-a .content { flex: 1; padding: 16px; overflow: hidden; }
+
+  .stat-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .stat-card {
+    flex: 1; background: #FFF; border-radius: 10px;
+    padding: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .stat-label { font-size: 10px; color: #9CA3AF; margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 700; color: #1A1A1A; }
+  .stat-val.accent { color: #CC7854; }
+
+  .table-card { background: #FFF; border-radius: 10px; padding: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .table-head { display: flex; gap: 6px; padding: 0 6px 8px; border-bottom: 1px solid #F3F4F6; }
+  .table-head span { flex: 1; font-size: 9px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; }
+  .table-row { display: flex; gap: 6px; padding: 7px 6px; border-bottom: 1px solid #F9FAFB; align-items: center; }
+  .table-row span { flex: 1; font-size: 11px; color: #374151; }
+  .badge {
+    font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+  }
+  .badge-active { background: #ECFDF5; color: #059669; }
+  .badge-pending { background: #FFF7ED; color: #D97706; }
+  .badge-admin { background: #FFF0EB; color: #CC7854; }
+
+  /* === B: 상단 GNB + 콘텐츠 === */
+  .layout-b { height: 320px; background: #FAF9F6; display: flex; flex-direction: column; }
+  .layout-b .gnb {
+    background: #1C1C1E; height: 48px;
+    display: flex; align-items: center; padding: 0 18px;
+    gap: 0; flex-shrink: 0;
+  }
+  .gnb-logo { font-size: 13px; font-weight: 700; color: #FFF; margin-right: 24px; white-space: nowrap; }
+  .gnb-item {
+    font-size: 12px; color: #8E8E93;
+    padding: 4px 12px; border-radius: 6px; white-space: nowrap;
+  }
+  .gnb-item.active { color: #CC7854; font-weight: 600; }
+  .gnb-spacer { flex: 1; }
+  .gnb-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #CC7854; color: #FFF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .layout-b .sub-nav {
+    background: #FFF; border-bottom: 1px solid #E5E7EB;
+    display: flex; gap: 0; padding: 0 18px;
+  }
+  .sub-item {
+    font-size: 12px; color: #6B7280;
+    padding: 10px 14px; border-bottom: 2px solid transparent;
+    cursor: pointer;
+  }
+  .sub-item.active { color: #CC7854; border-bottom-color: #CC7854; font-weight: 600; }
+  .layout-b .content2 { flex: 1; padding: 14px 18px; display: flex; gap: 12px; overflow: hidden; }
+  .col-left { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+  .col-right { flex: 1; }
+  .mini-stat { background: #FFF; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .mini-stat .label { font-size: 10px; color: #9CA3AF; margin-bottom: 2px; }
+  .mini-stat .val { font-size: 18px; font-weight: 700; }
+  .mini-stat .val.accent { color: #CC7854; }
+
+  /* Selected indicator */
+  .selected-indicator {
+    position: fixed; bottom: 20px; right: 20px;
+    background: #CC7854; color: #FFF;
+    padding: 10px 20px; border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 14px rgba(204,120,84,0.4);
+    display: none;
+  }
+  .selected-indicator.show { display: block; }
+</style>
+</head>
+<body>
+
+<h1>어드민 대시보드 레이아웃</h1>
+<p class="subtitle">두 가지 레이아웃 중 선택해주세요 (클릭으로 선택)</p>
+
+<div class="options-row">
+
+  <!-- ═══ OPTION A: 사이드바 ═══ -->
+  <div class="opt-card" onclick="selectOpt(this,'A')">
+    <div class="opt-label">A. 왼쪽 사이드바 레이아웃 <span class="opt-badge">추천</span></div>
+    <div class="opt-desc">Claude 스타일 — 다크 사이드바 + 밝은 본문. 메뉴 항목이 많을 때 최적.</div>
+    <div class="mockup">
+      <div class="layout-a">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+          <div class="sidebar-logo">소망병원 ERP<span>관리자 패널</span></div>
+          <div class="sidebar-section">메뉴</div>
+          <div class="sidebar-item active"><span class="icon">🏠</span> 대시보드</div>
+          <div class="sidebar-item"><span class="icon">📋</span> 총무과</div>
+          <div class="sidebar-section">부서</div>
+          <div class="sidebar-item coming"><span class="icon">🏥</span> 간호과 <span style="margin-left:auto;font-size:9px;color:#3A3A3C;background:#2C2C2E;padding:1px 5px;border-radius:4px;">준비중</span></div>
+          <div class="sidebar-item coming"><span class="icon">📑</span> 원무과 <span style="margin-left:auto;font-size:9px;color:#3A3A3C;background:#2C2C2E;padding:1px 5px;border-radius:4px;">준비중</span></div>
+          <div class="sidebar-item coming"><span class="icon">🩺</span> 진료부 <span style="margin-left:auto;font-size:9px;color:#3A3A3C;background:#2C2C2E;padding:1px 5px;border-radius:4px;">준비중</span></div>
+          <div class="sidebar-item coming"><span class="icon">🔧</span> 시설 <span style="margin-left:auto;font-size:9px;color:#3A3A3C;background:#2C2C2E;padding:1px 5px;border-radius:4px;">준비중</span></div>
+          <div class="sidebar-item coming"><span class="icon">⚙️</span> 행정 <span style="margin-left:auto;font-size:9px;color:#3A3A3C;background:#2C2C2E;padding:1px 5px;border-radius:4px;">준비중</span></div>
+        </div>
+        <!-- MAIN -->
+        <div class="main">
+          <div class="topbar">
+            <div class="topbar-left">대시보드</div>
+            <div class="topbar-right">
+              <span>김진석 관리자</span>
+              <div class="topbar-avatar">김</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="stat-row">
+              <div class="stat-card"><div class="stat-label">전체 직원</div><div class="stat-val">142</div></div>
+              <div class="stat-card"><div class="stat-label">결재 대기</div><div class="stat-val accent">8</div></div>
+              <div class="stat-card"><div class="stat-label">공지</div><div class="stat-val">3</div></div>
+            </div>
+            <div class="table-card">
+              <div class="table-head"><span>이름</span><span>부서</span><span>직책</span><span>상태</span></div>
+              <div class="table-row"><span>이재훈</span><span>간호과</span><span>수간호사</span><span class="badge badge-active">재직</span></div>
+              <div class="table-row"><span>박소연</span><span>원무과</span><span>주임</span><span class="badge badge-admin">관리자</span></div>
+              <div class="table-row"><span>최민준</span><span>진료부</span><span>전문의</span><span class="badge badge-pending">승인대기</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ OPTION B: 상단 GNB ═══ -->
+  <div class="opt-card" onclick="selectOpt(this,'B')">
+    <div class="opt-label">B. 상단 GNB 레이아웃</div>
+    <div class="opt-desc">상단 네비게이션 + 탭 방식. 좁은 화면에 유리하지만 항목이 많으면 좁아짐.</div>
+    <div class="mockup">
+      <div class="layout-b">
+        <!-- GNB -->
+        <div class="gnb">
+          <div class="gnb-logo">소망병원 ERP</div>
+          <div class="gnb-item active">총무과</div>
+          <div class="gnb-item">간호과</div>
+          <div class="gnb-item">원무과</div>
+          <div class="gnb-item" style="color:#3A3A3C;">진료부</div>
+          <div class="gnb-spacer"></div>
+          <div class="gnb-avatar">김</div>
+        </div>
+        <!-- SUB NAV -->
+        <div class="sub-nav">
+          <div class="sub-item active">직원관리</div>
+          <div class="sub-item">부서관리</div>
+          <div class="sub-item">권한관리</div>
+          <div class="sub-item">공지관리</div>
+          <div class="sub-item">결재현황</div>
+        </div>
+        <!-- CONTENT -->
+        <div class="content2">
+          <div class="col-left">
+            <div class="mini-stat"><div class="label">전체 직원</div><div class="val">142</div></div>
+            <div class="mini-stat"><div class="label">결재 대기</div><div class="val accent">8</div></div>
+            <div class="mini-stat"><div class="label">공지</div><div class="val">3</div></div>
+          </div>
+          <div class="col-right">
+            <div class="table-card">
+              <div class="table-head"><span>이름</span><span>부서</span><span>직책</span><span>상태</span></div>
+              <div class="table-row"><span>이재훈</span><span>간호과</span><span>수간호사</span><span class="badge badge-active">재직</span></div>
+              <div class="table-row"><span>박소연</span><span>원무과</span><span>주임</span><span class="badge badge-admin">관리자</span></div>
+              <div class="table-row"><span>최민준</span><span>진료부</span><span>전문의</span><span class="badge badge-pending">승인대기</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="selected-indicator" id="indicator">✓ 선택됨</div>
+
+<script>
+  let selected = null;
+  function selectOpt(el, key) {
+    document.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selected = key;
+    document.getElementById('indicator').textContent = '✓ ' + key + ' 선택됨';
+    document.getElementById('indicator').classList.add('show');
+    if (window.__claudeCompanion) {
+      window.__claudeCompanion.recordClick(key, el.querySelector('.opt-label').textContent.trim());
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,24 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import { SHIFT_2026_04, SHIFT_CODE_META, type ShiftCode } from "@/lib/shift-data";
+import {
+  SHIFT_2026_04,
+  SHIFT_CODE_META,
+  type ShiftCode,
+  type ShiftMember,
+} from "@/lib/shift-data";
 import { ShiftDayDetail } from "./ShiftDayDetail";
+import { useT } from "@/context/LangContext";
+import { useAuth } from "@/context/AuthContext";
+import type { TKey } from "@/lib/i18n/translations";
+
+const DESC_KEYS: Record<ShiftCode, TKey> = {
+  A:   "shift_desc_A",
+  S:   "shift_desc_S",
+  V:   "shift_desc_V",
+  H:   "shift_desc_H",
+  OFF: "shift_desc_OFF",
+};
 
 // April 1, 2026 = Wednesday = weekday index 3
-const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
-function getWeekday(day: number) {
-  return WEEKDAY[(3 + day - 1) % 7];
+function getWeekday(day: number, weekdays: string[]) {
+  return weekdays[(3 + day - 1) % 7] ?? "";
 }
 
 export function ShiftTable() {
+  const t = useT();
+  const { profile } = useAuth();
   const TODAY_DAY = new Date().getDate();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const me = SHIFT_2026_04.find((m) => m.isMe) ?? SHIFT_2026_04[0];
+
+  const dept = profile?.department ?? "";
+  const members: ShiftMember[] = SHIFT_2026_04;
+
+  const me = members.find((m) => m.isMe) ?? members[0];
+  const weekdays = t("cal_weekdays").split(",");
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const day = TODAY_DAY + i;
     if (day > 30) return null;
-    return { day, code: me.row[day - 1] as ShiftCode, weekday: getWeekday(day) };
+    return { day, code: me.row[day - 1] as ShiftCode, weekday: getWeekday(day, weekdays) };
   }).filter(Boolean) as { day: number; code: ShiftCode; weekday: string }[];
 
   const myCounts = me.row.reduce<Partial<Record<ShiftCode, number>>>((acc, c) => {
@@ -33,19 +55,23 @@ export function ShiftTable() {
         <div className="flex items-center gap-2">
           <span className="text-base">🏥</span>
           <div>
-            <p className="text-[0.9375rem] font-bold text-zinc-900">소망병원 간호과</p>
-            <p className="text-xs text-zinc-500">7명 · 2026년 4월 · 최종 4/15</p>
+            <p className="text-[0.9375rem] font-bold text-zinc-900">소망병원 {dept || "총무과"}</p>
+            <p className="text-xs text-zinc-500">
+              {t("shift_member_count").replace("{n}", String(members.length))} · 2026년 4월
+            </p>
           </div>
         </div>
       </div>
 
       {/* 내 이번 주 */}
       <div className="mx-4 mb-4 rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(45,92,110,0.08)]">
-        <p className="mb-3 text-sm font-bold text-zinc-700">내 이번 주 근무</p>
+        <p className="mb-3 text-sm font-bold text-zinc-700">{t("shift_my_week")}</p>
         <div className="flex gap-1.5">
           {weekDays.map(({ day, code, weekday }) => {
             const meta = SHIFT_CODE_META[code];
             const isToday = day === TODAY_DAY;
+            const isSun = weekdays[0] === weekday;
+            const isSat = weekdays[6] === weekday;
             return (
               <div
                 key={day}
@@ -53,7 +79,7 @@ export function ShiftTable() {
                   isToday ? "border-2 border-[#2d5c6e]" : "border border-zinc-100"
                 }`}
               >
-                <span className={`text-[0.625rem] font-semibold ${weekday === "일" ? "text-red-500" : weekday === "토" ? "text-blue-500" : "text-zinc-500"}`}>
+                <span className={`text-[0.625rem] font-semibold ${isSun ? "text-red-500" : isSat ? "text-blue-500" : "text-zinc-500"}`}>
                   {weekday}
                 </span>
                 <span className="text-xs font-bold text-zinc-700">{day}</span>
@@ -74,14 +100,16 @@ export function ShiftTable() {
             <div className="w-14 shrink-0" />
             {Array.from({ length: 30 }, (_, i) => {
               const day = i + 1;
-              const wd = getWeekday(day);
+              const wd = getWeekday(day, weekdays);
               const isToday = day === TODAY_DAY;
+              const isSun = weekdays[0] === wd;
+              const isSat = weekdays[6] === wd;
               return (
                 <div
                   key={day}
                   className={`flex w-8 shrink-0 flex-col items-center pb-1 ${isToday ? "border-b-2 border-[#2d5c6e]" : ""}`}
                 >
-                  <span className={`text-[0.5rem] font-semibold ${wd === "일" ? "text-red-400" : wd === "토" ? "text-blue-400" : "text-zinc-400"}`}>
+                  <span className={`text-[0.5rem] font-semibold ${isSun ? "text-red-400" : isSat ? "text-blue-400" : "text-zinc-400"}`}>
                     {wd}
                   </span>
                   <span className={`text-[0.625rem] font-bold ${isToday ? "text-[#2d5c6e]" : "text-zinc-600"}`}>
@@ -93,7 +121,7 @@ export function ShiftTable() {
           </div>
 
           {/* 멤버 행 */}
-          {SHIFT_2026_04.map((member) => (
+          {members.map((member) => (
             <div key={member.id} className={`flex items-center ${member.isMe ? "bg-[rgba(45,92,110,0.04)]" : ""}`}>
               <div className="relative flex w-14 shrink-0 flex-col justify-center py-1 pr-1">
                 {member.isMe && (
@@ -135,15 +163,17 @@ export function ShiftTable() {
               className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
               style={{ background: meta.bg, color: meta.fg }}
             >
-              {code} {meta.desc}
+              {code} {t(DESC_KEYS[code])}
             </span>
           ),
         )}
       </div>
 
-      {/* 내 4월 통계 */}
+      {/* 통계 */}
       <div className="mx-4 mt-4 rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(45,92,110,0.08)]">
-        <p className="mb-3 text-sm font-bold text-zinc-700">내 4월 통계</p>
+        <p className="mb-3 text-sm font-bold text-zinc-700">
+          {t("shift_stats_title").replace("{month}", "4")}
+        </p>
         <div className="flex flex-wrap gap-2">
           {(Object.entries(myCounts) as [ShiftCode, number][]).map(([code, count]) => {
             const meta = SHIFT_CODE_META[code];
@@ -158,11 +188,15 @@ export function ShiftTable() {
 
       {/* 안내 */}
       <div className="mx-4 mt-4 rounded-xl bg-zinc-50 p-4 text-xs leading-relaxed text-zinc-500">
-        💡 근무 변경이 필요하면 수간호사(김수민)에게 직접 요청 후 시스템에 반영됩니다.
+        {t("shift_guidance")}
       </div>
 
       {selectedDay !== null && (
-        <ShiftDayDetail day={selectedDay} onClose={() => setSelectedDay(null)} />
+        <ShiftDayDetail
+          day={selectedDay}
+          onClose={() => setSelectedDay(null)}
+          members={members}
+        />
       )}
     </div>
   );

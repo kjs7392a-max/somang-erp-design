@@ -15,6 +15,7 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { useT } from "@/context/LangContext";
 
 export type MyInfoViewProps = {
   editName: string;
@@ -53,6 +54,7 @@ export function MyInfoView({
   role,
   onRoleChange,
 }: MyInfoViewProps) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({
     name: editName,
@@ -123,14 +125,14 @@ export function MyInfoView({
         <div className="divide-y divide-zinc-100">
           <FieldRow
             icon={<User className="h-4 w-4 text-zinc-400" />}
-            label="이름"
+            label={t("my_name")}
             value={editing ? draft.name : editName}
             editable={editing}
             onChange={(v) => setDraft((d) => ({ ...d, name: v }))}
           />
           <FieldRow
             icon={<Phone className="h-4 w-4 text-zinc-400" />}
-            label="전화번호"
+            label={t("my_phone")}
             value={editing ? draft.phone : editPhone}
             editable={editing}
             type="tel"
@@ -138,24 +140,23 @@ export function MyInfoView({
           />
           <FieldRow
             icon={<Mail className="h-4 w-4 text-zinc-400" />}
-            label="이메일"
+            label={t("my_email")}
             value={editing ? draft.email : editEmail}
             editable={editing}
             type="email"
             onChange={(v) => setDraft((d) => ({ ...d, email: v }))}
           />
-          {/* 읽기 전용: 관리자 배정 */}
           <FieldRow
             icon={<Building2 className="h-4 w-4 text-zinc-400" />}
-            label="부서"
+            label={t("my_dept")}
             value={userDepartment}
-            readonlyHint="관리자 배정"
+            readonlyHint={t("my_admin_assigned")}
           />
           <FieldRow
             icon={<BadgeCheck className="h-4 w-4 text-zinc-400" />}
-            label="직급"
+            label={t("my_position")}
             value={userPosition}
-            readonlyHint="관리자 배정"
+            readonlyHint={t("my_admin_assigned")}
           />
         </div>
       </section>
@@ -188,22 +189,22 @@ export function MyInfoView({
       {/* 설정 섹션 */}
       <section className="mb-5">
         <h3 className="mb-2 px-1 text-[0.8125rem] font-semibold text-zinc-500">
-          설정
+          {t("my_settings")}
         </h3>
         <div className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
           <SettingRow
             icon={<KeyRound className="h-5 w-5 text-zinc-600" />}
-            label="비밀번호 변경"
+            label={t("my_change_password")}
             onClick={onOpenChangePassword}
           />
           <SettingRow
             icon={<Bell className="h-5 w-5 text-zinc-600" />}
-            label="알림 설정"
+            label={t("my_notifications")}
             onClick={onOpenNotifications}
           />
           <SettingRow
             icon={<Info className="h-5 w-5 text-zinc-600" />}
-            label="앱 정보"
+            label={t("my_app_info")}
             valueHint="v0.1.0"
             onClick={onOpenAppInfo}
           />
@@ -217,7 +218,7 @@ export function MyInfoView({
         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-[0.9375rem] font-semibold text-red-600 shadow-[0_2px_8px_rgba(0,0,0,0.06)] active:opacity-80"
       >
         <LogOut className="h-4 w-4" strokeWidth={2.2} />
-        로그아웃
+        {t("my_logout")}
       </button>
     </div>
   );

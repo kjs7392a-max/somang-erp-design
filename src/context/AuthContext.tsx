@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
 import type { Profile } from "@/types/profile";
@@ -22,10 +22,14 @@ const AuthContext = createContext<AuthState>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
   const supabase = createClient();
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
 
   async function fetchProfile(userId: string): Promise<Profile | null> {
     const { data: profileData } = await supabase
@@ -57,7 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null);
       setProfile(null);
       setLoading(false);
-      router.push("/login");
+      // TODO: 임시 비활성화 — 인증 가드 복구 시 아래 주석 해제
+      // if (!pathnameRef.current.startsWith("/ward")) {
+      //   router.push("/login");
+      // }
       return;
     }
     setProfile(p);
@@ -81,7 +88,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    if (!pathnameRef.current.startsWith("/ward")) {
+      router.push("/login");
+    }
   };
 
   return (

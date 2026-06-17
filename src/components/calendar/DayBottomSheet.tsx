@@ -1,8 +1,19 @@
 "use client";
 
 import { X, Lock, Plus, MapPin, Pencil } from "lucide-react";
-import type { CalendarEvent } from "@/types/calendar";
+import type { CalendarEvent, EventCategory } from "@/types/calendar";
 import { CATEGORY_META } from "@/types/calendar";
+import { useT } from "@/context/LangContext";
+import type { TKey } from "@/lib/i18n/translations";
+
+const CAT_KEYS: Record<EventCategory, TKey> = {
+  shift:    "cat_shift",
+  meeting:  "cat_meeting",
+  training: "cat_training",
+  event:    "cat_event",
+  deadline: "cat_deadline",
+  personal: "cat_personal",
+};
 
 export type DayBottomSheetProps = {
   open: boolean;
@@ -23,18 +34,24 @@ export function DayBottomSheet({
   onEditPersonal,
   onStartLeave,
 }: DayBottomSheetProps) {
+  const t = useT();
+
   if (!open) return null;
 
   const d = new Date(date + "T00:00:00");
-  const weekday = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
-  const title = `${d.getMonth() + 1}월 ${d.getDate()}일 (${weekday})`;
+  const weekdays = t("cal_weekdays").split(",");
+  const weekday = weekdays[d.getDay()] ?? "";
+  const title = t("cal_day_title")
+    .replace("{month}", String(d.getMonth() + 1))
+    .replace("{day}", String(d.getDate()))
+    .replace("{weekday}", weekday);
 
   return (
     <div className="fixed inset-0 z-[150] flex items-end justify-center">
       <button
         type="button"
         onClick={onClose}
-        aria-label="닫기"
+        aria-label={t("action_close")}
         className="absolute inset-0 bg-black/40"
       />
       <div className="relative w-full max-w-[430px] rounded-t-3xl bg-white pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
@@ -43,7 +60,7 @@ export function DayBottomSheet({
             type="button"
             onClick={onClose}
             className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 active:bg-zinc-100"
-            aria-label="닫기"
+            aria-label={t("action_close")}
           >
             <X className="h-5 w-5" strokeWidth={2} />
           </button>
@@ -52,7 +69,7 @@ export function DayBottomSheet({
             type="button"
             onClick={onAdd}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3b5bdb] text-white active:opacity-80"
-            aria-label="일정 추가"
+            aria-label={t("cal_add_personal_btn")}
           >
             <Plus className="h-5 w-5" strokeWidth={2.4} />
           </button>
@@ -61,13 +78,13 @@ export function DayBottomSheet({
         <div className="max-h-[60vh] overflow-y-auto px-5 py-4">
           {events.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-12 text-zinc-400">
-              <p className="text-sm">일정이 없어요</p>
+              <p className="text-sm">{t("cal_no_events")}</p>
               <button
                 type="button"
                 onClick={onAdd}
                 className="mt-2 rounded-full bg-[#3b5bdb] px-4 py-2 text-sm font-semibold text-white"
               >
-                + 개인 일정 추가
+                + {t("cal_add_personal_btn")}
               </button>
             </div>
           ) : (
@@ -94,7 +111,7 @@ export function DayBottomSheet({
                           className="rounded-full px-1.5 py-0.5 text-[0.625rem] font-bold"
                           style={{ background: meta.bg, color: meta.color }}
                         >
-                          {meta.label}
+                          {t(CAT_KEYS[evt.category])}
                         </span>
                         {evt.isPrivate && (
                           <Lock className="h-3 w-3 text-zinc-400" strokeWidth={2.2} />
@@ -135,7 +152,7 @@ export function DayBottomSheet({
               className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold text-white"
               style={{ background: "linear-gradient(135deg, #2d5c6e, #1e4554)" }}
             >
-              🌴 이 날짜로 휴가 신청
+              🌴 {t("cal_day_leave_btn")}
             </button>
           </div>
         )}

@@ -1,0 +1,83 @@
+<h2>지문 로그인 버튼 위치</h2>
+<p class="subtitle">로그인 화면에서 지문 버튼을 어디에 두면 좋을까요?</p>
+
+<div class="cards">
+
+  <!-- Option A: 탭 방식 -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: linear-gradient(to bottom, #dbeafe, #3b82f6); border-radius: 12px; padding: 16px; font-family: sans-serif;">
+        <div style="text-align:center; margin-bottom: 12px;">
+          <div style="width:44px;height:44px;background:#fff;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:20px;">🏥</div>
+          <div style="font-weight:bold;color:#1e293b;font-size:13px;">소망의료재단</div>
+        </div>
+        <div style="background:#e8f0fd;border-radius:14px;padding:14px;">
+          <!-- 탭 -->
+          <div style="display:flex;gap:4px;background:#d0ddf7;border-radius:8px;padding:3px;margin-bottom:12px;">
+            <div style="flex:1;background:#fff;border-radius:6px;padding:6px;text-align:center;font-size:11px;font-weight:600;color:#1e40af;">🔑 비밀번호</div>
+            <div style="flex:1;border-radius:6px;padding:6px;text-align:center;font-size:11px;font-weight:600;color:#64748b;">👆 지문</div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:8px;margin-bottom:8px;font-size:11px;color:#9bafd5;">아이디</div>
+          <div style="background:#fff;border-radius:8px;padding:8px;margin-bottom:10px;font-size:11px;color:#9bafd5;">비밀번호</div>
+          <div style="background:#3b82f6;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;color:#fff;">로그인</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 탭 전환</h3>
+      <p>카드 상단에 "비밀번호 | 지문" 탭. 지문 탭 선택 시 사번만 입력하고 지문인식 버튼 표시.</p>
+    </div>
+  </div>
+
+  <!-- Option B: 버튼 추가 -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: linear-gradient(to bottom, #dbeafe, #3b82f6); border-radius: 12px; padding: 16px; font-family: sans-serif;">
+        <div style="text-align:center; margin-bottom: 12px;">
+          <div style="width:44px;height:44px;background:#fff;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:20px;">🏥</div>
+          <div style="font-weight:bold;color:#1e293b;font-size:13px;">소망의료재단</div>
+        </div>
+        <div style="background:#e8f0fd;border-radius:14px;padding:14px;">
+          <div style="background:#fff;border-radius:8px;padding:8px;margin-bottom:8px;font-size:11px;color:#9bafd5;">아이디</div>
+          <div style="background:#fff;border-radius:8px;padding:8px;margin-bottom:10px;font-size:11px;color:#9bafd5;">비밀번호</div>
+          <div style="background:#3b82f6;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;color:#fff;margin-bottom:8px;">로그인</div>
+          <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin:4px 0 8px;">
+            <div style="flex:1;height:1px;background:#c5d2ec;"></div>
+            <span style="font-size:10px;color:#9bafd5;">또는</span>
+            <div style="flex:1;height:1px;background:#c5d2ec;"></div>
+          </div>
+          <div style="background:#fff;border:1.5px solid #3b82f6;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;color:#3b82f6;">👆 지문으로 로그인</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 구분선 + 보조 버튼</h3>
+      <p>기존 로그인 버튼 아래 "또는" 구분선과 함께 지문 버튼 추가. 두 방법이 명확히 분리됨.</p>
+    </div>
+  </div>
+
+  <!-- Option C: 아이콘 버튼 -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: linear-gradient(to bottom, #dbeafe, #3b82f6); border-radius: 12px; padding: 16px; font-family: sans-serif;">
+        <div style="text-align:center; margin-bottom: 12px;">
+          <div style="width:44px;height:44px;background:#fff;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:20px;">🏥</div>
+          <div style="font-weight:bold;color:#1e293b;font-size:13px;">소망의료재단</div>
+        </div>
+        <div style="background:#e8f0fd;border-radius:14px;padding:14px;">
+          <div style="background:#fff;border-radius:8px;padding:8px;margin-bottom:8px;font-size:11px;color:#9bafd5;">아이디</div>
+          <div style="background:#fff;border-radius:8px;padding:8px;margin-bottom:10px;font-size:11px;color:#9bafd5;">비밀번호</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;background:#3b82f6;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;color:#fff;">로그인</div>
+            <div style="width:42px;background:#fff;border:1.5px solid #3b82f6;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">👆</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. 아이콘 버튼</h3>
+      <p>로그인 버튼 오른쪽에 지문 아이콘만 표시. 화면이 깔끔하지만 처음엔 눈에 잘 안 띔.</p>
+    </div>
+  </div>
+
+</div>

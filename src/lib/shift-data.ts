@@ -1,4 +1,4 @@
-export type ShiftCode = "D" | "E" | "N" | "O" | "V" | "T";
+export type ShiftCode = "A" | "S" | "V" | "H" | "OFF";
 
 export type ShiftMember = {
   id: string;
@@ -12,45 +12,40 @@ export const SHIFT_CODE_META: Record<
   ShiftCode,
   { label: string; bg: string; fg: string; time: string; desc: string }
 > = {
-  D: { label: "Day",     bg: "#fff7e6", fg: "#d97706", time: "07:00–15:00",    desc: "데이 (오전)" },
-  E: { label: "Evening", bg: "#fef2f2", fg: "#dc2626", time: "15:00–23:00",    desc: "이브닝 (오후)" },
-  N: { label: "Night",   bg: "#eef2ff", fg: "#4f46e5", time: "23:00–익일 07:00", desc: "나이트 (야간)" },
-  O: { label: "Off",     bg: "#f1f5f7", fg: "#6b8c9a", time: "—",              desc: "오프 (휴무)" },
-  V: { label: "Vac",     bg: "#cffafe", fg: "#0e7490", time: "—",              desc: "연차" },
-  T: { label: "Train",   bg: "#fef3c7", fg: "#a16207", time: "—",              desc: "교육" },
+  A:   { label: "A",   bg: "#e8f4ff", fg: "#1d6fa5", time: "09:00–18:00", desc: "근무" },
+  S:   { label: "S",   bg: "#fff4e6", fg: "#d97706", time: "—",           desc: "출장" },
+  V:   { label: "V",   bg: "#cffafe", fg: "#0e7490", time: "—",           desc: "연차" },
+  H:   { label: "H",   bg: "#f3f0ff", fg: "#7048e8", time: "—",           desc: "반차" },
+  OFF: { label: "OFF", bg: "#f1f5f7", fg: "#6b8c9a", time: "—",           desc: "휴무" },
 };
 
-const BASE_MEMBERS = [
-  { id: "N001", name: "윤민주", role: "간호사",     isMe: true  },
-  { id: "N002", name: "김미현", role: "수간호사"                },
-  { id: "N003", name: "함수정", role: "수간호사"                },
-  { id: "N004", name: "사은경", role: "주임간호사"              },
-  { id: "N005", name: "최중선", role: "주임간호사"              },
-  { id: "N006", name: "임보람", role: "주임간호사"              },
-  { id: "N007", name: "신채영", role: "주임간호사"              },
+// April 1, 2026 = Wednesday → 7일 주기: 수목금토일월화
+const WEEKDAY_PATTERN: ShiftCode[] = ["A", "A", "A", "OFF", "OFF", "A", "A"];
+
+const BASE_MEMBERS: Omit<ShiftMember, "row">[] = [
+  { id: "G001", name: "이재훈", role: "주임",   isMe: true },
+  { id: "G002", name: "박지수", role: "대리"              },
+  { id: "G003", name: "최하늘", role: "사원"              },
+  { id: "G004", name: "김성호", role: "사원"              },
+  { id: "G005", name: "이미래", role: "대리"              },
+  { id: "G006", name: "정수현", role: "주임"              },
+  { id: "G007", name: "안준혁", role: "사원"              },
 ];
 
-const PATTERNS: ShiftCode[][] = [
-  ["D","D","E","E","N","N","O","O"],
-  ["D","D","D","D","D","O","O"],
-  ["E","E","N","N","O","O","D","D"],
-  ["N","N","O","O","D","D","E","E"],
-  ["O","O","D","D","E","E","N","N"],
-  ["E","N","O","D","E","N","O","D"],
-  ["D","E","N","O","D","E","N","O"],
-];
-
-export const SHIFT_2026_04: ShiftMember[] = BASE_MEMBERS.map((m, i) => {
-  const pat = PATTERNS[i] ?? (["D","E","N","O"] as ShiftCode[]);
-  const row: ShiftCode[] = Array.from({ length: 30 }, (_, d) => pat[d % pat.length]);
+export const SHIFT_2026_04: ShiftMember[] = BASE_MEMBERS.map((m) => {
+  const row: ShiftCode[] = Array.from(
+    { length: 30 },
+    (_, d) => WEEKDAY_PATTERN[d % 7],
+  );
   return { ...m, row };
 });
 
-// 개별 오버라이드
-SHIFT_2026_04[0].row[16] = "V"; // 박지영 4/17
-SHIFT_2026_04[0].row[24] = "V"; // 박지영 4/25
-SHIFT_2026_04[0].row[21] = "T"; // 박지영 4/22
-SHIFT_2026_04[2].row[19] = "V"; // 이연주 4/20
-SHIFT_2026_04[3].row[22] = "V"; // 최유진 4/23
-SHIFT_2026_04[5].row[27] = "T"; // 조민서 4/28
-SHIFT_2026_04[6].row[10] = "V"; // 윤서아 4/11
+// 개별 오버라이드 (주말 제외 평일 기준)
+SHIFT_2026_04[0].row[8]  = "V";   // 이재훈 4/9 (목) 연차
+SHIFT_2026_04[1].row[12] = "S";   // 박지수 4/13 (월) 출장
+SHIFT_2026_04[1].row[13] = "S";   // 박지수 4/14 (화) 출장
+SHIFT_2026_04[2].row[16] = "V";   // 최하늘 4/17 (금) 연차
+SHIFT_2026_04[3].row[20] = "H";   // 김성호 4/21 (화) 반차
+SHIFT_2026_04[4].row[21] = "S";   // 이미래 4/22 (수) 출장
+SHIFT_2026_04[5].row[24] = "V";   // 정수현 4/25 (토→실제 금 25일) 연차
+SHIFT_2026_04[6].row[15] = "H";   // 안준혁 4/16 (목) 반차

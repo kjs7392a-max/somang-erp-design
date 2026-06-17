@@ -1,6 +1,72 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 
+const DRAFT_DETAIL_SEED: DraftDetail[] = [
+  {
+    id: "D-0421-01",
+    title: "연차 신청서",
+    doc_type: "vacation",
+    status: "in_progress",
+    created_at: "2026-04-21T09:12:00.000Z",
+    drafterName: "이재훈",
+    drafterDept: "총무과",
+    drafterPosition: "주임",
+    body: {
+      vacationType: "annual",
+      startDate: "2026-04-22",
+      endDate: "2026-04-24",
+      reason: "개인 사정으로 인한 연차 사용",
+      contact: "010-1234-5678",
+    },
+    steps: [
+      { id: "S-0421-01-1", order_index: 1, approver_id: "mock-han", approverName: "한기석", approverDept: "총무과", approverPosition: "과장", action: "pending", comment: null, acted_at: null },
+      { id: "S-0421-01-2", order_index: 2, approver_id: "mock-lee", approverName: "이강표", approverDept: "경영진", approverPosition: "이사장", action: "waiting", comment: null, acted_at: null },
+    ],
+  },
+  {
+    id: "D-0420-03",
+    title: "비품 구매 품의서",
+    doc_type: "proposal",
+    status: "in_progress",
+    created_at: "2026-04-20T14:35:00.000Z",
+    drafterName: "박지수",
+    drafterDept: "총무과",
+    drafterPosition: "대리",
+    body: {
+      "제목": "사무용 비품 구매 품의",
+      "구매 항목": "복합기 토너 카트리지 5개, A4 용지 10박스",
+      "금액": "385,000원",
+      "구매처": "오피스디포",
+      "사유": "소모품 재고 소진으로 인한 긴급 구매",
+    },
+    steps: [
+      { id: "S-0420-03-1", order_index: 1, approver_id: "mock-han", approverName: "한기석", approverDept: "총무과", approverPosition: "과장", action: "pending", comment: null, acted_at: null },
+      { id: "S-0420-03-2", order_index: 2, approver_id: "mock-lee", approverName: "이강표", approverDept: "경영진", approverPosition: "이사장", action: "waiting", comment: null, acted_at: null },
+    ],
+  },
+  {
+    id: "D-0419-07",
+    title: "외부 교육 파견 신청서",
+    doc_type: "proposal",
+    status: "in_progress",
+    created_at: "2026-04-19T11:00:00.000Z",
+    drafterName: "최하늘",
+    drafterDept: "행정팀",
+    drafterPosition: "사원",
+    body: {
+      "제목": "병원행정 실무 교육 파견 신청",
+      "교육기관": "한국병원행정협회",
+      "교육일": "2026-05-10 ~ 2026-05-11 (2일)",
+      "교육비": "280,000원",
+      "사유": "병원 행정 역량 강화 및 자격증 취득 준비",
+    },
+    steps: [
+      { id: "S-0419-07-1", order_index: 1, approver_id: "mock-han", approverName: "한기석", approverDept: "총무과", approverPosition: "과장", action: "pending", comment: null, acted_at: null },
+      { id: "S-0419-07-2", order_index: 2, approver_id: "mock-lee", approverName: "이강표", approverDept: "경영진", approverPosition: "이사장", action: "waiting", comment: null, acted_at: null },
+    ],
+  },
+];
+
 export type StepDetail = {
   id: string;
   order_index: number;
@@ -52,7 +118,12 @@ export function useDraftDetail(draftId: string) {
       .single();
 
     setLoading(false);
-    if (dbError || !data) { setError(dbError?.message ?? "조회 실패"); return; }
+    if (dbError || !data) {
+      const seed = DRAFT_DETAIL_SEED.find((d) => d.id === draftId);
+      if (seed) { setDetail(seed); return; }
+      setError(dbError?.message ?? "조회 실패");
+      return;
+    }
 
     const drafter = data.profiles as unknown as { full_name: string; department: string; position: string } | null;
     const contents = data.document_contents as unknown as { body: Record<string, unknown> } | null;

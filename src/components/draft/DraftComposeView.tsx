@@ -13,6 +13,7 @@ import { AttachmentPicker, type AttachmentItem } from "./AttachmentPicker";
 import { ApprovalLineView } from "./ApprovalLineView";
 import { SubmitConfirmModal } from "./SubmitConfirmModal";
 import type { DraftSubmitData } from "@/hooks/useDraftSubmit";
+import { useT } from "@/context/LangContext";
 
 type Props = {
   kind: FormKind;
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialStartDate, initialEndDate }: Props) {
+  const t = useT();
   const meta = FORMS[kind];
 
   // 공통
@@ -60,21 +62,21 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
   );
 
   const validate = (): string | null => {
-    if (!title.trim()) return "제목을 입력해주세요.";
+    if (!title.trim()) return t("validate_title");
     if (kind === "vacation") {
-      if (!startDate || !endDate) return "기간을 입력해주세요.";
-      if (days <= 0) return "기간이 올바르지 않습니다.";
-      if (!body.trim()) return "사유를 입력해주세요.";
-      if (!contact.trim()) return "비상 연락처를 입력해주세요.";
+      if (!startDate || !endDate) return t("validate_period");
+      if (days <= 0) return t("validate_invalid_period");
+      if (!body.trim()) return t("validate_reason");
+      if (!contact.trim()) return t("validate_contact");
     }
     if (kind === "proposal") {
-      if (!body.trim()) return "구매사유 및 세부내역을 입력해주세요.";
+      if (!body.trim()) return t("validate_proposal_body");
     }
     if (kind === "resignation") {
-      if (!resignDate) return "사직 희망일을 입력해주세요.";
+      if (!resignDate) return t("validate_resign_date");
     }
     if (attachmentRequired && attachments.length === 0) {
-      return "병가는 증빙서류 첨부가 필수입니다.";
+      return t("validate_attachment");
     }
     return null;
   };
@@ -116,7 +118,7 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
   };
 
   const handleSaveDraft = () => {
-    alert("임시 저장되었습니다.");
+    alert(t("compose_saved_msg"));
   };
 
   return (
@@ -136,12 +138,12 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
 
       <div className="px-5 py-5 space-y-5">
         {/* 제목 */}
-        <Field label="제목" required>
+        <Field label={t("compose_title_label")} required>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="제목을 입력하세요"
+            placeholder={t("compose_title_placeholder")}
             className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[#3b5bdb] focus:outline-none"
           />
         </Field>
@@ -149,26 +151,26 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
         {/* 연차 전용 */}
         {kind === "vacation" && (
           <>
-            <Field label="휴가 종류" required>
+            <Field label={t("compose_vacation_type")} required>
               <div className="grid grid-cols-3 gap-2">
-                {VACATION_TYPES.map((t) => (
+                {VACATION_TYPES.map((vt) => (
                   <button
-                    key={t.value}
+                    key={vt.value}
                     type="button"
-                    onClick={() => setVacType(t.value)}
+                    onClick={() => setVacType(vt.value)}
                     className={`rounded-xl border px-2 py-2.5 text-sm font-semibold transition ${
-                      vacType === t.value
+                      vacType === vt.value
                         ? "border-[#3b5bdb] bg-[#eef2ff] text-[#3b5bdb]"
                         : "border-zinc-200 bg-white text-zinc-600"
                     }`}
                   >
-                    {t.label}
+                    {vt.label}
                   </button>
                 ))}
               </div>
             </Field>
 
-            <Field label="기간" required>
+            <Field label={t("compose_period")} required>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="date"
@@ -185,22 +187,22 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
               </div>
               {days > 0 && (
                 <p className="mt-2 text-xs text-zinc-500">
-                  총 <strong className="text-[#3b5bdb]">{days}</strong>일
+                  {t("compose_total_days").replace("{n}", String(days))}
                 </p>
               )}
             </Field>
 
-            <Field label="사유" required>
+            <Field label={t("compose_reason")} required>
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 rows={4}
-                placeholder="사유를 입력하세요"
+                placeholder={t("compose_reason_placeholder")}
                 className="w-full resize-none rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[#3b5bdb] focus:outline-none"
               />
             </Field>
 
-            <Field label="비상 연락처 (휴대폰)" required>
+            <Field label={t("compose_emergency_contact")} required>
               <input
                 type="tel"
                 value={contact}
@@ -215,7 +217,7 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
         {/* 품의 전용 */}
         {kind === "proposal" && (
           <>
-            <Field label="협의 부서">
+            <Field label={t("compose_coop_dept")}>
               <input
                 type="text"
                 value={coopDept}
@@ -225,7 +227,7 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
               />
             </Field>
 
-            <Field label="금액 (선택)">
+            <Field label={t("compose_amount")}>
               <input
                 type="text"
                 value={amount}
@@ -235,7 +237,7 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
               />
             </Field>
 
-            <Field label="구매사유 및 세부내역" required>
+            <Field label={t("compose_purchase_detail")} required>
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
@@ -250,7 +252,7 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
         {/* 사직 전용 */}
         {kind === "resignation" && (
           <>
-            <Field label="사직 희망일" required>
+            <Field label={t("compose_resign_date")} required>
               <input
                 type="date"
                 value={resignDate}
@@ -259,7 +261,7 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
               />
             </Field>
 
-            <Field label="기타 사유">
+            <Field label={t("compose_other_reason")}>
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
@@ -297,14 +299,14 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
             onClick={handleSaveDraft}
             className="flex-1 rounded-xl border border-zinc-200 bg-white py-3.5 text-sm font-semibold text-zinc-700 active:bg-zinc-50"
           >
-            임시저장
+            {t("compose_save_draft")}
           </button>
           <button
             type="button"
             onClick={handleOpenConfirm}
             className="flex-[2] rounded-xl bg-[#3b5bdb] py-3.5 text-sm font-bold text-white shadow-[0_4px_12px_rgba(59,91,219,0.28)] active:scale-[0.98]"
           >
-            상신하기
+            {t("compose_submit")}
           </button>
         </div>
       </div>
@@ -325,8 +327,8 @@ export function DraftComposeView({ kind, onBack, onSubmitted, onSubmit, initialS
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/30">
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-6 shadow-2xl animate-[pop_0.25s_ease-out]">
             <CheckCircle2 className="h-12 w-12 text-[#0ca678]" strokeWidth={2} />
-            <p className="text-base font-bold text-zinc-900">상신 완료</p>
-            <p className="text-xs text-zinc-500">결재자에게 전달되었습니다</p>
+            <p className="text-base font-bold text-zinc-900">{t("compose_submitted_title")}</p>
+            <p className="text-xs text-zinc-500">{t("compose_submitted_sub")}</p>
           </div>
           <style jsx>{`
             @keyframes pop {

@@ -6,6 +6,7 @@ import type { UserRole } from "@/types/role";
 
 export function deriveDisplayRole(profile: Profile): UserRole {
   if (profile.is_super_admin || profile.is_global_viewer) return "exec";
+  if (profile.is_approver) return "manager";
   return "staff";
 }
 

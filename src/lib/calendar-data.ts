@@ -7,14 +7,15 @@ const STORAGE_KEY = "somang-personal-events";
 
 /** 관리자 배정 + 시스템 자동 생성 목업 */
 export const MOCK_EVENTS: CalendarEvent[] = [
-  { id: "s1", title: "주간 회의",           date: "2026-04-20", startTime: "10:00", endTime: "11:00", category: "meeting" },
-  { id: "s2", title: "의료진 교육 (CPR)",   date: "2026-04-22", startTime: "14:00", endTime: "16:00", category: "training" },
-  { id: "s3", title: "통합 워크숍",         date: "2026-04-20", startTime: "09:00", endTime: "18:00", category: "event" },
-  { id: "s4", title: "야간 당직",           date: "2026-04-18", category: "shift" },
-  { id: "s5", title: "오프",                date: "2026-04-21", category: "shift" },
-  { id: "s6", title: "연차 결재 마감",      date: "2026-04-17", category: "deadline" },
-  { id: "s7", title: "부서장 회의",         date: "2026-04-25", startTime: "15:00", endTime: "16:30", category: "meeting" },
-  { id: "s8", title: "감염관리 교육",       date: "2026-04-28", startTime: "13:00", endTime: "14:30", category: "training" },
+  { id: "s1", title: "주간 업무 회의",       date: "2026-04-20", startTime: "10:00", endTime: "11:00", category: "meeting" },
+  { id: "s2", title: "행정 역량 강화 교육",  date: "2026-04-22", startTime: "14:00", endTime: "16:00", category: "training" },
+  { id: "s3", title: "통합 워크숍",          date: "2026-04-20", startTime: "09:00", endTime: "18:00", category: "event" },
+  { id: "s4", title: "월간 보고서 제출",     date: "2026-04-25", category: "deadline" },
+  { id: "s5", title: "연차 결재 마감",       date: "2026-04-17", category: "deadline" },
+  { id: "s6", title: "부서장 회의",          date: "2026-04-28", startTime: "15:00", endTime: "16:30", category: "meeting" },
+  { id: "s7", title: "비품 재고 점검",       date: "2026-04-15", startTime: "10:00", endTime: "11:00", category: "meeting" },
+  { id: "s8", title: "박지수 출장",          date: "2026-04-13", category: "shift" },
+  { id: "s9", title: "박지수 출장",          date: "2026-04-14", category: "shift" },
 ];
 
 function loadPersonal(): CalendarEvent[] {

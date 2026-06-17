@@ -2,12 +2,19 @@
 
 import AppHeader from "@/components/layout/AppHeader";
 import { AppBottomNav } from "@/components/layout/AppBottomNav";
+import { useApprovalNotify } from "@/hooks/useApprovalNotify";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
 
 export type MainShellProps = {
   children: React.ReactNode;
-  /** 헤더 제목 (각 page에서 덮어쓰기 가능) */
   headerTitle?: string;
 };
+
+function ApprovalNotifyBridge() {
+  useApprovalNotify();
+  usePushSubscription();
+  return null;
+}
 
 export function MainShell({ children, headerTitle }: MainShellProps) {
   return (
@@ -17,6 +24,7 @@ export function MainShell({ children, headerTitle }: MainShellProps) {
         {children}
       </div>
       <AppBottomNav />
+      <ApprovalNotifyBridge />
     </div>
   );
 }

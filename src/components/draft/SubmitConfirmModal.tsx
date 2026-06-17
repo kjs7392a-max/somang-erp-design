@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { X, Send, AlertCircle } from "lucide-react";
 import type { ApprovalLine } from "@/lib/draft-forms";
+import { useT } from "@/context/LangContext";
 
 type Props = {
   open: boolean;
@@ -23,6 +24,8 @@ export function SubmitConfirmModal({
   onClose,
   onConfirm,
 }: Props) {
+  const t = useT();
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -50,12 +53,12 @@ export function SubmitConfirmModal({
 
         <div className="flex items-start justify-between gap-3 px-5 pt-2 pb-4">
           <div className="flex-1">
-            <h2 className="text-lg font-bold text-zinc-900">상신하시겠습니까?</h2>
-            <p className="mt-1 text-xs text-zinc-500">상신 시 본인 아이디로 서명 처리됩니다.</p>
+            <h2 className="text-lg font-bold text-zinc-900">{t("confirm_submit_title")}</h2>
+            <p className="mt-1 text-xs text-zinc-500">{t("confirm_submit_sign")}</p>
           </div>
           <button
             type="button"
-            aria-label="닫기"
+            aria-label={t("action_close")}
             onClick={onClose}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100 active:scale-95"
           >
@@ -64,19 +67,22 @@ export function SubmitConfirmModal({
         </div>
 
         <div className="px-5 pb-4 space-y-2.5">
-          <Row label="양식" value={formLabel} />
-          <Row label="제목" value={title || "(제목 없음)"} />
+          <Row label={t("confirm_form")} value={formLabel} />
+          <Row label={t("compose_title_label")} value={title || t("confirm_no_title")} />
           <Row
-            label="결재선"
+            label={t("detail_approval_line")}
             value={approvalLine.map((s) => s.position).join(" → ")}
           />
-          <Row label="첨부" value={`${attachmentCount}개`} />
+          <Row
+            label={t("confirm_attachment")}
+            value={t("confirm_attachment_n").replace("{n}", String(attachmentCount))}
+          />
         </div>
 
         <div className="mx-5 mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2.5">
           <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" strokeWidth={2.2} />
           <p className="text-xs leading-relaxed text-amber-800">
-            상신 후에는 수정이 제한되며, 결재자가 반려해야 수정할 수 있습니다.
+            {t("confirm_warning")}
           </p>
         </div>
 
@@ -86,7 +92,7 @@ export function SubmitConfirmModal({
             onClick={onClose}
             className="flex-1 rounded-xl border border-zinc-200 py-3 text-sm font-semibold text-zinc-700 active:bg-zinc-50"
           >
-            취소
+            {t("action_cancel")}
           </button>
           <button
             type="button"
@@ -94,7 +100,7 @@ export function SubmitConfirmModal({
             className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#3b5bdb] py-3 text-sm font-semibold text-white active:scale-[0.98]"
           >
             <Send className="h-4 w-4" strokeWidth={2.2} />
-            상신하기
+            {t("compose_submit")}
           </button>
         </div>
 

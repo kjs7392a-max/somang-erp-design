@@ -6,7 +6,11 @@ import { BiometricLockScreen } from "@/components/auth/BiometricLockScreen";
 import { createClient } from "@/lib/supabase";
 import { ROUTES } from "@/lib/routes";
 import { useWebAuthn } from "@/hooks/useWebAuthn";
-import { registerBiometric, getRegisteredEmployeeId, prefetchAuthOptions } from "@/lib/webauthn-client";
+import {
+  registerBiometric,
+  getRegisteredEmployeeId,
+  prefetchAuthOptions,
+} from "@/lib/webauthn-client";
 
 export default function LoginPage() {
   const [userId, setUserId] = useState("");
@@ -15,10 +19,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
 
-  // localStorage 동기 체크 & options fetch 즉시 시작 — 첫 렌더 시점에 실행
+  // 첫 렌더 시점에 등록 여부 확인 & options 미리 fetch
   const [initiallyRegistered] = useState(() => {
     const registered = !!getRegisteredEmployeeId();
-    if (registered) prefetchAuthOptions(); // 잠금화면 렌더와 동시에 서버 요청 시작
+    if (registered) prefetchAuthOptions();
     return registered;
   });
 
@@ -30,7 +34,7 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn();
 
-  // 지문 등록 기기: isSupported 대기 없이 마운트 즉시 인증 시작
+  // 지문 등록 기기: 마운트 즉시 인증 시작
   useEffect(() => {
     if (initiallyRegistered) {
       authenticate();
@@ -41,29 +45,36 @@ export default function LoginPage() {
     e.preventDefault();
     const form = e.currentTarget as HTMLFormElement;
     const fd = new FormData(form);
-    const actualUserId = ((fd.get("userId") as string | null) || userId).trim();
+    const rawId = ((fd.get("userId") as string | null) || userId).trim();
     const actualPassword = (fd.get("password") as string | null) || password;
-    if (!actualUserId || !actualPassword) {
-      setError("사번과 비밀번호를 입력하세요.");
+
+    if (!rawId || !actualPassword) {
+      setError("아이디와 비밀번호를 입력하세요.");
       return;
     }
     setError(null);
     setLoading(true);
+
+    // @ 포함 시 이메일 그대로, 없으면 @somang.internal 추가
+    const email = rawId.includes("@")
+      ? rawId.toLowerCase()
+      : `${rawId.toLowerCase()}@somang.internal`;
+
     try {
       const supabase = createClient();
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: `${actualUserId.toLowerCase()}@somang.internal`,
+        email,
         password: actualPassword,
       });
       if (authError) {
         setLoading(false);
-        setError("사번 또는 비밀번호가 올바르지 않습니다.");
+        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
         return;
       }
-      // ID/PW 로그인 시 항상 재등록 (기존 클라우드 패스키 → 기기 로컬 자동 마이그레이션)
+      // ID/PW 로그인 시 항상 재등록 (클라우드 패스키 → 기기 로컬 마이그레이션)
       if (isSupported) {
         try {
-          await registerBiometric(actualUserId, true);
+          await registerBiometric(rawId, true);
         } catch {
           // 취소 또는 실패 → 홈으로
         }
@@ -75,7 +86,7 @@ export default function LoginPage() {
     }
   };
 
-  // 지문 등록된 기기 & 폼 미표시 → 잠금화면
+  // 지문 등록 기기 & 폼 미표시 → 잠금화면
   if (initiallyRegistered && !showLoginForm) {
     return (
       <BiometricLockScreen

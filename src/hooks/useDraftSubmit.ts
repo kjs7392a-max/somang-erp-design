@@ -28,7 +28,8 @@ export function useDraftSubmit() {
       } catch (e) {
         return { error: (e as Error).message };
       }
-      if (uuid) {
+      // 기안자 본인이 결재자인 경우 스킵
+      if (uuid && uuid !== profile.id) {
         steps.push({ uuid, orderIndex });
         orderIndex++;
       }
@@ -67,12 +68,12 @@ export function useDraftSubmit() {
 
     if (contentsError) return { error: contentsError.message };
 
-    // draft_approval_steps INSERT
+    // draft_approval_steps INSERT — 첫 번째만 pending, 나머지는 waiting
     const stepRows = steps.map((s) => ({
       draft_id: draft.id,
       approver_id: s.uuid,
       order_index: s.orderIndex,
-      action: "pending",
+      action: s.orderIndex === 1 ? "pending" : "waiting",
     }));
 
     const { error: stepsError } = await supabase
@@ -80,6 +81,21 @@ export function useDraftSubmit() {
       .insert(stepRows);
 
     if (stepsError) return { error: stepsError.message };
+
+    // 첫 번째 결재자에게 Push 알림
+    const firstApproverId = steps[0]?.uuid;
+    if (firstApproverId) {
+      await fetch("/api/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: firstApproverId,
+          title: `${data.title} — 결재 요청`,
+          body: "새 기안이 상신되었습니다",
+          url: `/approval/${draft.id}`,
+        }),
+      }).catch(() => {});
+    }
 
     return {};
   }

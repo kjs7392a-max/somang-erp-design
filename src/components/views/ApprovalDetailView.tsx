@@ -5,6 +5,8 @@ import type { ApprovalDetailTab } from "@/types/navigation";
 import { PdfPreviewSheet } from "@/components/pdf/PdfPreviewSheet";
 import type { DraftDetail } from "@/hooks/useDraftDetail";
 import { VACATION_TYPES } from "@/lib/draft-forms";
+import { useT } from "@/context/LangContext";
+import type { TKey } from "@/lib/i18n/translations";
 
 export type ApprovalDetailViewProps = {
   draft: DraftDetail;
@@ -27,27 +29,43 @@ export type ApprovalDetailViewProps = {
   onConfirmHold?: () => void;
 };
 
-const ACTION_STYLE: Record<string, { textCls: string; label: string; numBg: string }> = {
-  pending:  { textCls: "text-amber-500", label: "대기중", numBg: "bg-amber-500" },
-  approved: { textCls: "text-green-600", label: "승인",   numBg: "bg-green-500" },
-  rejected: { textCls: "text-red-500",   label: "반려",   numBg: "bg-red-500"   },
-  held:     { textCls: "text-gray-400",  label: "보류",   numBg: "bg-gray-300"  },
-};
-
-function toKoreanDate(d: string): string {
+function formatDate(d: string, t: (k: TKey) => string): string {
   const [y, m, day] = d.split("-");
-  return `${y}년 ${m}월 ${day}일`;
+  return t("detail_date_format")
+    .replace("{year}", y ?? "")
+    .replace("{month}", m ?? "")
+    .replace("{day}", day ?? "");
 }
 
-function VacationBodySection({ body }: { body: Record<string, unknown> }) {
+function GenericBodySection({ body }: { body: Record<string, unknown> }) {
+  const entries = Object.entries(body).filter(([, v]) => v !== undefined && v !== null && v !== "");
+  return (
+    <>
+      {entries.map(([label, value], i, arr) => (
+        <div key={label} className={`flex py-2 ${i < arr.length - 1 ? "border-b border-gray-100" : ""}`}>
+          <span className="w-[90px] flex-shrink-0 text-sm text-[#666]">{label}</span>
+          <span className="text-[0.9375rem] font-semibold text-[#333]">{String(value)}</span>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function VacationBodySection({
+  body,
+  t,
+}: {
+  body: Record<string, unknown>;
+  t: (k: TKey) => string;
+}) {
   const vacationLabel =
-    VACATION_TYPES.find((t) => t.value === body.vacationType)?.label ??
+    VACATION_TYPES.find((vt) => vt.value === body.vacationType)?.label ??
     String(body.vacationType ?? "");
   const rows = [
-    { label: "휴가 종류",   value: vacationLabel },
-    { label: "기간",        value: `${body.startDate ?? ""} ~ ${body.endDate ?? ""}` },
-    { label: "사유",        value: String(body.reason ?? "") },
-    { label: "비상연락처",  value: String(body.contact ?? "") },
+    { label: t("compose_vacation_type"), value: vacationLabel },
+    { label: t("compose_period"),        value: `${body.startDate ?? ""} ~ ${body.endDate ?? ""}` },
+    { label: t("compose_reason"),        value: String(body.reason ?? "") },
+    { label: t("compose_emergency_contact"), value: String(body.contact ?? "") },
   ];
   return (
     <>
@@ -61,7 +79,13 @@ function VacationBodySection({ body }: { body: Record<string, unknown> }) {
   );
 }
 
-function VacationOriginalSection({ draft }: { draft: DraftDetail }) {
+function VacationOriginalSection({
+  draft,
+  t,
+}: {
+  draft: DraftDetail;
+  t: (k: TKey) => string;
+}) {
   const { body, steps } = draft;
   const start = String(body.startDate ?? "");
   const end   = String(body.endDate   ?? "");
@@ -69,20 +93,20 @@ function VacationOriginalSection({ draft }: { draft: DraftDetail }) {
     ? `(${Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1}일)`
     : "";
   const periodStr = start && end
-    ? `${toKoreanDate(start)} ~ ${toKoreanDate(end)} ${dayCount}`
+    ? `${formatDate(start, t)} ~ ${formatDate(end, t)} ${dayCount}`
     : "";
   const detailRows = [
-    { label: "소속",       value: draft.drafterDept },
-    { label: "성명",       value: draft.drafterName },
-    { label: "직책",       value: draft.drafterPosition },
-    { label: "기간",       value: periodStr },
-    { label: "사유",       value: String(body.reason ?? "") },
-    { label: "비상연락처", value: String(body.contact ?? "") },
+    { label: t("detail_dept"),                  value: draft.drafterDept },
+    { label: t("detail_name"),                  value: draft.drafterName },
+    { label: t("detail_position"),              value: draft.drafterPosition },
+    { label: t("compose_period"),               value: periodStr },
+    { label: t("compose_reason"),               value: String(body.reason ?? "") },
+    { label: t("compose_emergency_contact"),    value: String(body.contact ?? "") },
   ];
   return (
     <>
       <h3 className="mb-6 border-b-2 border-[#333] pb-4 text-center text-xl font-bold text-[#1a1a1a]">
-        연 차 신 청 서
+        {t("detail_vacation_form_title")}
       </h3>
       <table className="mb-6 w-full border-collapse border border-[#ddd] text-[0.8125rem]">
         <tbody>
@@ -111,9 +135,11 @@ function VacationOriginalSection({ draft }: { draft: DraftDetail }) {
         </tbody>
       </table>
       <div className="mt-8 text-center text-sm text-[#666]">
-        <p>위와 같이 연차를 신청하오니 승인하여 주시기 바랍니다.</p>
-        <p className="mt-8">{toKoreanDate(draft.created_at.slice(0, 10))}</p>
-        <p className="mt-4 font-semibold">신청자: {draft.drafterName} (인)</p>
+        <p>{t("detail_vacation_apply_text")}</p>
+        <p className="mt-8">{formatDate(draft.created_at.slice(0, 10), t)}</p>
+        <p className="mt-4 font-semibold">
+          {t("detail_applicant").replace("{name}", draft.drafterName)}
+        </p>
       </div>
     </>
   );
@@ -139,7 +165,15 @@ export function ApprovalDetailView({
   onConfirmReject,
   onConfirmHold,
 }: ApprovalDetailViewProps) {
+  const t = useT();
   const [showPdf, setShowPdf] = useState(false);
+
+  const ACTION_STYLE: Record<string, { textCls: string; label: string; numBg: string }> = {
+    pending:  { textCls: "text-amber-500", label: t("status_pending"),  numBg: "bg-amber-500" },
+    approved: { textCls: "text-green-600", label: t("status_approved"), numBg: "bg-green-500" },
+    rejected: { textCls: "text-red-500",   label: t("status_rejected"), numBg: "bg-red-500"   },
+    held:     { textCls: "text-gray-400",  label: t("status_held"),     numBg: "bg-gray-300"  },
+  };
 
   const pdfStages = draft.steps.map((s) => ({
     title: s.approverPosition || s.approverDept,
@@ -164,7 +198,7 @@ export function ApprovalDetailView({
               <span className="text-sm text-[#666]">{draft.drafterDept}</span>
             </div>
             <div className="mt-1.5 text-[0.8125rem] text-[#999]">
-              작성일: {draft.created_at.slice(0, 10)}
+              {t("detail_created_at")} {draft.created_at.slice(0, 10)}
             </div>
           </div>
         </div>
@@ -182,7 +216,7 @@ export function ApprovalDetailView({
                     : "bg-transparent text-[#666]"
                 }`}
               >
-                {tab === "summary" ? "요약" : "원문 보기"}
+                {tab === "summary" ? t("detail_tab_summary") : t("detail_tab_original")}
               </button>
             ))}
           </div>
@@ -192,17 +226,19 @@ export function ApprovalDetailView({
           <div className="space-y-4 px-5">
             <div className="rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <h3 className="mb-4 text-[1.0625rem] font-bold text-[#1a1a1a]">
-                문서 내용
+                {t("detail_doc_content")}
               </h3>
               {draft.doc_type === "vacation" ? (
-                <VacationBodySection body={draft.body} />
+                <VacationBodySection body={draft.body} t={t} />
+              ) : Object.keys(draft.body).length > 0 ? (
+                <GenericBodySection body={draft.body} />
               ) : (
-                <p className="text-sm text-[#999]">이 양식의 미리보기는 준비 중입니다.</p>
+                <p className="text-sm text-[#999]">{t("detail_preview_wip")}</p>
               )}
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-              <h3 className="mb-4 text-[1.0625rem] font-bold text-[#1a1a1a]">결재선</h3>
+              <h3 className="mb-4 text-[1.0625rem] font-bold text-[#1a1a1a]">{t("detail_approval_line")}</h3>
               <div className="space-y-3">
                 {(() => {
                   const firstPendingIdx = draft.steps.findIndex((s) => s.action === "pending");
@@ -247,10 +283,10 @@ export function ApprovalDetailView({
           <div className="px-5">
             <div className="rounded-2xl bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               {draft.doc_type === "vacation" ? (
-                <VacationOriginalSection draft={draft} />
+                <VacationOriginalSection draft={draft} t={t} />
               ) : (
                 <p className="py-8 text-center text-sm text-[#999]">
-                  원문 보기는 준비 중입니다.
+                  {t("detail_tab_original")} — {t("detail_preview_wip")}
                 </p>
               )}
             </div>
@@ -262,7 +298,7 @@ export function ApprovalDetailView({
         <div className="fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom,0px))] left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 px-5">
           <div className="flex gap-2">
             <button type="button" className="flex-1 rounded-xl border border-zinc-200 bg-white py-2.5 text-sm font-semibold text-zinc-700">
-              📄 원본 양식
+              {t("detail_original_form")}
             </button>
             <button
               type="button"
@@ -270,7 +306,7 @@ export function ApprovalDetailView({
               className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white"
               style={{ background: "linear-gradient(135deg, #c1272d, #8b1a1a)" }}
             >
-              🔴 PDF (도장)
+              {t("detail_pdf_stamp")}
             </button>
           </div>
         </div>
@@ -284,21 +320,21 @@ export function ApprovalDetailView({
               onClick={onApprove}
               className="flex-1 cursor-pointer rounded-xl border-none bg-emerald-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
             >
-              승인
+              {t("detail_approve_btn")}
             </button>
             <button
               type="button"
               onClick={onOpenRejectModal}
               className="flex-1 cursor-pointer rounded-xl border-none bg-red-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
             >
-              반려
+              {t("detail_reject_btn")}
             </button>
             <button
               type="button"
               onClick={onOpenHoldModal}
               className="flex-1 cursor-pointer rounded-xl border-none bg-amber-500 py-3.5 text-base font-bold text-white transition-transform active:scale-95"
             >
-              보류
+              {t("detail_hold_btn")}
             </button>
           </div>
         </div>
@@ -307,11 +343,11 @@ export function ApprovalDetailView({
       {showRejectModal ? (
         <div className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/50 sm:items-center">
           <div className="animate-somang-slide-up-modal w-full rounded-t-3xl bg-white p-6">
-            <h3 className="mb-4 text-lg font-bold text-[#1a1a1a]">반려 사유 입력</h3>
+            <h3 className="mb-4 text-lg font-bold text-[#1a1a1a]">{t("detail_reject_reason_title")}</h3>
             <textarea
               value={rejectReason}
               onChange={(e) => onRejectReasonChange(e.target.value)}
-              placeholder="반려 사유를 입력해주세요"
+              placeholder={t("detail_reject_reason_placeholder")}
               className="mb-4 min-h-[120px] w-full resize-none rounded-xl border border-[#e0e0e0] p-4 font-sans text-[0.9375rem] outline-none"
             />
             <div className="flex gap-2">
@@ -320,14 +356,14 @@ export function ApprovalDetailView({
                 onClick={onCloseRejectModal}
                 className="flex-1 cursor-pointer rounded-xl border-none bg-gray-100 py-3 text-base font-semibold text-[#666]"
               >
-                취소
+                {t("action_cancel")}
               </button>
               <button
                 type="button"
                 onClick={onConfirmReject}
                 className="flex-1 cursor-pointer rounded-xl border-none bg-red-500 py-3 text-base font-bold text-white"
               >
-                확인
+                {t("action_confirm")}
               </button>
             </div>
           </div>
@@ -337,11 +373,11 @@ export function ApprovalDetailView({
       {showHoldModal ? (
         <div className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/50 sm:items-center">
           <div className="animate-somang-slide-up-modal w-full rounded-t-3xl bg-white p-6">
-            <h3 className="mb-4 text-lg font-bold text-[#1a1a1a]">보류 사유 입력</h3>
+            <h3 className="mb-4 text-lg font-bold text-[#1a1a1a]">{t("detail_hold_reason_title")}</h3>
             <textarea
               value={holdReason}
               onChange={(e) => onHoldReasonChange(e.target.value)}
-              placeholder="보류 사유를 입력해주세요"
+              placeholder={t("detail_hold_reason_placeholder")}
               className="mb-4 min-h-[120px] w-full resize-none rounded-xl border border-[#e0e0e0] p-4 font-sans text-[0.9375rem] outline-none"
             />
             <div className="flex gap-2">
@@ -350,14 +386,14 @@ export function ApprovalDetailView({
                 onClick={onCloseHoldModal}
                 className="flex-1 cursor-pointer rounded-xl border-none bg-gray-100 py-3 text-base font-semibold text-[#666]"
               >
-                취소
+                {t("action_cancel")}
               </button>
               <button
                 type="button"
                 onClick={onConfirmHold}
                 className="flex-1 cursor-pointer rounded-xl border-none bg-amber-500 py-3 text-base font-bold text-white"
               >
-                확인
+                {t("action_confirm")}
               </button>
             </div>
           </div>

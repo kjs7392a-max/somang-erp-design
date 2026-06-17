@@ -4,39 +4,33 @@ import { Sparkles, ChevronRight, MapPin } from "lucide-react";
 import { AccordionCard } from "./AccordionCard";
 import { getTodayEvents } from "@/lib/home-data";
 import { CATEGORY_META } from "@/types/calendar";
+import { useT } from "@/context/LangContext";
 
 export function TodayTasksCard({ onGoCalendar }: { onGoCalendar?: () => void }) {
+  const t = useT();
   const events = getTodayEvents();
   const count = events.length;
 
   return (
     <AccordionCard
-      title="오늘의 할 일"
+      title={t("tasks_title")}
       icon={<Sparkles className="h-5 w-5 text-[#3b5bdb]" strokeWidth={2.2} />}
       summary={
         <span className="text-xs text-zinc-500">
-          오늘 <strong className="text-zinc-700">{count}건</strong>
+          {t("tasks_count").replace("{n}", String(count))}
         </span>
       }
       defaultOpen={count > 0}
     >
       {count === 0 ? (
-        <p className="py-4 text-center text-sm text-zinc-400">
-          오늘은 일정이 없어요
-        </p>
+        <p className="py-4 text-center text-sm text-zinc-400">{t("tasks_empty")}</p>
       ) : (
         <div className="space-y-2">
           {events.map((e) => {
             const meta = CATEGORY_META[e.category];
             return (
-              <div
-                key={e.id}
-                className="flex items-start gap-3 rounded-xl border border-zinc-100 p-3"
-              >
-                <span
-                  className="mt-0.5 h-8 w-1 shrink-0 rounded-full"
-                  style={{ background: meta.color }}
-                />
+              <div key={e.id} className="flex items-start gap-3 rounded-xl border border-zinc-100 p-3">
+                <span className="mt-0.5 h-8 w-1 shrink-0 rounded-full" style={{ background: meta.color }} />
                 <div className="flex-1">
                   <div className="mb-0.5 flex items-center gap-1.5">
                     <span
@@ -47,8 +41,7 @@ export function TodayTasksCard({ onGoCalendar }: { onGoCalendar?: () => void }) 
                     </span>
                     {e.startTime && (
                       <span className="text-xs text-zinc-500">
-                        {e.startTime}
-                        {e.endTime ? `-${e.endTime}` : ""}
+                        {e.startTime}{e.endTime ? `-${e.endTime}` : ""}
                       </span>
                     )}
                   </div>
@@ -68,7 +61,7 @@ export function TodayTasksCard({ onGoCalendar }: { onGoCalendar?: () => void }) 
             onClick={onGoCalendar}
             className="mt-2 flex w-full items-center justify-center gap-1 rounded-xl bg-zinc-50 py-2 text-sm font-semibold text-zinc-700 active:bg-zinc-100"
           >
-            캘린더에서 보기
+            {t("tasks_view_calendar")}
             <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
         </div>
