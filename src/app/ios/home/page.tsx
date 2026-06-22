@@ -24,24 +24,53 @@ export default function IOSHomePage() {
 
   useEffect(() => {
     const supabase = createIOSClient();
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+
+    const init = async () => {
+      let session = null;
+
+      // 방금 로그인한 경우: sessionStorage에서 토큰 직접 복원
+      const at = sessionStorage.getItem("ios_at");
+      const rt = sessionStorage.getItem("ios_rt");
+      if (at && rt) {
+        sessionStorage.removeItem("ios_at");
+        sessionStorage.removeItem("ios_rt");
+        const { data, error } = await supabase.auth.setSession({
+          access_token: at,
+          refresh_token: rt,
+        });
+        if (!error && data.session) {
+          session = data.session;
+        }
+      }
+
+      // sessionStorage에 없으면 일반 세션 확인 (재방문)
+      if (!session) {
+        const { data } = await supabase.auth.getSession();
+        session = data.session;
+      }
+
       if (!session) {
         router.replace("/ios/login");
         return;
       }
+
       const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
         .single();
+
       if (!data || data.employment_status === "퇴직") {
         await supabase.auth.signOut();
         router.replace("/ios/login");
         return;
       }
+
       setProfile(data as Profile);
       setLoading(false);
-    });
+    };
+
+    init();
   }, [router]);
 
   const signOut = async () => {

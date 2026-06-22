@@ -39,15 +39,18 @@ export default function IOSLoginPage() {
 
     try {
       const supabase = createIOSClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password: actualPassword,
       });
-      if (authError) {
+      if (authError || !data.session) {
         setLoading(false);
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");
         return;
       }
+      // localStorage 불안정 환경을 대비해 sessionStorage로 토큰 직접 전달
+      sessionStorage.setItem("ios_at", data.session.access_token);
+      sessionStorage.setItem("ios_rt", data.session.refresh_token);
       window.location.href = "/ios/home";
     } catch {
       setLoading(false);
