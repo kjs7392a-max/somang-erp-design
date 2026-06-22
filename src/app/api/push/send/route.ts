@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 
-webpush.setVapidDetails(
-  "mailto:kjs7392a@gmail.com",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-);
+function initVapid() {
+  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !priv) throw new Error("VAPID keys not configured");
+  webpush.setVapidDetails("mailto:kjs7392a@gmail.com", pub, priv);
+}
 
 function createAdminClient() {
   return createSupabaseAdmin(
@@ -16,6 +17,9 @@ function createAdminClient() {
 }
 
 export async function POST(request: NextRequest) {
+  try { initVapid(); } catch {
+    return NextResponse.json({ ok: false, error: "Push not configured" }, { status: 503 });
+  }
   const { userId, title, body, url } = await request.json();
   if (!userId) return NextResponse.json({ ok: false, error: "userId required" }, { status: 400 });
 

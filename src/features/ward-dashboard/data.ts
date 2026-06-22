@@ -120,8 +120,8 @@ export const SHIFT_CODES: Record<ShiftCode, ShiftCodeMeta> = {
 };
 
 export const APPROVERS = {
-  head: { name: "정현숙", role: "간호부장" },
-  exec: { name: "한영태", role: "행정원장" },
+  head: { name: "김미현", role: "수간호사" },
+  exec: { name: "김태우", role: "병원장" },
 };
 
 export const INIT_DOCS: ApprovalDoc[] = [

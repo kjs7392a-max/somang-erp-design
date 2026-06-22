@@ -55,20 +55,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
-    const p = await fetchProfile(s.user.id);
-    if (!p || p.employment_status !== "active") {
-      await supabase.auth.signOut();
+    try {
+      const p = await fetchProfile(s.user.id);
+      if (!p || p.employment_status !== "active") {
+        await supabase.auth.signOut().catch(() => {});
+        setSession(null);
+        setProfile(null);
+      } else {
+        setProfile(p);
+      }
+    } catch {
+      await supabase.auth.signOut().catch(() => {});
       setSession(null);
       setProfile(null);
+    } finally {
       setLoading(false);
-      // TODO: 임시 비활성화 — 인증 가드 복구 시 아래 주석 해제
-      // if (!pathnameRef.current.startsWith("/ward")) {
-      //   router.push("/login");
-      // }
-      return;
     }
-    setProfile(p);
-    setLoading(false);
   }
 
   useEffect(() => {

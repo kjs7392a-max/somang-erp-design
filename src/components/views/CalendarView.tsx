@@ -19,6 +19,8 @@ import { usePersonalEvents } from "@/lib/calendar-data";
 import { DayBottomSheet } from "@/components/calendar/DayBottomSheet";
 import { EventFormSheet } from "@/components/calendar/EventFormSheet";
 import { ShiftTable } from "@/components/shift/ShiftTable";
+import { ClinicScheduleView } from "@/components/shift/ClinicScheduleView";
+import { useUserRole } from "@/lib/role";
 import { ROUTES } from "@/lib/routes";
 import { useT } from "@/context/LangContext";
 
@@ -38,6 +40,7 @@ function loadView(): CalView {
 export function CalendarView() {
   const t = useT();
   const router = useRouter();
+  const { role } = useUserRole();
   const today = new Date();
   const todayISO = toISO(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -110,7 +113,7 @@ export function CalendarView() {
           </button>
           <button type="button" onClick={() => saveView("shift")}
             className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${calView === "shift" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>
-            🕐 {t("cal_shift")}
+            {role === "exec" ? "📋 진료" : `🕐 ${t("cal_shift")}`}
           </button>
         </div>
         {calView === "month" && (
@@ -122,7 +125,11 @@ export function CalendarView() {
         )}
       </div>
 
-      {calView === "shift" && <div className="mt-3"><ShiftTable /></div>}
+      {calView === "shift" && (
+        <div className="mt-3">
+          {role === "exec" ? <ClinicScheduleView /> : <ShiftTable />}
+        </div>
+      )}
 
       {calView === "month" && (
         <>

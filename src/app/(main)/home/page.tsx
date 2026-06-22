@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HomeView } from "@/components/views/HomeView";
 import { useAuth } from "@/context/AuthContext";
@@ -18,10 +19,22 @@ const NAV: Record<AppPage, string> = {
 
 export default function HomePage() {
   const router = useRouter();
-  const { profile, signOut } = useAuth();
+  const { profile, loading, signOut } = useAuth();
   const { role } = useUserRole();
 
-  if (!profile) return null;
+  useEffect(() => {
+    if (!loading && !profile) {
+      router.replace(ROUTES.login);
+    }
+  }, [loading, profile, router]);
+
+  if (loading || !profile) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#3b82f6] border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <HomeView
@@ -33,3 +46,4 @@ export default function HomePage() {
     />
   );
 }
+

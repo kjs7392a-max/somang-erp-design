@@ -6,6 +6,8 @@ const POSITION_MAP: Record<string, string | null> = {
   "팀장":     "460358a6-85aa-4418-bd6b-f1127aa37646",
   "부서장":   "460358a6-85aa-4418-bd6b-f1127aa37646",
   "담당":     "460358a6-85aa-4418-bd6b-f1127aa37646",
+  "수간호사": "b0240000-0000-0000-0000-000000000001", // 김미현
+  "병원장":   "b0030000-0000-0000-0000-000000000001", // 김태우 진료원장
 };
 
 export function getApproverByPosition(position: string): string | null {

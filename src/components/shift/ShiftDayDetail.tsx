@@ -11,6 +11,10 @@ const DESC_KEYS: Record<ShiftCode, TKey> = {
   V:   "shift_desc_V",
   H:   "shift_desc_H",
   OFF: "shift_desc_OFF",
+  D:   "shift_desc_D",
+  E:   "shift_desc_E",
+  N:   "shift_desc_N",
+  DB:  "shift_desc_DB",
 };
 
 export function ShiftDayDetail({

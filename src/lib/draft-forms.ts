@@ -17,9 +17,8 @@ export const FORMS: Record<FormKind, FormMeta> = {
     kind: "vacation",
     label: "연차 신청서",
     approvalLine: [
-      { position: "팀장" },
-      { position: "총무과장" },
-      { position: "이사장" },
+      { position: "수간호사" },
+      { position: "병원장" },
     ],
     attachmentPolicy: "required-when",
     attachmentHint: "병가(무급)은 진단서·입원확인서 등 증빙서류 첨부 필수",

@@ -90,7 +90,7 @@ function ComposeModal({ initialForm, onClose, onSubmit }: {
             <div style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, marginBottom: 10 }}>결재선</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               {[
-                { name: "이수진", role: "수간호사", kind: "기안", me: true },
+                { name: "나", role: "기안자", kind: "기안", me: true },
                 { name: APPROVERS.head.name, role: APPROVERS.head.role, kind: "검토" },
                 { name: APPROVERS.exec.name, role: APPROVERS.exec.role, kind: "결재" },
               ].map((s, i) => (

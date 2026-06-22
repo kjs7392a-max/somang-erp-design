@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import {
-  SHIFT_2026_04,
+  ADMIN_DATASET,
+  NURSE_DATASET,
   SHIFT_CODE_META,
   type ShiftCode,
-  type ShiftMember,
+  type ShiftDataset,
 } from "@/lib/shift-data";
 import { ShiftDayDetail } from "./ShiftDayDetail";
 import { useT } from "@/context/LangContext";
@@ -18,11 +19,23 @@ const DESC_KEYS: Record<ShiftCode, TKey> = {
   V:   "shift_desc_V",
   H:   "shift_desc_H",
   OFF: "shift_desc_OFF",
+  D:   "shift_desc_D",
+  E:   "shift_desc_E",
+  N:   "shift_desc_N",
+  DB:  "shift_desc_DB",
 };
 
-// April 1, 2026 = Wednesday = weekday index 3
-function getWeekday(day: number, weekdays: string[]) {
-  return weekdays[(3 + day - 1) % 7] ?? "";
+const ADMIN_LEGEND: ShiftCode[] = ["A", "S", "V", "H", "OFF"];
+const NURSE_LEGEND: ShiftCode[] = ["D", "E", "N", "DB", "V", "H", "OFF"];
+
+function getWeekday(day: number, weekdays: string[], firstWeekdayIdx: number) {
+  return weekdays[(firstWeekdayIdx + day - 1) % 7] ?? "";
+}
+
+function isNurseProfile(position?: string | null, department?: string | null) {
+  const p = position ?? "";
+  const d = department ?? "";
+  return p.includes("간호") || d.includes("간호") || d.includes("병동");
 }
 
 export function ShiftTable() {
@@ -31,16 +44,26 @@ export function ShiftTable() {
   const TODAY_DAY = new Date().getDate();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
-  const dept = profile?.department ?? "";
-  const members: ShiftMember[] = SHIFT_2026_04;
+  const isNurse = isNurseProfile(profile?.position, profile?.department);
+  const dataset: ShiftDataset = isNurse ? NURSE_DATASET : ADMIN_DATASET;
+  const { members, month, days, firstWeekdayIdx } = dataset;
+  const legend: ShiftCode[] = isNurse ? NURSE_LEGEND : ADMIN_LEGEND;
 
-  const me = members.find((m) => m.isMe) ?? members[0];
+  const me =
+    members.find((m) => m.name === profile?.full_name) ??
+    members.find((m) => m.isMe) ??
+    members[0];
+
   const weekdays = t("cal_weekdays").split(",");
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const day = TODAY_DAY + i;
-    if (day > 30) return null;
-    return { day, code: me.row[day - 1] as ShiftCode, weekday: getWeekday(day, weekdays) };
+    if (day > days) return null;
+    return {
+      day,
+      code: me.row[day - 1] as ShiftCode,
+      weekday: getWeekday(day, weekdays, firstWeekdayIdx),
+    };
   }).filter(Boolean) as { day: number; code: ShiftCode; weekday: string }[];
 
   const myCounts = me.row.reduce<Partial<Record<ShiftCode, number>>>((acc, c) => {
@@ -55,9 +78,11 @@ export function ShiftTable() {
         <div className="flex items-center gap-2">
           <span className="text-base">🏥</span>
           <div>
-            <p className="text-[0.9375rem] font-bold text-zinc-900">소망병원 {dept || "총무과"}</p>
+            <p className="text-[0.9375rem] font-bold text-zinc-900">
+              소망병원 {profile?.department || (isNurse ? "간호부" : "총무과")}
+            </p>
             <p className="text-xs text-zinc-500">
-              {t("shift_member_count").replace("{n}", String(members.length))} · 2026년 4월
+              {t("shift_member_count").replace("{n}", String(members.length))} · {dataset.year}년 {month}월
             </p>
           </div>
         </div>
@@ -98,9 +123,9 @@ export function ShiftTable() {
           {/* 날짜 헤더 */}
           <div className="flex">
             <div className="w-14 shrink-0" />
-            {Array.from({ length: 30 }, (_, i) => {
+            {Array.from({ length: days }, (_, i) => {
               const day = i + 1;
-              const wd = getWeekday(day, weekdays);
+              const wd = getWeekday(day, weekdays, firstWeekdayIdx);
               const isToday = day === TODAY_DAY;
               const isSun = weekdays[0] === wd;
               const isSat = weekdays[6] === wd;
@@ -121,43 +146,47 @@ export function ShiftTable() {
           </div>
 
           {/* 멤버 행 */}
-          {members.map((member) => (
-            <div key={member.id} className={`flex items-center ${member.isMe ? "bg-[rgba(45,92,110,0.04)]" : ""}`}>
-              <div className="relative flex w-14 shrink-0 flex-col justify-center py-1 pr-1">
-                {member.isMe && (
-                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-[#2d5c6e]" />
-                )}
-                <span className={`pl-2 text-[0.6875rem] font-bold leading-tight ${member.isMe ? "text-[#2d5c6e]" : "text-zinc-700"}`}>
-                  {member.name}
-                </span>
-                <span className="pl-2 text-[0.5625rem] leading-tight text-zinc-400">{member.role}</span>
+          {members.map((member) => {
+            const isMe = member.name === (profile?.full_name ?? "") || member.isMe;
+            return (
+              <div key={member.id} className={`flex items-center ${isMe ? "bg-[rgba(45,92,110,0.04)]" : ""}`}>
+                <div className="relative flex w-14 shrink-0 flex-col justify-center py-1 pr-1">
+                  {isMe && (
+                    <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-[#2d5c6e]" />
+                  )}
+                  <span className={`pl-2 text-[0.6875rem] font-bold leading-tight ${isMe ? "text-[#2d5c6e]" : "text-zinc-700"}`}>
+                    {member.name}
+                  </span>
+                  <span className="pl-2 text-[0.5625rem] leading-tight text-zinc-400">{member.role}</span>
+                </div>
+                {member.row.map((code, dayIdx) => {
+                  const meta = SHIFT_CODE_META[code];
+                  const isToday = dayIdx + 1 === TODAY_DAY;
+                  return (
+                    <button
+                      key={dayIdx}
+                      type="button"
+                      onClick={() => setSelectedDay(dayIdx + 1)}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center text-[0.625rem] font-bold ${
+                        isToday ? "border-b-2 border-[#2d5c6e]" : ""
+                      }`}
+                      style={{ background: meta.bg, color: meta.fg }}
+                    >
+                      {code}
+                    </button>
+                  );
+                })}
               </div>
-              {member.row.map((code, dayIdx) => {
-                const meta = SHIFT_CODE_META[code];
-                const isToday = dayIdx + 1 === TODAY_DAY;
-                return (
-                  <button
-                    key={dayIdx}
-                    type="button"
-                    onClick={() => setSelectedDay(dayIdx + 1)}
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center text-[0.625rem] font-bold ${
-                      isToday ? "border-b-2 border-[#2d5c6e]" : ""
-                    }`}
-                    style={{ background: meta.bg, color: meta.fg }}
-                  >
-                    {code}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {/* 범례 */}
       <div className="mx-4 mt-4 flex flex-wrap gap-2">
-        {(Object.entries(SHIFT_CODE_META) as [ShiftCode, typeof SHIFT_CODE_META[ShiftCode]][]).map(
-          ([code, meta]) => (
+        {legend.map((code) => {
+          const meta = SHIFT_CODE_META[code];
+          return (
             <span
               key={code}
               className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
@@ -165,14 +194,14 @@ export function ShiftTable() {
             >
               {code} {t(DESC_KEYS[code])}
             </span>
-          ),
-        )}
+          );
+        })}
       </div>
 
       {/* 통계 */}
       <div className="mx-4 mt-4 rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(45,92,110,0.08)]">
         <p className="mb-3 text-sm font-bold text-zinc-700">
-          {t("shift_stats_title").replace("{month}", "4")}
+          {t("shift_stats_title").replace("{month}", String(month))}
         </p>
         <div className="flex flex-wrap gap-2">
           {(Object.entries(myCounts) as [ShiftCode, number][]).map(([code, count]) => {
