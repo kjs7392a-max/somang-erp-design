@@ -68,10 +68,10 @@ export function LoginView({
             )}
           </div>
 
-          <h1 className="font-display mb-2 text-center text-[1.8rem] font-bold tracking-[0.088em] text-[#1e293b]">
+          <h1 className="font-display mb-1 text-center text-[1.8rem] font-bold tracking-[0.088em] text-[#1e293b]">
             소망의료재단
           </h1>
-          <p className="font-display text-center text-[1.1rem] font-semibold tracking-[0.04em] text-[#1e293b]/70">
+          <p className="font-display text-center text-[1.8rem] font-bold tracking-[0.088em] text-[#1e293b]">
             현대병원
           </p>
 
