@@ -69,8 +69,11 @@ export function LoginView({
           </div>
 
           <h1 className="font-display mb-2 text-center text-[1.8rem] font-bold tracking-[0.088em] text-[#1e293b]">
-            {process.env.NEXT_PUBLIC_CORP_NAME ?? "소망의료재단"}
+            소망의료재단
           </h1>
+          <p className="font-display text-center text-[1.1rem] font-semibold tracking-[0.04em] text-[#1e293b]/70">
+            현대병원
+          </p>
 
           <p
             className="font-display mt-[21px] whitespace-pre-line text-center text-[1.5rem] font-bold leading-[1.25] tracking-[-0.4px] text-[#fdfefe]"
@@ -169,7 +172,7 @@ export function LoginView({
         {/* 하단 저작권 */}
         <div className="pt-4 text-center">
           <p className="text-[0.6875rem] font-normal text-white/85">
-            © 2026 {process.env.NEXT_PUBLIC_CORP_NAME ?? "소망의료재단"}. All rights reserved.
+            © 2026 소망의료재단 · 현대병원. All rights reserved.
           </p>
         </div>
       </div>
