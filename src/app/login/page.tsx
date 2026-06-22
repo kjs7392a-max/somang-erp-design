@@ -34,6 +34,13 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn();
 
+  // iOS 감지 → /ios/login으로 리다이렉트
+  useEffect(() => {
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      window.location.replace("/ios/login");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 지문 등록 기기: 마운트 즉시 인증 시작
   useEffect(() => {
     if (initiallyRegistered) {
