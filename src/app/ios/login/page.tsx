@@ -48,7 +48,7 @@ export default function IOSLoginPage() {
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");
         return;
       }
-      router.push("/ios/home");
+      window.location.href = "/ios/home";
     } catch {
       setLoading(false);
       setError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
