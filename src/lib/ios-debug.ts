@@ -78,7 +78,8 @@ function isStandalone(): boolean {
 }
 
 export function recordCrumb(path: string): void {
-  if (!isIOSDevice()) return;
+  // 감지(isIOSDevice)에 의존하지 않고 모든 기기에서 기록한다.
+  // 감지 자체가 의심 대상이므로 게이트하면 안 됨.
   try {
     const crumb: IOSCrumb = {
       t: new Date().toISOString().slice(11, 23),

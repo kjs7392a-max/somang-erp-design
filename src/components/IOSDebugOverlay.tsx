@@ -11,57 +11,47 @@ import {
 } from "@/lib/ios-debug";
 
 /**
- * iOS 전용 임시 진단 오버레이 (증거 수집 단계).
- * - iOS 가 아니면 null 반환 → Android/PC 화면·동작에 전혀 영향 없음.
- * - 페이지 이동(전체 새로고침 포함)마다 경로/세션 상태를 기록.
- * - 우하단 "iOS디버그" 버튼 → 누적 경로 표시 → 스크린샷으로 공유.
+ * 임시 진단 오버레이 (증거 수집 단계).
+ * - 감지(isIOSDevice)에 의존하지 않고 모든 기기에서 동작 (감지 자체가 의심 대상).
+ * - 좌하단의 작은 회색 stamp 를 탭하면 경로 추적 패널이 열림.
+ * - 패널에 이 기기의 실제 UA / maxTouchPoints / 감지결과 / 경로 이력 표시.
  * 원인 확정 후 제거 예정.
  */
-const BUILD = "diag3";
+const BUILD = "diag4";
 
 export function IOSDebugOverlay() {
   const pathname = usePathname();
-  const [isIOS, setIsIOS] = useState(false);
   const [open, setOpen] = useState(false);
   const [crumbs, setCrumbs] = useState<IOSCrumb[]>([]);
+  const [ua, setUa] = useState("");
+  const [tp, setTp] = useState<number>(-1);
+  const [detected, setDetected] = useState<boolean | null>(null);
+  const [standalone, setStandalone] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setIsIOS(isIOSDevice());
+    try {
+      setUa(navigator.userAgent);
+      setTp(navigator.maxTouchPoints);
+      setDetected(isIOSDevice());
+      setStandalone(
+        (window.navigator as unknown as { standalone?: boolean }).standalone ===
+          true || window.matchMedia("(display-mode: standalone)").matches
+      );
+    } catch {
+      /* noop */
+    }
   }, []);
 
   useEffect(() => {
-    if (!isIOSDevice()) return;
     recordCrumb(pathname);
     setCrumbs(readCrumbs());
   }, [pathname]);
 
   const flag = (b: boolean) => (b ? "✅" : "—");
 
-  // 모든 기기에 보이는 빌드 식별자 (캐시 staleness 확인용, 임시).
-  // 이 값이 화면에 보이지 않으면 옛 캐시 버전을 보고 있는 것.
-  const versionStamp = (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 4,
-        left: 6,
-        zIndex: 2147483647,
-        fontSize: 9,
-        lineHeight: "12px",
-        color: "rgba(0,0,0,.45)",
-        pointerEvents: "none",
-      }}
-    >
-      v:{BUILD}
-    </div>
-  );
-
-  // iOS 가 아니면 버전 표시만 (Android 동작 영향 없음)
-  if (!isIOS) return versionStamp;
-
   return (
     <>
-      {versionStamp}
+      {/* 항상 보이는 작은 stamp (탭하면 패널 토글) */}
       <button
         onClick={() => {
           setCrumbs(readCrumbs());
@@ -69,20 +59,19 @@ export function IOSDebugOverlay() {
         }}
         style={{
           position: "fixed",
-          bottom: 10,
-          right: 10,
+          bottom: 4,
+          left: 6,
           zIndex: 2147483647,
-          padding: "6px 10px",
-          fontSize: 12,
-          fontWeight: 700,
-          color: "#fff",
-          background: "#dc2626",
-          border: "none",
-          borderRadius: 8,
-          boxShadow: "0 2px 6px rgba(0,0,0,.3)",
+          fontSize: 10,
+          lineHeight: "13px",
+          color: "rgba(0,0,0,.55)",
+          background: "rgba(255,255,255,.6)",
+          border: "1px solid rgba(0,0,0,.15)",
+          borderRadius: 5,
+          padding: "1px 5px",
         }}
       >
-        iOS디버그 {crumbs.length}
+        v:{BUILD} iOS:{detected === null ? "?" : detected ? "Y" : "N"} tp:{tp} (탭)
       </button>
 
       {open && (
@@ -91,11 +80,11 @@ export function IOSDebugOverlay() {
             position: "fixed",
             left: 8,
             right: 8,
-            bottom: 48,
-            maxHeight: "60vh",
+            bottom: 30,
+            maxHeight: "70vh",
             overflowY: "auto",
             zIndex: 2147483647,
-            background: "rgba(17,24,39,.97)",
+            background: "rgba(17,24,39,.98)",
             color: "#e5e7eb",
             fontSize: 11,
             lineHeight: 1.5,
@@ -105,8 +94,22 @@ export function IOSDebugOverlay() {
             border: "1px solid #374151",
           }}
         >
+          <div style={{ color: "#fcd34d", marginBottom: 4 }}>
+            build {BUILD} · iOS감지:{detected ? "Y" : "N"} · maxTouchPoints:{tp} ·{" "}
+            {standalone ? "PWA" : "WEB"}
+          </div>
+          <div
+            style={{
+              color: "#93c5fd",
+              marginBottom: 8,
+              whiteSpace: "normal",
+              wordBreak: "break-all",
+            }}
+          >
+            UA: {ua}
+          </div>
           <div style={{ marginBottom: 6, color: "#93c5fd" }}>
-            경로 / standalone / cookie / localStorage / ssToken
+            경로 / 쿼리 / PWA / 쿠키 / localStorage / ssToken
           </div>
           {crumbs.length === 0 && <div>기록 없음</div>}
           {crumbs.map((c, i) => (
