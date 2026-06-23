@@ -19,6 +19,7 @@ export function isIOSDevice(): boolean {
 export type IOSCrumb = {
   t: string; // HH:MM:SS.mmm
   path: string;
+  q: string; // 쿼리스트링(값 마스킹). 네이티브 폼 전송 시 ?userId=…&password=… 노출됨
   standalone: boolean; // 홈화면 PWA 로 실행 중인지
   cookieSess: boolean; // 쿠키에 supabase 세션(-auth-token)이 있는지
   lsSess: boolean; // localStorage 에 supabase 세션이 있는지
@@ -56,6 +57,15 @@ function hasLocalStorageSession(): boolean {
   return false;
 }
 
+function maskedQuery(): string {
+  try {
+    // 값은 …로 가려 비밀번호 등 노출 방지. 키 구조만 남김.
+    return window.location.search.replace(/=[^&]*/g, "=…");
+  } catch {
+    return "";
+  }
+}
+
 function isStandalone(): boolean {
   try {
     return (
@@ -73,6 +83,7 @@ export function recordCrumb(path: string): void {
     const crumb: IOSCrumb = {
       t: new Date().toISOString().slice(11, 23),
       path,
+      q: maskedQuery(),
       standalone: isStandalone(),
       cookieSess: hasCookieSession(),
       lsSess: hasLocalStorageSession(),

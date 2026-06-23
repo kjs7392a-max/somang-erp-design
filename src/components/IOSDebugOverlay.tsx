@@ -89,6 +89,7 @@ export function IOSDebugOverlay() {
           {crumbs.map((c, i) => (
             <div key={i} style={{ whiteSpace: "nowrap" }}>
               {c.t} {c.path}
+              {c.q ? <span style={{ color: "#fca5a5" }}>{c.q}</span> : null}
               {"  "}PWA:{flag(c.standalone)} 쿠키:{flag(c.cookieSess)} LS:
               {flag(c.lsSess)} SS:{flag(c.ssToken)}
             </div>
