@@ -42,3 +42,29 @@
 - `document.cookie`에서 보이는 쿠키라도 서버 요청에 포함 안 될 수 있음 (path, secure 플래그 확인 필요).
 
 ---
+
+## BUG-002 · iOS 로그인 무한루프 ✅ 수정완료
+
+**발생일** 2026-06-23  
+**수정일** 2026-06-23
+
+### 증상
+iOS에서 `/ios/login` 로그인 성공 후 `/ios/home`으로 가지 못하고 `/login`↔`/ios/login`을 오가는 무한루프. 또한 이를 고치려 proxy를 건드릴 때마다 Android 인증이 같이 깨짐.
+
+### 원인 (구조적 커플링)
+- **iOS 클라이언트**(`src/lib/supabase-ios.ts`)는 `supabase-js` + `window.localStorage` 저장 → **쿠키를 설정하지 않음**.
+- **Android 클라이언트**(`src/lib/supabase.ts`)는 `@supabase/ssr` `createBrowserClient` → **쿠키**(`sb-...-auth-token`) 저장.
+- 루트 `proxy.ts`는 matcher가 `/ios/*` 포함, **쿠키 유무로만** 인증 판단.
+- 결과: iOS 로그인은 localStorage에만 세션 저장 → 쿠키 없음 → `/ios/home` 풀 네비게이션 시 proxy가 `isLoggedIn=false`로 보고 `/login`으로 리다이렉트 → `/login`이 iOS UA 감지해 `/ios/login`으로 되돌림 → **루프**.
+- 단일 공유 `proxy.ts`가 Android·iOS 양쪽 게이트여서 iOS 수정이 Android에 전이됨.
+
+### 수정 내용
+| 파일 | 변경 |
+|---|---|
+| `proxy.ts` (루트) | `isPublic`에 `pathname.startsWith("/ios")` 추가 → `/ios/*`는 쿠키 게이트 우회, 클라이언트 자체 인증 사용 |
+
+### 교훈
+- 저장 방식이 다른 두 인증(쿠키 vs localStorage)을 **하나의 쿠키 기반 proxy**로 게이트하면 충돌. 경로별로 게이트를 분리해야 함.
+- **미해결 후속:** `/ios/home`의 3개 기능 버튼은 여전히 Android 공유 라우트(`/approval`, `/calendar`, `/draft`)로 이동 → 이들도 쿠키 proxy가 막으므로 버튼 클릭 시 동일 루프 발생. 별도 작업 필요.
+
+---

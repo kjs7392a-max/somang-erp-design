@@ -10,8 +10,12 @@ export function proxy(request: NextRequest) {
     .getAll()
     .some((c) => c.name.endsWith("-auth-token") && c.value.length > 0);
 
+  // /ios/* 는 localStorage 기반 클라이언트 자체 인증(쿠키 없음)을 사용하므로
+  // 쿠키 기반 proxy 게이트를 우회한다. (Android 경로는 영향 없음)
   const isPublic =
-    pathname === "/login" || pathname.startsWith("/api/auth/");
+    pathname === "/login" ||
+    pathname.startsWith("/ios") ||
+    pathname.startsWith("/api/auth/");
 
   if (!isLoggedIn && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
