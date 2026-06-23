@@ -34,18 +34,6 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn();
 
-  // iOS/iPadOS 감지 → /ios/login으로 리다이렉트
-  // iPadOS 13+는 Mac UA를 쓰므로 maxTouchPoints로 보완
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const isIOS =
-      /iPad|iPhone|iPod/.test(ua) ||
-      (ua.includes("Mac") && navigator.maxTouchPoints > 1);
-    if (isIOS) {
-      window.location.replace("/ios/login");
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   // 지문 등록 기기: 마운트 즉시 인증 시작
   useEffect(() => {
     if (initiallyRegistered) {
