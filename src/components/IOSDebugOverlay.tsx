@@ -17,7 +17,7 @@ import {
  * - 패널에 이 기기의 실제 UA / maxTouchPoints / 감지결과 / 경로 이력 표시.
  * 원인 확정 후 제거 예정.
  */
-const BUILD = "fix1";
+const BUILD = "fix2";
 
 export function IOSDebugOverlay() {
   const pathname = usePathname();
