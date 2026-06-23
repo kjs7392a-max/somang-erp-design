@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 import { PwaRegister } from "@/components/PwaRegister";
+import { IOSDebugOverlay } from "@/components/IOSDebugOverlay";
 
 const corpName = process.env.NEXT_PUBLIC_CORP_NAME ?? "소망의료재단";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body>
         <Providers>{children}</Providers>
         <PwaRegister />
+        <IOSDebugOverlay />
       </body>
     </html>
   );

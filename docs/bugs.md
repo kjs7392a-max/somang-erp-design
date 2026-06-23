@@ -67,4 +67,38 @@ iOS에서 `/ios/login` 로그인 성공 후 `/ios/home`으로 가지 못하고 `
 - 저장 방식이 다른 두 인증(쿠키 vs localStorage)을 **하나의 쿠키 기반 proxy**로 게이트하면 충돌. 경로별로 게이트를 분리해야 함.
 - **미해결 후속:** `/ios/home`의 3개 기능 버튼은 여전히 Android 공유 라우트(`/approval`, `/calendar`, `/draft`)로 이동 → 이들도 쿠키 proxy가 막으므로 버튼 클릭 시 동일 루프 발생. 별도 작업 필요.
 
+> ⚠️ **2026-06-23 정정:** 이 수정은 실제로는 동작하지 않았음. 아래 BUG-003 참조. 루트 `proxy.ts`를 고쳤으나 Next.js는 루트가 아니라 `src/proxy.ts`를 실행하므로 이 변경은 한 번도 실행되지 않았다.
+
+---
+
+## BUG-003 · iOS 무한루프 재발 — 죽은 proxy 파일 수정 + 인증 저장소 분리 🔍 진단중
+
+**발생일** 2026-06-23
+
+### 핵심 발견: BUG-001/002의 전제가 틀렸다
+BUG-001 교훈에 "루트와 `src/` 양쪽에 `proxy.ts`가 있으면 **루트가 우선**"이라고 적혀 있으나 **정반대다.**
+
+Next.js 16 소스(`node_modules/next/dist/build/index.js:616`):
+```
+const rootDir = path.join(pagesDir || appDir, '..');   // appDir = src/app → rootDir = src
+const rootPaths = getFilesInDir(rootDir) ...           // src 안만 스캔
+```
+`src/` 디렉터리를 쓰면 proxy 탐색 기준이 `src`가 되어 **`src/proxy.ts`만 발견·실행**하고 루트 `proxy.ts`는 스캔 범위 밖이라 **완전히 무시**된다.
+
+→ BUG-002의 수정(`598a1da` 등 루트 `proxy.ts`에 `/ios` 우회 추가)을 포함한 최근 iOS 커밋 4건은 전부 **죽은 파일**을 고쳤다. 한 줄도 실행된 적이 없어 루프가 그대로 남았다.
+
+실제 활성 proxy인 `src/proxy.ts`는 현재 `// DIAGNOSTIC: pass everything through` — **인증 검사를 아예 하지 않는 통과 파일**이다.
+
+### 원인 정리
+- **RC1** 활성 proxy = `src/proxy.ts`(통과). 루트 `proxy.ts`(게이트+`/ios`우회)는 죽은 코드.
+- **RC2** iOS(`/ios/*`)는 `supabase-js`+localStorage, 앱 본체(Android 포함)는 `@supabase/ssr`+쿠키 → 세션 저장소 분리, 상호 공유 안 됨.
+- **RC3** PWA `start_url`=`/home`(쿠키 게이트, `(main)/home/page.tsx:26` 클라이언트 가드). iOS는 쿠키 세션이 없어 진입 즉시 `/login`→`/ios/login`으로 튕김. `/ios/home`까지 가도 외딴 섬이라 기능 페이지·재실행 시 다시 튕김 → 체감 무한루프.
+
+### 진행
+- 2번(증거): iOS 전용 화면 진단 오버레이 추가(`src/lib/ios-debug.ts`, `src/components/IOSDebugOverlay.tsx`) → 실제 iPhone에서 루프 경로·세션 상태 확인.
+- 1번(근본 수정 예정): iOS localStorage 섬과 죽은 루트 `proxy.ts` 제거, iOS도 Android와 동일한 쿠키 흐름으로 통일. Android 흐름 로직 불변.
+
+### 교훈 (정정)
+- **`src/` 디렉터리 사용 시 proxy/middleware는 `src/proxy.ts`가 활성. 루트 파일은 무시됨.** (BUG-001 교훈의 "루트 우선"은 오류) 두 파일이 공존하면 즉시 하나를 지워야 한다.
+
 ---
