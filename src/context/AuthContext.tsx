@@ -57,7 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       const p = await fetchProfile(s.user.id);
-      if (!p || p.employment_status !== "active") {
+      // 데이터의 재직 상태값은 "재직"/"퇴직"(한글). 과거 "active" 비교는 실제
+      // 직원(재직)을 전부 막았음. 퇴직자만 차단하고 나머지는 허용. (BUG-004)
+      if (!p || p.employment_status === "퇴직") {
         await supabase.auth.signOut().catch(() => {});
         setSession(null);
         setProfile(null);

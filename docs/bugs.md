@@ -126,3 +126,33 @@ const rootPaths = getFilesInDir(rootDir) ...           // src 안만 스캔
 - iPad는 데스크탑 UA(`Mac OS X 10_15`)를 써서 OS 버전 파싱이 안 됨 → UA 버전 게이트는 실제 iOS UA(`iPhone|iPad|iPod`)만 검사해 오탐 방지.
 
 ---
+
+## BUG-004 · 실제 직원 로그인 후 튕김 — 프로필 검증 불일치 + SM 프로필 누락 ✅ 수정완료
+
+**발생일** 2026-06-24  
+**수정일** 2026-06-24
+
+### 증상
+실제 직원이 `사번` / `사번+1234`(예: `SM-0003` / `SM-00031234`)로 로그인하면 인증은 되는데 즉시 `/login`으로 튕김. (관리자 계정 10개만 정상)
+
+### 원인 (DB 조회로 확정 — 두 개)
+production `profiles` 213건 분포: `재직` 203 / `active` 10.
+
+- **RC1 (HD 69명 — 코드):** `AuthContext`가 `employment_status !== "active"` 면 로그아웃. 그런데 실제 직원 값은 **`재직`** → `"재직" !== "active"` → 전원 튕김. (옛 `/ios/home`은 `=== "퇴직"`만 막아 정상이었음 — 메인 컨텍스트만 틀렸음)
+- **RC2 (SM 134명 — 데이터):** `create-staff-accounts.mjs`가 **auth 계정만 만들고 `profiles` 행을 안 만듦**. SM 137명 중 3명만 profiles 존재 → 나머지 134명은 `fetchProfile`=null → `!p` → 튕김. (HD는 SQL 마이그레이션으로 profiles까지 생성됐으나 SM은 누락)
+
+### 수정 내용
+| 파일 | 변경 |
+|---|---|
+| `src/context/AuthContext.tsx` | `employment_status !== "active"` → `=== "퇴직"` (재직·active 허용, 퇴직만 차단) |
+| `supabase/migrations/20260624_sm_staff_profiles.sql` | SM 134명 profiles 일괄 생성(`staff_directory` 기반, `재직`/`is_approver=false`, idempotent) — 실행 완료 |
+
+### 검증
+- profiles 79 → **213** (재직 203 + active 10). SM- profiles 3 → **137**, HD- 69. INSERT 134행, FK/auth 검증 누락 0.
+
+### 교훈
+- 상태 플래그는 **DB 실제 값과 코드 비교값을 반드시 일치**시킬 것. 한 곳(`/ios/home`)은 `퇴직`, 다른 곳(`AuthContext`)은 `active` 로 갈려 있었음.
+- 계정 생성은 **auth + profiles 둘 다** 만들어야 함. 스크립트(auth만)와 SQL 마이그레이션(둘 다)이 갈려 SM/HD가 다르게 처리됨.
+- 비번 규칙: `사번 그대로 + 1234` (접두사 포함, 예: `SM-00031234` / `HD-00011234`).
+
+---
