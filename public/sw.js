@@ -1,4 +1,4 @@
-const CACHE = "erp-v4";
+const CACHE = "erp-v5";
 const APP_SHELL = ["/", "/login"];
 
 // 설치 시 앱 쉘 캐싱

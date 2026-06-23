@@ -17,6 +17,8 @@ import {
  * - 우하단 "iOS디버그" 버튼 → 누적 경로 표시 → 스크린샷으로 공유.
  * 원인 확정 후 제거 예정.
  */
+const BUILD = "diag3";
+
 export function IOSDebugOverlay() {
   const pathname = usePathname();
   const [isIOS, setIsIOS] = useState(false);
@@ -33,12 +35,33 @@ export function IOSDebugOverlay() {
     setCrumbs(readCrumbs());
   }, [pathname]);
 
-  if (!isIOS) return null;
-
   const flag = (b: boolean) => (b ? "✅" : "—");
+
+  // 모든 기기에 보이는 빌드 식별자 (캐시 staleness 확인용, 임시).
+  // 이 값이 화면에 보이지 않으면 옛 캐시 버전을 보고 있는 것.
+  const versionStamp = (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 4,
+        left: 6,
+        zIndex: 2147483647,
+        fontSize: 9,
+        lineHeight: "12px",
+        color: "rgba(0,0,0,.45)",
+        pointerEvents: "none",
+      }}
+    >
+      v:{BUILD}
+    </div>
+  );
+
+  // iOS 가 아니면 버전 표시만 (Android 동작 영향 없음)
+  if (!isIOS) return versionStamp;
 
   return (
     <>
+      {versionStamp}
       <button
         onClick={() => {
           setCrumbs(readCrumbs());
