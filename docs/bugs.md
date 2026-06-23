@@ -71,9 +71,11 @@ iOS에서 `/ios/login` 로그인 성공 후 `/ios/home`으로 가지 못하고 `
 
 ---
 
-## BUG-003 · iOS 무한루프 재발 — 죽은 proxy 파일 수정 + 인증 저장소 분리 🔍 진단중
+## BUG-003 · iOS 무한루프 — 진짜 원인은 구형 Safari JS 미실행 ✅ 수정완료
 
-**발생일** 2026-06-23
+**발생일** 2026-06-23  
+**수정일** 2026-06-23  
+**커밋** `fe5224c`(섬 제거) · `2e9d8f2`(/ios 리다이렉트) · Q2-B/정리 커밋
 
 ### 핵심 발견: BUG-001/002의 전제가 틀렸다
 BUG-001 교훈에 "루트와 `src/` 양쪽에 `proxy.ts`가 있으면 **루트가 우선**"이라고 적혀 있으나 **정반대다.**
@@ -94,11 +96,33 @@ const rootPaths = getFilesInDir(rootDir) ...           // src 안만 스캔
 - **RC2** iOS(`/ios/*`)는 `supabase-js`+localStorage, 앱 본체(Android 포함)는 `@supabase/ssr`+쿠키 → 세션 저장소 분리, 상호 공유 안 됨.
 - **RC3** PWA `start_url`=`/home`(쿠키 게이트, `(main)/home/page.tsx:26` 클라이언트 가드). iOS는 쿠키 세션이 없어 진입 즉시 `/login`→`/ios/login`으로 튕김. `/ios/home`까지 가도 외딴 섬이라 기능 페이지·재실행 시 다시 튕김 → 체감 무한루프.
 
-### 진행
-- 2번(증거): iOS 전용 화면 진단 오버레이 추가(`src/lib/ios-debug.ts`, `src/components/IOSDebugOverlay.tsx`) → 실제 iPhone에서 루프 경로·세션 상태 확인.
-- 1번(근본 수정 예정): iOS localStorage 섬과 죽은 루트 `proxy.ts` 제거, iOS도 Android와 동일한 쿠키 흐름으로 통일. Android 흐름 로직 불변.
+### 진짜 원인 (기기 진단으로 확정)
+화면 진단 오버레이(`stamp`에 `iOS:?  tp:-1` 표시)로 확인한 결과, **해당 iPhone(iOS 16.1.1)에서 JS 번들이 아예 실행되지 않았음**. `useEffect`가 안 도니 stamp 값이 서버 초기값 그대로였다.
 
-### 교훈 (정정)
+- **RC0 (주원인):** iOS Safari **16.4 미만**은 Next.js 16 + React 19 번들 실행에 실패(특정 기능 미지원). JS가 죽으니:
+  - 로그인 폼이 `preventDefault` 없이 **네이티브 전송**(전체 새로고침) → 비번 오입력해도 로그인 화면 복귀
+  - 세션·리다이렉트 처리 전부 안 됨 → 무한루프
+  - Android는 JS 정상 실행 → 무관
+- **RC1:** iOS를 우회하려 만든 `/ios` localStorage 섬은 잘못된 진단의 산물(원래 루프는 JS 문제였음). JS가 돌면(16.4+/18) iOS도 쿠키 흐름으로 정상 동작.
+- **RC2:** 최근 iOS 커밋들이 **죽은 루트 `proxy.ts`**를 고쳐 효과 없었음(아래 교훈).
+
+### 수정 내용
+| 파일 | 변경 |
+|---|---|
+| `src/app/login/page.tsx` | iOS→`/ios/login` 리다이렉트 제거 (iOS도 동일 쿠키 로그인) |
+| `src/app/ios/*`, `src/lib/supabase-ios.ts` | 삭제 (localStorage 섬 제거) |
+| `proxy.ts` (루트) | 삭제 (죽은 코드) |
+| `src/proxy.ts` | `/ios/*` → `/login` 리다이렉트 추가 (PWA 옛 주소 404 복구) |
+| `src/app/layout.tsx` | `<head>`에 ES5 인라인 스크립트: 실제 iOS UA & 16.4 미만이면 **업데이트 안내 화면** 표시 |
+
+### 검증
+- iOS 18로 업그레이드한 기기에서 로그인·네비바·홈아이콘·캘린더·메뉴 전부 정상 확인.
+- `/ios/login` → 307 `/login` 리다이렉트 확인(somang/hyundai 양 프로젝트).
+
+### 교훈
+- **무한루프 = 인증 버그라고 단정하지 말 것.** 실제 원인은 **구형 Safari에서 JS 번들 자체가 미실행**이었고, 모든 증상이 거기서 파생됐다. 화면 stamp(`iOS:?  tp:-1`)가 JS 미실행을 한 번에 드러냄.
+- **구형 iOS 대응:** Safari 16.4가 기준선. iPhone 8/X도 iOS 16.7(Safari 16.6)까지 업데이트 가능 → 사실상 업데이트로 해결. iPhone 7 이하(iOS 15)만 불가 → 업데이트 안내로 처리.
 - **`src/` 디렉터리 사용 시 proxy/middleware는 `src/proxy.ts`가 활성. 루트 파일은 무시됨.** (BUG-001 교훈의 "루트 우선"은 오류) 두 파일이 공존하면 즉시 하나를 지워야 한다.
+- iPad는 데스크탑 UA(`Mac OS X 10_15`)를 써서 OS 버전 파싱이 안 됨 → UA 버전 게이트는 실제 iOS UA(`iPhone|iPad|iPod`)만 검사해 오탐 방지.
 
 ---
