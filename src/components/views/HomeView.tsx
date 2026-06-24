@@ -14,13 +14,14 @@ import { useT } from "@/context/LangContext";
 
 export type HomeViewProps = {
   editName: string;
+  position?: string;
   role: UserRole;
   userId: string;
   onNavigate: (page: AppPage) => void;
   onLogout: () => void;
 };
 
-export function HomeView({ editName, role = "staff", userId, onNavigate }: HomeViewProps) {
+export function HomeView({ editName, position, role = "staff", userId, onNavigate }: HomeViewProps) {
   const goApproval = () => onNavigate("approvalList");
   const goCalendar = () => onNavigate("schedule");
   const { push } = useNotifications();
@@ -34,7 +35,7 @@ export function HomeView({ editName, role = "staff", userId, onNavigate }: HomeV
           {t("home_greeting").replace("{name}", editName)}
         </h1>
         <span className="rounded-full bg-[#eef2ff] px-2 py-0.5 text-[0.6875rem] font-bold text-[#3b5bdb]">
-          {ROLE_META[role]?.short ?? "직원"}
+          {position || ROLE_META[role]?.short || "직원"}
         </span>
       </div>
 
