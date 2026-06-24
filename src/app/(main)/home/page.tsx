@@ -40,6 +40,7 @@ export default function HomePage() {
     <HomeView
       editName={profile.full_name}
       position={profile.position}
+      department={profile.department}
       role={role}
       userId={profile.id}
       onNavigate={(p) => router.push(NAV[p])}

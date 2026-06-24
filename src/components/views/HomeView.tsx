@@ -14,13 +14,14 @@ import { useT } from "@/context/LangContext";
 export type HomeViewProps = {
   editName: string;
   position?: string;
+  department?: string;
   role: UserRole;
   userId: string;
   onNavigate: (page: AppPage) => void;
   onLogout: () => void;
 };
 
-export function HomeView({ editName, position, role = "staff", userId, onNavigate }: HomeViewProps) {
+export function HomeView({ editName, position, department, role = "staff", userId, onNavigate }: HomeViewProps) {
   const goApproval = () => onNavigate("approvalList");
   const goCalendar = () => onNavigate("schedule");
   const { push } = useNotifications();
@@ -31,7 +32,11 @@ export function HomeView({ editName, position, role = "staff", userId, onNavigat
       {/* 인사 */}
       <div className="mb-4">
         <h1 className="text-[1.375rem] font-bold text-zinc-900">
-          {t("home_greeting").replace("{name}", position ? `${editName} ${position}` : editName)}
+          {t("home_greeting").replace("{name}", (() => {
+            const displayPosition =
+              department === "간호과" && position === "사원" ? "선생님" : position;
+            return displayPosition ? `${editName} ${displayPosition}` : editName;
+          })())}
         </h1>
       </div>
 
