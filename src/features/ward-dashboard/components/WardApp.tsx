@@ -13,7 +13,7 @@ import { TabStaff } from "./tabs/TabStaff";
 import { ApprovalPage } from "@/features/approval/components/ApprovalPage";
 import { DraftPage } from "@/features/approval/components/DraftPage";
 import {
-  ACCOUNTS, INIT_LEAVES, INIT_DOCS, APPROVERS, TODAY,
+  ACCOUNTS, INIT_LEAVES, INIT_DOCS, APPROVERS, TODAY, DOC_FORMS,
 } from "@/features/ward-dashboard/data";
 import type { WardAccount, WardRoute, WardTab, Leave, ApprovalDoc } from "@/features/ward-dashboard/types";
 
@@ -211,6 +211,8 @@ export function WardApp() {
               openId={openDocId}
               compose={compose}
               setCompose={setCompose}
+              forms={DOC_FORMS}
+              approvers={APPROVERS}
             />
           )}
         </div>
