@@ -2,7 +2,6 @@
 
 import type { AppPage } from "@/types/navigation";
 import type { UserRole } from "@/types/role";
-import { ROLE_META } from "@/types/role";
 import { AnnouncementSection } from "@/components/home/AnnouncementSection";
 import { ApprovalStatusCard, ApprovalStatusDonut } from "@/components/home/ApprovalStatusCard";
 import { DraftStatusCard } from "@/components/home/DraftStatusCard";
@@ -30,13 +29,10 @@ export function HomeView({ editName, position, role = "staff", userId, onNavigat
   return (
     <div className="px-5 py-5">
       {/* 인사 */}
-      <div className="mb-4 flex items-baseline gap-2">
+      <div className="mb-4">
         <h1 className="text-[1.375rem] font-bold text-zinc-900">
-          {t("home_greeting").replace("{name}", editName)}
+          {t("home_greeting").replace("{name}", position ? `${editName} ${position}` : editName)}
         </h1>
-        <span className="rounded-full bg-[#eef2ff] px-2 py-0.5 text-[0.6875rem] font-bold text-[#3b5bdb]">
-          {position || ROLE_META[role]?.short || "직원"}
-        </span>
       </div>
 
       {/* 알림 토스트 데모 */}
