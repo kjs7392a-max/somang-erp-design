@@ -18,6 +18,7 @@ const STATUS_TONE: Record<ApprovalDocStatus, "warn" | "info" | "ok" | "danger"> 
 const FORM_ICONS: Record<string, keyof typeof WardIcons> = {
   annual: "calendar", half: "clock", shift: "table",
   leave: "door", purchase: "building", report: "file",
+  sick: "file", family: "users", official: "stamp",
 };
 
 function ApprovalLine({ line, compact }: { line: ApprovalStep[]; compact?: boolean }) {

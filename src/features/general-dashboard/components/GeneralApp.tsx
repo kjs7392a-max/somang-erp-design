@@ -169,8 +169,8 @@ export function GeneralApp() {
       : `${input.start.replace(/-/g, ".")} ~ ${input.end.replace(/-/g, ".")}`;
 
     const newDoc: ApprovalDoc = {
-      id: docId, box: "sent", form, title: `${input.kind} 신청서 (${staff.name})`,
-      drafter: { name: user.name, role: user.role }, date: TODAY, status: "진행중",
+      id: docId, box: "received", form, title: `${input.kind} 신청서 (${staff.name})`,
+      drafter: { name: user.name, role: user.role }, date: TODAY, status: "결재대기",
       body: [
         ["신청자", `${staff.name} (${staff.dept})`],
         ["휴가 구분", `${input.kind} (${days}일)`],
@@ -179,8 +179,7 @@ export function GeneralApp() {
       ],
       line: [
         { name: user.name, role: user.role, kind: "기안", status: "승인", at: nowStamp(), me: true },
-        { name: G_APPROVERS.head.name, role: G_APPROVERS.head.role, kind: "검토", status: "결재중", at: null },
-        { name: G_APPROVERS.exec.name, role: G_APPROVERS.exec.role, kind: "결재", status: "대기", at: null },
+        { name: G_APPROVERS.exec.name, role: G_APPROVERS.exec.role, kind: "결재", status: "결재중", at: null },
       ],
     };
     const newLeave: LeaveRequest = {
