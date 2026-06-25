@@ -16,7 +16,7 @@ import {
 import type {
   GeneralAccount, GeneralRoute, GeneralTab, LeaveRequest, NewLeaveInput,
 } from "@/features/general-dashboard/types";
-import type { ApprovalDoc } from "@/features/approval/types";
+import type { ApprovalDoc, ApprovalDocStatus } from "@/features/approval/types";
 
 const GENERAL_TABS: { id: GeneralTab; label: string; icon: keyof typeof WardIcons }[] = [
   { id: "status", label: "현황", icon: "grid" },
@@ -59,7 +59,8 @@ export function GeneralApp() {
   });
   const [tab, setTab] = useState<GeneralTab>(() => {
     if (typeof window !== "undefined") {
-      return (localStorage.getItem("gd_tab") as GeneralTab) || "status";
+      const t = localStorage.getItem("gd_tab");
+      return (t === "status" || t === "staff" || t === "leave") ? t : "status";
     }
     return "status";
   });
@@ -104,8 +105,7 @@ export function GeneralApp() {
   }
 
   function handleApprove(id: string) {
-    let completed = false;
-    setDocs((prev) => prev.map((d) => {
+    const updated = docs.map((d) => {
       if (d.id !== id) return d;
       const line = d.line.map((s) => ({ ...s }));
       const idx = line.findIndex((s) => s.status === "결재중");
@@ -115,9 +115,11 @@ export function GeneralApp() {
         if (line[idx + 1]) line[idx + 1].status = "결재중";
       }
       const allDone = line.every((s) => s.status === "승인");
-      completed = allDone;
-      return { ...d, line, status: allDone ? "완료" : "진행중" };
-    }));
+      const docStatus: ApprovalDocStatus = allDone ? "완료" : "진행중";
+      return { ...d, line, status: docStatus };
+    });
+    const completed = updated.find((d) => d.id === id)?.status === "완료";
+    setDocs(updated);
     if (completed) syncLeaveByDoc(id, "승인");
     setOpenDocId(null);
     toast(completed ? "결재가 완료되었습니다" : "결재를 승인했습니다");
