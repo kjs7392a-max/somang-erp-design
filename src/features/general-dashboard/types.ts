@@ -44,3 +44,11 @@ export interface LeaveBalance {
 
 export type GeneralRoute = "general" | "approval" | "draft";
 export type GeneralTab = "status" | "staff" | "leave";
+
+export interface NewLeaveInput {
+  staffId: string;
+  kind: LeaveKind;
+  start: string;
+  end: string;
+  reason: string;
+}
