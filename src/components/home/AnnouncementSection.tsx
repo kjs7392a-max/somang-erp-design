@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Megaphone, Pin, ChevronRight } from "lucide-react";
-import { ANNOUNCEMENTS, getAnnouncementText, type Announcement } from "@/lib/home-data";
+import { getAnnouncementText, type Announcement } from "@/lib/home-data";
+import { fetchAnnouncements, type NoticeScope } from "@/lib/announcements";
 import { AccordionCard } from "./AccordionCard";
 import { AnnouncementDetailModal } from "./AnnouncementDetailModal";
 import { useT, useLang } from "@/context/LangContext";
-import { useAuth } from "@/context/AuthContext";
 
 type Props = {
-  scope: "company" | "dept";
+  scope: NoticeScope;
 };
 
 const READ_KEY = "somang-read-announcements";
@@ -32,12 +32,19 @@ function writeStoredIds(ids: string[]) {
 export function AnnouncementSection({ scope }: Props) {
   const t = useT();
   const lang = useLang();
-  const { profile } = useAuth();
-  const items = ANNOUNCEMENTS.filter((a) => {
-    if (a.scope !== scope) return false;
-    if (scope === "dept") return a.targetDept === profile?.department;
-    return true;
-  }).slice(0, 2);
+  const [items, setItems] = useState<Announcement[]>([]);
+
+  // 어떤 행이 보이는가(법인/부서/병동 격리)는 Supabase RLS가 결정. 여기선 scope만 요청.
+  useEffect(() => {
+    let alive = true;
+    fetchAnnouncements(scope).then((rows) => {
+      if (alive) setItems(rows.slice(0, 2));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [scope]);
+
   const [selected, setSelected] = useState<Announcement | null>(null);
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
   const [mounted, setMounted] = useState(false);
@@ -50,7 +57,12 @@ export function AnnouncementSection({ scope }: Props) {
 
   if (items.length === 0) return null;
 
-  const title = scope === "company" ? t("notice_company") : t("notice_dept");
+  const title =
+    scope === "company"
+      ? t("notice_company")
+      : scope === "ward"
+        ? t("notice_ward")
+        : t("notice_dept");
   const latest = items[0];
   const latestText = latest ? getAnnouncementText(latest, lang) : null;
   const unreadCount = mounted

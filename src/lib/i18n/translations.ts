@@ -54,6 +54,7 @@ export const T = {
     // 공지
     notice_company: "전체 공지",
     notice_dept:    "부서 공지",
+    notice_ward:    "병동 공지",
 
     // 결재 현황 카드
     approval_card_title:   "내 결재 현황",
@@ -273,6 +274,7 @@ export const T = {
 
     notice_company: "Общие объявления",
     notice_dept:    "Объявления отдела",
+    notice_ward:    "Объявления отделения",
 
     approval_card_title: "Мои согласования",
     approval_waiting:    "Ожидает одобрения",
@@ -475,6 +477,7 @@ export const T = {
 
     notice_company: "全体公告",
     notice_dept:    "部门公告",
+    notice_ward:    "病房公告",
 
     approval_card_title: "我的审批",
     approval_waiting:    "待审批",
@@ -677,6 +680,7 @@ export const T = {
 
     notice_company: "Umumiy e'lon",
     notice_dept:    "Bo'lim e'loni",
+    notice_ward:    "Palata e'loni",
 
     approval_card_title: "Mening tasdiqlarim",
     approval_waiting:    "Tasdiqlash kutilmoqda",
@@ -879,6 +883,7 @@ export const T = {
 
     notice_company: "Загальні оголошення",
     notice_dept:    "Оголошення відділу",
+    notice_ward:    "Оголошення відділення",
 
     approval_card_title: "Мої погодження",
     approval_waiting:    "Очікує схвалення",
