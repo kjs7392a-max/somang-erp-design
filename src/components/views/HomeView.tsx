@@ -34,7 +34,7 @@ export function HomeView({ editName, position, department, role = "staff", userI
         <h1 className="text-[1.375rem] font-bold text-zinc-900">
           {t("home_greeting").replace("{name}", (() => {
             const displayPosition =
-              department === "간호과" && position === "사원" ? "선생님" : position;
+              department === "간호과" && position === "사원" ? "간호사" : position;
             return displayPosition ? `${editName} ${displayPosition}` : editName;
           })())}
         </h1>
