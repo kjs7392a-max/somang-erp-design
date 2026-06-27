@@ -108,7 +108,11 @@ CREATE TABLE IF NOT EXISTS announcements (
        (scope = 'company' AND target_dept IS NULL AND target_ward IS NULL)
     OR (scope = 'dept'    AND target_dept IS NOT NULL AND target_ward IS NULL)
     OR (scope = 'ward'    AND target_dept = '간호과' AND target_ward IS NOT NULL)
-  )
+  ),
+  -- 병동 유효성: ward 행의 (corporation_id, target_ward)는 실제 wards 행이어야 함.
+  -- company/dept 행은 target_ward NULL → MATCH SIMPLE로 검사 제외.
+  CONSTRAINT announcements_ward_fk FOREIGN KEY (corporation_id, target_ward)
+    REFERENCES wards (corporation_id, code)
 );
 CREATE INDEX IF NOT EXISTS announcements_corp_scope_idx
   ON announcements (corporation_id, scope, published_at DESC);
@@ -117,8 +121,11 @@ ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
 
 -- 읽기: 내 법인 + (전체 / 내 부서 / 내 병동). super_admin 전체.
 DROP POLICY IF EXISTS ann_select ON announcements;
+-- author_id = auth.uid(): 작성자는 자기 글을 항상 봄.
+--   (PostgREST INSERT...RETURNING이 SELECT 정책을 타므로 필수 — 없으면 my_ward()=NULL인
+--    간호사가 병동공지 작성 시 RETURNING 단계에서 42501로 막힘.)
 CREATE POLICY ann_select ON announcements FOR SELECT TO authenticated USING (
-  public.is_super() OR (
+  public.is_super() OR author_id = auth.uid() OR (
     corporation_id = public.my_corp() AND (
          scope = 'company'
       OR (scope = 'dept' AND target_dept = public.my_dept())
@@ -138,8 +145,7 @@ CREATE POLICY ann_insert ON announcements FOR INSERT TO authenticated WITH CHECK
          (scope = 'company' AND public.my_dept() = (SELECT company_notice_dept FROM corporations WHERE id = public.my_corp()))
       OR (scope = 'dept' AND target_dept = public.my_dept()
             AND EXISTS (SELECT 1 FROM notice_departments nd WHERE nd.corporation_id = public.my_corp() AND nd.department = public.my_dept()))
-      OR (scope = 'ward' AND public.my_dept() = '간호과'
-            AND EXISTS (SELECT 1 FROM wards w WHERE w.corporation_id = public.my_corp() AND w.code = target_ward))
+      OR (scope = 'ward' AND public.my_dept() = '간호과')
     )
   )
 );
@@ -152,8 +158,7 @@ USING (
          (scope = 'company' AND public.my_dept() = (SELECT company_notice_dept FROM corporations WHERE id = public.my_corp()))
       OR (scope = 'dept' AND target_dept = public.my_dept()
             AND EXISTS (SELECT 1 FROM notice_departments nd WHERE nd.corporation_id = public.my_corp() AND nd.department = public.my_dept()))
-      OR (scope = 'ward' AND public.my_dept() = '간호과'
-            AND EXISTS (SELECT 1 FROM wards w WHERE w.corporation_id = public.my_corp() AND w.code = target_ward))
+      OR (scope = 'ward' AND public.my_dept() = '간호과')
     )
   )
 )
@@ -163,8 +168,7 @@ WITH CHECK (
          (scope = 'company' AND public.my_dept() = (SELECT company_notice_dept FROM corporations WHERE id = public.my_corp()))
       OR (scope = 'dept' AND target_dept = public.my_dept()
             AND EXISTS (SELECT 1 FROM notice_departments nd WHERE nd.corporation_id = public.my_corp() AND nd.department = public.my_dept()))
-      OR (scope = 'ward' AND public.my_dept() = '간호과'
-            AND EXISTS (SELECT 1 FROM wards w WHERE w.corporation_id = public.my_corp() AND w.code = target_ward))
+      OR (scope = 'ward' AND public.my_dept() = '간호과')
     )
   )
 );
@@ -176,8 +180,7 @@ CREATE POLICY ann_delete ON announcements FOR DELETE TO authenticated USING (
          (scope = 'company' AND public.my_dept() = (SELECT company_notice_dept FROM corporations WHERE id = public.my_corp()))
       OR (scope = 'dept' AND target_dept = public.my_dept()
             AND EXISTS (SELECT 1 FROM notice_departments nd WHERE nd.corporation_id = public.my_corp() AND nd.department = public.my_dept()))
-      OR (scope = 'ward' AND public.my_dept() = '간호과'
-            AND EXISTS (SELECT 1 FROM wards w WHERE w.corporation_id = public.my_corp() AND w.code = target_ward))
+      OR (scope = 'ward' AND public.my_dept() = '간호과')
     )
   )
 );

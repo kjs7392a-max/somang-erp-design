@@ -98,6 +98,16 @@ CHECK: company→target_dept/target_ward NULL · dept→target_dept NOT NULL, ta
 
 → 부서/병동 공지는 **읽기 자체가 같은 부서/병동으로 제한**되어 타 부서·타 병동이 못 본다. UI 필터 + RLS 이중 보장.
 
+### SELECT 정책에 작성자 본인 가시성 (필수)
+`ann_select`에 `author_id = auth.uid()` 분기를 둔다. 이유: **PostgREST의 `INSERT ... RETURNING`이 SELECT 정책의 적용을 받는다.** 병동공지는 `target_ward = my_ward()`로 보이는데, 간호사↔병동 명단이 아직 없어 `my_ward()=NULL`이므로 방금 작성한 행이 본인에게 안 보여 RETURNING이 42501로 거부된다. `author_id=auth.uid()`로 "작성자는 자기 글을 항상 봄"을 보장해 해결. (명단 적재 후엔 같은 병동원도 보임.)
+
+### 작성 계약 (대시보드 구현 시)
+공지 작성(INSERT) 시 **반드시 `author_id = 현재 사용자 id`를 세팅**해야 한다(위 RETURNING 문제 방지 + 작성자 추적). 병동 유효성은 복합 FK `announcements_ward_fk (corporation_id, target_ward) → wards`가 강제하므로, 잘못된/타 법인 병동은 23503으로 거부된다.
+
+### 실데이터 검증 (2026-06-27, 실 계정 RLS)
+SM 총무과/간호과/원무과, HD 기획실/간호과 계정으로 11개 케이스 전부 기대대로:
+전체공지 SM총무과·HD기획실만 허용 / 부서·병동 타 소속 차단 / 간호사 자기법인 병동 작성 허용, 없는·타법인 병동 FK 거부.
+
 ## 앱 측 변경
 
 ### 신규 `src/lib/announcements.ts`
