@@ -84,11 +84,14 @@ export default function LoginPage() {
     }
   };
 
-  // 지문 등록 기기 & 폼 미표시 → 잠금화면
+  // 지문 등록 기기 & 폼 미표시 → 인증 시도 중엔 배경만, 실패 시 잠금화면
   if (initiallyRegistered && !showLoginForm) {
+    if (bioLoading && !bioError) {
+      return <div className="min-h-dvh bg-gradient-to-b from-[#dbeafe] to-[#3b82f6]" />;
+    }
     return (
       <BiometricLockScreen
-        loading={bioLoading}
+        loading={false}
         error={bioError}
         canRetry={hasRegistered}
         onRetry={authenticate}
