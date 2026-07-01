@@ -14,11 +14,17 @@ import {
   verifyChallengeToken,
 } from "@/lib/webauthn";
 
+// 함수 예열용 — 외부 모니터(UptimeRobot 등)가 5분마다 GET으로 호출해
+// 서버 함수를 warm 상태로 유지 → 지문 인증 cold start 제거. DB 호출 없음.
+export async function GET() {
+  return NextResponse.json({ ok: true, warm: true });
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
 
   // ── options ──────────────────────────────────────────────────────────
-  // 예열 요청 — cold start 방지용, DB 호출 없음
+  // 예열 요청 — cold start 방지용, DB 호출 없음 (POST 방식 유지)
   if (body.action === "ping") {
     return NextResponse.json({ ok: true });
   }
