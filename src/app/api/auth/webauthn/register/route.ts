@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     const challenge = generateChallenge();
     const options = await generateRegistrationOptions({
       rpName: "소망의료재단",
-      rpID: getRpId(),
+      rpID: getRpId(request),
       userName: user.email ?? user.id,
       challenge: Buffer.from(challenge, "base64url"),
       excludeCredentials: (existing ?? []).map((c) => ({
@@ -130,8 +130,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const origin = getAppOrigin();
-    const rpId = getRpId();
+    const origin = getAppOrigin(request);
+    const rpId = getRpId(request);
     let verification;
     try {
       verification = await verifyRegistrationResponse({

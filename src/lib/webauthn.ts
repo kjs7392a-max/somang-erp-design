@@ -4,21 +4,19 @@ import { createClient } from "@supabase/supabase-js";
 export const REG_CHALLENGE_COOKIE = "wn_reg_challenge";
 export const AUTH_CHALLENGE_COOKIE = "wn_auth_challenge";
 
-export function getAppOrigin(): string {
+export function getAppOrigin(request?: { headers: { get(name: string): string | null } }): string {
+  if (request) {
+    const host = request.headers.get("host") ?? "";
+    const proto = request.headers.get("x-forwarded-proto") ?? "https";
+    if (host) return `${proto}://${host}`;
+  }
   const configured = process.env.NEXT_PUBLIC_APP_URL;
-  // If explicitly set to a non-localhost URL, use it
-  if (configured && !/localhost|127\.0\.0\.1/.test(configured)) {
-    return configured;
-  }
-  // On Vercel, use the canonical production domain regardless of NEXT_PUBLIC_APP_URL
-  if (process.env.VERCEL_ENV || process.env.VERCEL_URL) {
-    return "https://somang-erp.vercel.app";
-  }
+  if (configured && !/localhost|127\.0\.0\.1/.test(configured)) return configured;
   return "http://localhost:3000";
 }
 
-export function getRpId(): string {
-  return new URL(getAppOrigin()).hostname;
+export function getRpId(request?: { headers: { get(name: string): string | null } }): string {
+  return new URL(getAppOrigin(request)).hostname;
 }
 
 export function generateChallenge(): string {

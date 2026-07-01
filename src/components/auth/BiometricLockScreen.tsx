@@ -1,7 +1,46 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+type BiometricType = "faceid" | "touchid" | "fingerprint";
+
+function detectBiometricType(): BiometricType {
+  if (typeof navigator === "undefined") return "fingerprint";
+  const ua = navigator.userAgent;
+  if (/iPhone/.test(ua)) return "faceid";
+  if (/iPad/.test(ua)) return "touchid";
+  return "fingerprint";
+}
+
+const BIOMETRIC_CONFIG: Record<BiometricType, { label: string; icon: React.ReactNode; hint: string }> = {
+  faceid: {
+    label: "Face ID로 로그인하세요",
+    hint: "비밀번호로 로그인",
+    icon: (
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="14" height="14" rx="4" stroke="white" strokeWidth="3" fill="none"/>
+        <rect x="36" y="2" width="14" height="14" rx="4" stroke="white" strokeWidth="3" fill="none"/>
+        <rect x="2" y="36" width="14" height="14" rx="4" stroke="white" strokeWidth="3" fill="none"/>
+        <rect x="36" y="36" width="14" height="14" rx="4" stroke="white" strokeWidth="3" fill="none"/>
+        <circle cx="19" cy="22" r="2.5" fill="white"/>
+        <circle cx="33" cy="22" r="2.5" fill="white"/>
+        <path d="M19 32 Q26 38 33 32" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+        <path d="M26 18 L26 28" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  touchid: {
+    label: "Touch ID로 로그인하세요",
+    hint: "비밀번호로 로그인",
+    icon: <span style={{ fontSize: 52 }}>👆</span>,
+  },
+  fingerprint: {
+    label: "지문으로 로그인하세요",
+    hint: "비밀번호로 로그인",
+    icon: <span style={{ fontSize: 52 }}>👆</span>,
+  },
+};
 
 export type BiometricLockScreenProps = {
   loading?: boolean;
@@ -19,6 +58,13 @@ export function BiometricLockScreen({
   onFallback,
 }: BiometricLockScreenProps) {
   const [logoOk, setLogoOk] = useState(true);
+  const [bioType, setBioType] = useState<BiometricType>("fingerprint");
+
+  useEffect(() => {
+    setBioType(detectBiometricType());
+  }, []);
+
+  const cfg = BIOMETRIC_CONFIG[bioType];
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col bg-gradient-to-b from-[#dbeafe] to-[#3b82f6]">
@@ -49,15 +95,15 @@ export function BiometricLockScreen({
         {/* 중앙 — 지문 아이콘 + 상태 */}
         <div className="flex flex-col items-center gap-5">
           <div
-            className={`flex h-24 w-24 items-center justify-center rounded-full bg-white/25 text-5xl shadow-[0_8px_32px_rgba(30,41,91,0.2)] backdrop-blur-sm transition-all duration-300 ${
+            className={`flex h-24 w-24 items-center justify-center rounded-full bg-white/25 shadow-[0_8px_32px_rgba(30,41,91,0.2)] backdrop-blur-sm transition-all duration-300 ${
               loading ? "animate-pulse scale-105" : ""
             }`}
           >
-            👆
+            {cfg.icon}
           </div>
 
           <p className="text-center text-[1.25rem] font-semibold text-white drop-shadow-sm">
-            {loading ? "인증 중..." : error ? "인증 실패" : "지문으로 로그인하세요"}
+            {loading ? "인증 중..." : error ? "인증 실패" : cfg.label}
           </p>
 
           {error && (
@@ -84,7 +130,7 @@ export function BiometricLockScreen({
             onClick={onFallback}
             className="rounded-xl border border-white/40 px-6 py-2.5 text-sm font-semibold text-white active:opacity-70"
           >
-            비밀번호로 로그인
+            {cfg.hint}
           </button>
           <p className="text-[0.6875rem] font-normal text-white/85">
             © 2026 소망의료재단. All rights reserved.

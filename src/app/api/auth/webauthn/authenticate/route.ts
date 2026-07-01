@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     const challenge = generateChallenge();
     const options = await generateAuthenticationOptions({
-      rpID: getRpId(),
+      rpID: getRpId(request),
       challenge: Buffer.from(challenge, "base64url"),
       allowCredentials,
       userVerification: "required",
@@ -142,8 +142,8 @@ export async function POST(request: NextRequest) {
       verification = await verifyAuthenticationResponse({
         response: body.credential,
         expectedChallenge: challenge,
-        expectedOrigin: getAppOrigin(),
-        expectedRPID: getRpId(),
+        expectedOrigin: getAppOrigin(request),
+        expectedRPID: getRpId(request),
         credential: {
           id: credRow.credential_id,
           publicKey: Buffer.from(credRow.public_key, "base64url"),
