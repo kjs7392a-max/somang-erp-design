@@ -6,7 +6,6 @@ import {
 const LS_KEY = "wn_registered";   // employeeId
 const LS_CRED_KEY = "wn_cred_id"; // credential_id (빠른 인증 경로용)
 
-// 잠금화면 렌더와 동시에 미리 시작한 options fetch 결과를 여기에 보관
 let _prefetchedOptions: Promise<Response> | null = null;
 
 /** WebAuthn Platform Authenticator 지원 여부 확인 */
@@ -42,27 +41,6 @@ export function clearRegistered(): void {
   localStorage.removeItem(LS_CRED_KEY);
 }
 
-/**
- * 잠금화면 렌더 시점에 호출 — options fetch를 미리 시작해서
- * authenticate() 호출 시 대기 시간을 제거한다.
- */
-export function prefetchAuthOptions(): void {
-  if (typeof window === "undefined") return;
-  const credentialId = getRegisteredCredentialId();
-  const employeeId = getRegisteredEmployeeId();
-  if (!credentialId && !employeeId) return;
-
-  _prefetchedOptions = fetch("/api/auth/webauthn/authenticate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(
-      credentialId
-        ? { action: "options", credentialId }
-        : { action: "options", employeeId }
-    ),
-    credentials: "include",
-  });
-}
 
 /**
  * force=true: 기존 credential 삭제 후 재등록 (클라우드 패스키 → 기기 로컬 마이그레이션)
