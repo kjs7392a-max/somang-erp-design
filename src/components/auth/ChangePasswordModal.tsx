@@ -39,10 +39,10 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+      className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-lg rounded-t-3xl bg-white px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-5 shadow-xl">
+      <div className="w-full max-w-lg rounded-t-3xl bg-white px-5 pb-10 pt-5 shadow-xl">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-[1.0625rem] font-bold text-zinc-900">비밀번호 변경</h2>
           <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 active:bg-zinc-100">
