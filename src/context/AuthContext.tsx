@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
 import { PROFILE_CACHE_KEY } from "@/lib/webauthn-client";
@@ -22,7 +22,6 @@ const AuthContext = createContext<AuthState>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
   const supabase = createClient();
@@ -93,13 +92,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
     // 로그아웃 후 자동 생체인식 재시도 방지
     if (typeof sessionStorage !== "undefined") {
       sessionStorage.setItem("logged_out", "1");
     }
+    // scope: local → 네트워크 응답을 기다리지 않고 로컬 세션만 즉시 제거(스피너 제거)
+    supabase.auth.signOut({ scope: "local" }).catch(() => {});
     if (!pathnameRef.current.startsWith("/ward")) {
-      router.push("/login");
+      // 하드 리다이렉트로 홈 스피너 깜빡임 없이 로그인 화면으로 전환
+      window.location.href = "/login";
     }
   };
 

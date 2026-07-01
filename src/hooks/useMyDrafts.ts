@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase";
+import { readCache, writeCache } from "@/lib/local-cache";
 
 export type ApprovalStep = {
   order_index: number;
@@ -18,15 +19,30 @@ export type DraftSummary = {
   steps: ApprovalStep[];
 };
 
+const draftsCacheKey = (userId: string) => `somang-drafts-${userId}`;
+
 export function useMyDrafts() {
   const { profile } = useAuth();
   const [drafts, setDrafts] = useState<DraftSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 캐시된 결과를 즉시 표시하고 백그라운드에서 갱신 (첫 조회 "불러오는중" 제거)
+  useEffect(() => {
+    if (!profile) return;
+    const cached = readCache<DraftSummary[]>(draftsCacheKey(profile.id));
+    if (cached) {
+      setDrafts(cached);
+      setLoading(false);
+    }
+  }, [profile?.id]);
+
   const fetchDrafts = useCallback(async () => {
     if (!profile) return;
-    setLoading(true);
+    // 캐시가 이미 표시 중이면 스피너로 되돌리지 않는다
+    if (readCache<DraftSummary[]>(draftsCacheKey(profile.id)) === null) {
+      setLoading(true);
+    }
     setError(null);
     const supabase = createClient();
     const { data, error: dbError } = await supabase
@@ -61,6 +77,7 @@ export function useMyDrafts() {
         })),
     }));
     setDrafts(mapped);
+    writeCache(draftsCacheKey(profile.id), mapped);
   }, [profile?.id]);
 
   useEffect(() => { fetchDrafts(); }, [fetchDrafts]);

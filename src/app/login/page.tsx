@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LoginView } from "@/components/auth/LoginView";
 import { BiometricLockScreen } from "@/components/auth/BiometricLockScreen";
 import { createClient } from "@/lib/supabase";
@@ -38,12 +38,8 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn();
 
-  // 지문 등록 기기: 마운트 즉시 인증 시작
-  useEffect(() => {
-    if (initiallyRegistered) {
-      authenticate();
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // 자동 실행 안 함 — 잠금화면의 "인증하기"를 눌러야 지문 프롬프트가 뜬다.
+  // (렌더 시 prefetchAuthOptions로 미리 준비 → 탭하면 즉시 프롬프트)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

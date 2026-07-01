@@ -3,7 +3,12 @@
 import { useState, useEffect } from "react";
 import { Megaphone, Pin, ChevronRight } from "lucide-react";
 import { getAnnouncementText, type Announcement } from "@/lib/home-data";
-import { fetchAnnouncements, type NoticeScope } from "@/lib/announcements";
+import {
+  fetchAnnouncements,
+  readCachedAnnouncements,
+  writeCachedAnnouncements,
+  type NoticeScope,
+} from "@/lib/announcements";
 import { AccordionCard } from "./AccordionCard";
 import { AnnouncementDetailModal } from "./AnnouncementDetailModal";
 import { useT, useLang } from "@/context/LangContext";
@@ -32,13 +37,16 @@ function writeStoredIds(ids: string[]) {
 export function AnnouncementSection({ scope }: Props) {
   const t = useT();
   const lang = useLang();
-  const [items, setItems] = useState<Announcement[]>([]);
+  // 캐시된 데이터로 초기값 설정 → 즉시 표시, 백그라운드에서 갱신
+  const [items, setItems] = useState<Announcement[]>(() => readCachedAnnouncements(scope));
 
-  // 어떤 행이 보이는가(법인/부서/병동 격리)는 Supabase RLS가 결정. 여기선 scope만 요청.
   useEffect(() => {
     let alive = true;
     fetchAnnouncements(scope).then((rows) => {
-      if (alive) setItems(rows.slice(0, 2));
+      if (!alive) return;
+      const sliced = rows.slice(0, 2);
+      setItems(sliced);
+      writeCachedAnnouncements(scope, sliced);
     });
     return () => {
       alive = false;

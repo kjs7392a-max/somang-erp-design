@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { APP_VERSION } from "@/lib/version";
 
 type BiometricType = "faceid" | "fingerprint";
 
@@ -124,6 +125,9 @@ export function BiometricLockScreen({
           </button>
           <p className="text-[0.6875rem] font-normal text-white/85">
             © 2026 소망의료재단. All rights reserved.
+          </p>
+          <p className="text-[0.625rem] font-medium text-white/70">
+            {APP_VERSION}
           </p>
         </div>
       </div>

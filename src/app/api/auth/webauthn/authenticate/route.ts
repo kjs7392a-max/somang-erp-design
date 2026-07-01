@@ -106,14 +106,21 @@ export async function POST(request: NextRequest) {
 
   // ── verify ────────────────────────────────────────────────────────────
   if (body.action === "verify") {
+    // [DIAG] 간헐 실패 원인 추적용 로그. 원인 확정 후 제거.
+    const credentialId0 = (body.credential as { id?: string } | undefined)?.id;
+    const hasCookie = !!request.cookies.get(AUTH_CHALLENGE_COOKIE)?.value;
+    console.log(`[wa-verify] start cred=${credentialId0?.slice(0, 12) ?? "none"} cookie=${hasCookie} origin=${getAppOrigin(request)} rpId=${getRpId(request)}`);
+
     const token = request.cookies.get(AUTH_CHALLENGE_COOKIE)?.value;
     if (!token) {
+      console.warn("[wa-verify] FAIL: missing challenge cookie");
       return NextResponse.json({ error: "Missing challenge" }, { status: 400 });
     }
     let challenge: string;
     try {
       challenge = verifyChallengeToken(token);
-    } catch {
+    } catch (e) {
+      console.warn(`[wa-verify] FAIL: invalid/expired challenge — ${(e as Error).message}`);
       return NextResponse.json(
         { error: "Invalid or expired challenge" },
         { status: 400 }
@@ -122,6 +129,7 @@ export async function POST(request: NextRequest) {
 
     const credentialId = (body.credential as { id?: string } | undefined)?.id;
     if (!credentialId) {
+      console.warn("[wa-verify] FAIL: missing credential id in body");
       return NextResponse.json(
         { error: "Missing credential id" },
         { status: 400 }
@@ -129,13 +137,14 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createAdminClient();
-    const { data: credRow } = await admin
+    const { data: credRow, error: credErr } = await admin
       .from("webauthn_credentials")
       .select("*")
       .eq("credential_id", credentialId)
       .single();
 
     if (!credRow) {
+      console.warn(`[wa-verify] FAIL: credential not found — dbErr=${credErr?.message ?? "none"}`);
       return NextResponse.json(
         { error: "Credential not found" },
         { status: 404 }
@@ -156,7 +165,8 @@ export async function POST(request: NextRequest) {
         },
         requireUserVerification: true,
       });
-    } catch {
+    } catch (e) {
+      console.warn(`[wa-verify] FAIL: verifyAuthenticationResponse threw — ${(e as Error).message} (storedCounter=${credRow.counter})`);
       return NextResponse.json(
         { error: "Verification failed" },
         { status: 400 }
@@ -164,11 +174,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (!verification.verified || !verification.authenticationInfo) {
+      console.warn(`[wa-verify] FAIL: not verified (verified=${verification.verified})`);
       return NextResponse.json(
         { error: "Verification failed" },
         { status: 400 }
       );
     }
+    console.log(`[wa-verify] OK cred=${credentialId.slice(0, 12)} newCounter=${verification.authenticationInfo.newCounter}`);
 
     // counter update + getUserById + profile + global_viewers 모두 병렬
     const userId = credRow.user_id;
@@ -187,6 +199,7 @@ export async function POST(request: NextRequest) {
       ]);
 
     if (userError || !userData?.user?.email) {
+      console.warn(`[wa-verify] FAIL: getUser — ${userError?.message ?? "no email"}`);
       return NextResponse.json({ error: "Failed to get user" }, { status: 500 });
     }
 
@@ -196,6 +209,7 @@ export async function POST(request: NextRequest) {
         email: userData.user.email,
       });
     if (linkError || !linkData?.properties?.hashed_token) {
+      console.warn(`[wa-verify] FAIL: generateLink — ${linkError?.message ?? "no hashed_token"}`);
       return NextResponse.json(
         { error: "Failed to generate session token" },
         { status: 500 }
@@ -212,6 +226,7 @@ export async function POST(request: NextRequest) {
       type: "magiclink",
     });
     if (otpError || !otpData.session) {
+      console.warn(`[wa-verify] FAIL: verifyOtp — ${otpError?.message ?? "no session"}`);
       return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
     }
 

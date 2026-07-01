@@ -77,6 +77,33 @@ export async function fetchAnnouncements(scope: NoticeScope): Promise<Announceme
   return (data as Row[]).map(mapRow);
 }
 
+/* ---------- 공지 localStorage 캐시 (홈 진입 즉시 표시용) ---------- */
+
+const ANNOUNCE_CACHE_KEY = (scope: string) => `somang-announcements-${scope}`;
+
+/** 홈 섹션이 표시하는 개수와 동일(상위 2개)하게 잘라 캐시한다. */
+const CACHE_LIMIT = 2;
+
+export function readCachedAnnouncements(scope: NoticeScope): Announcement[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(ANNOUNCE_CACHE_KEY(scope));
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeCachedAnnouncements(scope: NoticeScope, items: Announcement[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(
+      ANNOUNCE_CACHE_KEY(scope),
+      JSON.stringify(items.slice(0, CACHE_LIMIT)),
+    );
+  } catch {}
+}
+
 /* ---------- 권한 헬퍼 (UI 노출 판단용; 실제 강제는 RLS) ---------- */
 
 export function canPostCompanyNotice(profile: Profile | null): boolean {
