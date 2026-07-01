@@ -22,7 +22,7 @@ export function GeneralGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
     if (!profile) {
-      router.replace("/login");
+      router.replace("/general/login");
     } else if (!allowed) {
       router.replace("/home");
     }

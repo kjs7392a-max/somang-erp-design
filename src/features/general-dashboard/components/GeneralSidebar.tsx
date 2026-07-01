@@ -35,13 +35,13 @@ export function GeneralSidebar({ route, onNav, user, pendingCount, onLogout }: P
       height: "100%",
     }}>
       <div style={{ height: 64, padding: "0 20px", display: "flex", alignItems: "center", gap: 11, borderBottom: `1px solid ${C.borderSoft}` }}>
-        <div style={{
-          width: 34, height: 34, borderRadius: 9,
-          background: `linear-gradient(135deg, ${C.primary}, ${C.primaryDeep})`,
-          color: "#fff", fontSize: 16, fontWeight: 800,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 3px 8px rgba(0,160,198,0.3)",
-        }}>S</div>
+        <img
+          src="/icon-192.png"
+          alt="소망병원 로고"
+          width={34}
+          height={34}
+          style={{ width: 34, height: 34, borderRadius: 9, objectFit: "contain", boxShadow: "0 3px 8px rgba(0,160,198,0.2)" }}
+        />
         <div>
           <div style={{ fontSize: 14, fontWeight: 800, color: C.ink, lineHeight: 1.1, letterSpacing: "-0.01em" }}>소망병원 ERP</div>
           <div style={{ fontSize: 10, color: C.textFaint, letterSpacing: "0.1em", marginTop: 2, whiteSpace: "nowrap" }}>GENERAL · 총무과</div>
