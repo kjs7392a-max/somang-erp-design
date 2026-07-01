@@ -3,20 +3,16 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
-type BiometricType = "faceid" | "touchid" | "fingerprint";
+type BiometricType = "faceid" | "fingerprint";
 
 function detectBiometricType(): BiometricType {
   if (typeof navigator === "undefined") return "fingerprint";
-  const ua = navigator.userAgent;
-  if (/iPhone/.test(ua)) return "faceid";
-  if (/iPad/.test(ua)) return "touchid";
-  return "fingerprint";
+  return /iPhone/.test(navigator.userAgent) ? "faceid" : "fingerprint";
 }
 
-const BIOMETRIC_CONFIG: Record<BiometricType, { label: string; icon: React.ReactNode; hint: string }> = {
+const BIOMETRIC_CONFIG: Record<BiometricType, { label: string; icon: React.ReactNode }> = {
   faceid: {
     label: "Face ID로 로그인하세요",
-    hint: "비밀번호로 로그인",
     icon: (
       <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="2" width="14" height="14" rx="4" stroke="white" strokeWidth="3" fill="none"/>
@@ -30,14 +26,8 @@ const BIOMETRIC_CONFIG: Record<BiometricType, { label: string; icon: React.React
       </svg>
     ),
   },
-  touchid: {
-    label: "Touch ID로 로그인하세요",
-    hint: "비밀번호로 로그인",
-    icon: <span style={{ fontSize: 52 }}>👆</span>,
-  },
   fingerprint: {
     label: "지문으로 로그인하세요",
-    hint: "비밀번호로 로그인",
     icon: <span style={{ fontSize: 52 }}>👆</span>,
   },
 };
@@ -130,7 +120,7 @@ export function BiometricLockScreen({
             onClick={onFallback}
             className="rounded-xl border border-white/40 px-6 py-2.5 text-sm font-semibold text-white active:opacity-70"
           >
-            {cfg.hint}
+            비밀번호로 로그인
           </button>
           <p className="text-[0.6875rem] font-normal text-white/85">
             © 2026 소망의료재단. All rights reserved.
