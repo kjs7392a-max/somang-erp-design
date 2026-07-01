@@ -92,6 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    // 로그아웃 후 자동 생체인식 재시도 방지
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.setItem("logged_out", "1");
+    }
     if (!pathnameRef.current.startsWith("/ward")) {
       router.push("/login");
     }

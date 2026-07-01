@@ -15,7 +15,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
 
-  const [initiallyRegistered] = useState(() => !!getRegisteredEmployeeId());
+  // 로그아웃 직후인지 확인 (sessionStorage 플래그)
+  const [initiallyRegistered] = useState(() => {
+    if (typeof sessionStorage === "undefined") return !!getRegisteredEmployeeId();
+    if (sessionStorage.getItem("logged_out")) {
+      sessionStorage.removeItem("logged_out");
+      return false; // 로그아웃 후엔 자동 생체인식 건너뜀
+    }
+    return !!getRegisteredEmployeeId();
+  });
 
   const {
     isSupported,
@@ -25,14 +33,8 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn();
 
-  // 지문 등록 기기: 마운트 즉시 인증 시작 + 함수 예열 (cold start 방지)
+  // 지문 등록 기기: 마운트 즉시 인증 시작 (예열은 Providers에서 앱 시작 시 미리 완료)
   useEffect(() => {
-    // authenticate 함수 예열 (cold start 2~3초 제거)
-    fetch("/api/auth/webauthn/authenticate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "ping" }),
-    }).catch(() => {});
     if (initiallyRegistered) {
       authenticate();
     }
