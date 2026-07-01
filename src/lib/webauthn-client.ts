@@ -99,7 +99,7 @@ export async function registerBiometric(employeeId: string, force = false): Prom
  */
 export const PROFILE_CACHE_KEY = "wn_profile_cache";
 
-export async function authenticateBiometric(): Promise<{ access_token: string; refresh_token: string; expires_at: number }> {
+export async function authenticateBiometric(): Promise<{ access_token: string; refresh_token: string; expires_at: number; profile?: unknown }> {
   const credentialId = getRegisteredCredentialId();
   const employeeId = getRegisteredEmployeeId();
   if (!credentialId && !employeeId) throw new Error("No registered credential");

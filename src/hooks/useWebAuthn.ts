@@ -9,10 +9,13 @@ import {
   getRegisteredEmployeeId,
   isWebAuthnSupported,
 } from "@/lib/webauthn-client";
+import { useAuth } from "@/context/AuthContext";
 import { ROUTES } from "@/lib/routes";
+import type { Profile } from "@/types/profile";
 
 export function useWebAuthn() {
   const router = useRouter();
+  const { injectProfile } = useAuth();
   const [isSupported, setIsSupported] = useState(false);
   const [hasRegistered, setHasRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,7 +37,7 @@ export function useWebAuthn() {
     setLoading(true);
     setError(null);
     try {
-      const { access_token, refresh_token } = await authenticateBiometric();
+      const { access_token, refresh_token, profile } = await authenticateBiometric();
       const supabase = createClient();
       const { error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
       if (sessionError) {
@@ -42,8 +45,10 @@ export function useWebAuthn() {
         setLoading(false);
         return;
       }
-      // 성공: 클라이언트 전환 (전체 리로드 없음 → 홈 즉시 진입)
-      // loading은 false로 안 바꿈 → 배경 화면 유지하다 홈으로 이동
+      // navigate 전에 profile을 AuthContext에 직접 주입 → 홈 첫 렌더링 즉시 표시
+      if (profile) {
+        injectProfile(profile as Profile);
+      }
       router.push(ROUTES.home);
     } catch (e) {
       if (e instanceof Error && e.message.startsWith("NO_CREDENTIAL")) {

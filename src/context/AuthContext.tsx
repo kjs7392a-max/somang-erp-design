@@ -12,6 +12,7 @@ type AuthState = {
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  injectProfile: (p: Profile) => void;
 };
 
 const AuthContext = createContext<AuthState>({
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthState>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  injectProfile: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -109,8 +111,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // 생체인식 직후 navigate 전 profile을 미리 주입 → 홈 첫 렌더링에서 스피너 없음
+  const injectProfile = (p: Profile) => {
+    setProfile(p);
+    setLoading(false);
+  };
+
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ session, profile, loading, signOut, injectProfile }}>
       {children}
     </AuthContext.Provider>
   );
