@@ -2,31 +2,31 @@
 
 import React from "react";
 import { C, FONT, WardIcons } from "@/shared/ui/WardUI";
-import type { WardAccount, WardRoute } from "@/features/ward-dashboard/types";
+import type { GeneralAccount, GeneralRoute } from "@/features/general-dashboard/types";
 
 const NAV_SECTIONS = [
   {
-    label: "간호 업무",
-    items: [{ id: "ward" as WardRoute, label: "병동 대시보드", icon: "grid" as const }],
+    label: "총무 업무",
+    items: [{ id: "general" as GeneralRoute, label: "총무 대시보드", icon: "grid" as const }],
   },
   {
     label: "전자결재",
     items: [
-      { id: "approval" as WardRoute, label: "결재함", icon: "stamp" as const },
-      { id: "draft" as WardRoute, label: "기안 결재", icon: "edit" as const },
+      { id: "approval" as GeneralRoute, label: "결재함", icon: "stamp" as const },
+      { id: "draft" as GeneralRoute, label: "기안 결재", icon: "edit" as const },
     ],
   },
 ];
 
 interface Props {
-  route: WardRoute;
-  onNav: (r: WardRoute) => void;
-  user: WardAccount;
+  route: GeneralRoute;
+  onNav: (r: GeneralRoute) => void;
+  user: GeneralAccount;
   pendingCount: number;
   onLogout?: () => void;
 }
 
-export function WardSidebar({ route, onNav, user, pendingCount, onLogout }: Props) {
+export function GeneralSidebar({ route, onNav, user, pendingCount, onLogout }: Props) {
   const sections = user.canApprove ? NAV_SECTIONS : NAV_SECTIONS.filter((s) => s.label !== "전자결재");
   return (
     <aside style={{
@@ -34,7 +34,6 @@ export function WardSidebar({ route, onNav, user, pendingCount, onLogout }: Prop
       borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column",
       height: "100%",
     }}>
-      {/* 로고 */}
       <div style={{ height: 64, padding: "0 20px", display: "flex", alignItems: "center", gap: 11, borderBottom: `1px solid ${C.borderSoft}` }}>
         <img
           src="/icon-192.png"
@@ -45,15 +44,14 @@ export function WardSidebar({ route, onNav, user, pendingCount, onLogout }: Prop
         />
         <div>
           <div style={{ fontSize: 14, fontWeight: 800, color: C.ink, lineHeight: 1.1, letterSpacing: "-0.01em" }}>소망병원 ERP</div>
-          <div style={{ fontSize: 10, color: C.textFaint, letterSpacing: "0.1em", marginTop: 2, whiteSpace: "nowrap" }}>NURSING · 간호과</div>
+          <div style={{ fontSize: 10, color: C.textFaint, letterSpacing: "0.1em", marginTop: 2, whiteSpace: "nowrap" }}>GENERAL · 총무과</div>
         </div>
       </div>
 
-      {/* 병동 컨텍스트 */}
       <div style={{ margin: "16px 16px 4px", padding: "12px 14px", borderRadius: 10, background: `linear-gradient(135deg, ${C.primarySoft}, #f0f9fb)`, border: `1px solid ${C.border}` }}>
-        <div style={{ fontSize: 10.5, color: C.primaryDeep, fontWeight: 700, letterSpacing: "0.04em" }}>담당 병동</div>
-        <div style={{ fontSize: 17, fontWeight: 800, color: C.ink, marginTop: 3, letterSpacing: "-0.01em" }}>{user.ward.name}</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>{user.ward.dept}</div>
+        <div style={{ fontSize: 10.5, color: C.primaryDeep, fontWeight: 700, letterSpacing: "0.04em" }}>소속</div>
+        <div style={{ fontSize: 17, fontWeight: 800, color: C.ink, marginTop: 3, letterSpacing: "-0.01em" }}>총무과</div>
+        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>행정지원팀</div>
       </div>
 
       <div style={{ padding: "10px 0", flex: 1, overflowY: "auto" }}>
@@ -86,7 +84,6 @@ export function WardSidebar({ route, onNav, user, pendingCount, onLogout }: Prop
         ))}
       </div>
 
-      {/* 유저 */}
       <div style={{ borderTop: `1px solid ${C.borderSoft}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: 11 }}>
         <div style={{
           width: 36, height: 36, borderRadius: "50%",

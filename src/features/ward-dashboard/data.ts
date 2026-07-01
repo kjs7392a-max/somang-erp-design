@@ -2,6 +2,7 @@ import type {
   WardInfo, WardAccount, Patient, Leave, Exam,
   ShiftRow, ShiftCode, ShiftCodeMeta, Staff, ApprovalDoc,
 } from "./types";
+import type { DocForm } from "@/features/approval/types";
 
 export const TODAY = "2026-06-07";
 export const CAL_YEAR = 2026;
@@ -195,3 +196,12 @@ export function computeKpi(patients: Patient[], leaves: Leave[]) {
     outNow: leaves.filter((l) => l.status !== "복귀완료").length,
   };
 }
+
+export const DOC_FORMS: DocForm[] = [
+  { id: "annual", label: "연차 휴가 신청서", icon: "calendar", fields: ["기간", "사유"] },
+  { id: "half", label: "반차 신청서", icon: "clock", fields: ["일자", "구분", "사유"] },
+  { id: "shift", label: "근무 변경 신청서", icon: "table", fields: ["대상일", "변경 내용", "사유"] },
+  { id: "leave", label: "외박·외출 특별 승인 요청", icon: "door", fields: ["환자", "기간", "사유"] },
+  { id: "purchase", label: "물품 구매 요청서", icon: "building", fields: ["품목", "수량", "사유"] },
+  { id: "report", label: "특이사항 보고서", icon: "file", fields: ["발생일시", "내용"] },
+];

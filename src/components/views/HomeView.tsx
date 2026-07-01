@@ -57,6 +57,9 @@ export function HomeView({ editName, position, department, role = "staff", userI
       {/* 공지 */}
       <AnnouncementSection scope="company" />
       {role !== "exec" && <AnnouncementSection scope="dept" />}
+      {role !== "exec" && department === "간호과" && (
+        <AnnouncementSection scope="ward" />
+      )}
 
       {/* 식사 예약 */}
       <MealMenuCard userId={userId} />

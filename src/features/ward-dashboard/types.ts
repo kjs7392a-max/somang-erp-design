@@ -78,32 +78,10 @@ export interface Staff {
   status: "재직" | "휴직";
 }
 
-export type ApprovalStepStatus = "승인" | "결재중" | "대기" | "반려";
-export type ApprovalDocStatus = "결재대기" | "진행중" | "완료" | "반려";
-export type ApprovalStepKind = "기안" | "검토" | "결재";
-export type DocBox = "received" | "sent";
-
-export interface ApprovalStep {
-  name: string;
-  role: string;
-  kind: ApprovalStepKind;
-  status: ApprovalStepStatus;
-  at: string | null;
-  me?: boolean;
-  memo?: string;
-}
-
-export interface ApprovalDoc {
-  id: string;
-  box: DocBox;
-  form: string;
-  title: string;
-  drafter: { name: string; role: string };
-  date: string;
-  status: ApprovalDocStatus;
-  body: [string, string][];
-  line: ApprovalStep[];
-}
+export type {
+  ApprovalStepStatus, ApprovalDocStatus, ApprovalStepKind, DocBox,
+  ApprovalStep, ApprovalDoc, DocForm, Approvers,
+} from "@/features/approval/types";
 
 export type WardRoute = "ward" | "approval" | "draft";
 export type WardTab = "status" | "patients" | "leave" | "exam" | "shift" | "staff";
