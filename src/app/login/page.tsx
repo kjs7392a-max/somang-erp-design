@@ -6,7 +6,10 @@ import { BiometricLockScreen } from "@/components/auth/BiometricLockScreen";
 import { createClient } from "@/lib/supabase";
 import { ROUTES } from "@/lib/routes";
 import { useWebAuthn } from "@/hooks/useWebAuthn";
-import { getRegisteredEmployeeId } from "@/lib/webauthn-client";
+import {
+  getRegisteredEmployeeId,
+  prefetchAuthOptions,
+} from "@/lib/webauthn-client";
 
 export default function LoginPage() {
   const [userId, setUserId] = useState("");
@@ -15,14 +18,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
 
-  // 로그아웃 직후인지 확인 (sessionStorage 플래그)
+  // 렌더 즉시 등록 여부 확인 + options fetch 미리 시작
+  // 로그아웃 직후(sessionStorage "logged_out")엔 자동 생체인식 건너뜀
   const [initiallyRegistered] = useState(() => {
-    if (typeof sessionStorage === "undefined") return !!getRegisteredEmployeeId();
-    if (sessionStorage.getItem("logged_out")) {
+    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("logged_out")) {
       sessionStorage.removeItem("logged_out");
-      return false; // 로그아웃 후엔 자동 생체인식 건너뜀
+      return false;
     }
-    return !!getRegisteredEmployeeId();
+    const registered = !!getRegisteredEmployeeId();
+    if (registered) prefetchAuthOptions();
+    return registered;
   });
 
   const {
@@ -33,7 +38,7 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn();
 
-  // 지문 등록 기기: 마운트 즉시 인증 시작 (예열은 Providers에서 앱 시작 시 미리 완료)
+  // 지문 등록 기기: 마운트 즉시 인증 시작
   useEffect(() => {
     if (initiallyRegistered) {
       authenticate();
@@ -54,8 +59,6 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    // 사번 prefix로 법인 도메인 자동 결정
-    // SM- → somang.internal, HD- → hyundai.internal
     const DOMAIN_MAP: Record<string, string> = {
       SM: "somang.internal",
       HD: "hyundai.internal",
@@ -84,14 +87,11 @@ export default function LoginPage() {
     }
   };
 
-  // 지문 등록 기기 & 폼 미표시 → 인증 시도 중엔 배경만, 실패 시 잠금화면
+  // 지문 등록 기기 & 폼 미표시 → 즉시 잠금화면
   if (initiallyRegistered && !showLoginForm) {
-    if (bioLoading && !bioError) {
-      return <div className="min-h-dvh bg-gradient-to-b from-[#dbeafe] to-[#3b82f6]" />;
-    }
     return (
       <BiometricLockScreen
-        loading={false}
+        loading={bioLoading}
         error={bioError}
         canRetry={hasRegistered}
         onRetry={authenticate}

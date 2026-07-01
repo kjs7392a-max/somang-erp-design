@@ -12,7 +12,6 @@ type AuthState = {
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  injectProfile: (p: Profile) => void;
 };
 
 const AuthContext = createContext<AuthState>({
@@ -20,7 +19,6 @@ const AuthContext = createContext<AuthState>({
   profile: null,
   loading: true,
   signOut: async () => {},
-  injectProfile: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -35,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
 
   async function fetchProfile(userId: string): Promise<Profile | null> {
-    // 생체인식 직후엔 verify 응답에 포함된 profile 캐시 사용 (Supabase 재조회 생략)
+    // 생체인식 직후 window.location.href 리로드 시 sessionStorage 캐시 사용 (Supabase 재조회 생략)
     if (typeof sessionStorage !== "undefined") {
       const cached = sessionStorage.getItem(PROFILE_CACHE_KEY);
       if (cached) {
@@ -62,8 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       const p = await fetchProfile(s.user.id);
-      // 데이터의 재직 상태값은 "재직"/"퇴직"(한글). 과거 "active" 비교는 실제
-      // 직원(재직)을 전부 막았음. 퇴직자만 차단하고 나머지는 허용. (BUG-004)
+      // 퇴직자만 차단, 나머지는 허용 (BUG-004)
       if (!p || p.employment_status === "퇴직") {
         await supabase.auth.signOut().catch(() => {});
         setSession(null);
@@ -97,28 +94,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    // 로그아웃 후 자동 생체인식 재시도 방지
     if (typeof sessionStorage !== "undefined") {
       sessionStorage.setItem("logged_out", "1");
     }
-    // /login 이동 전 webauthn 함수 미리 예열 (cold start 방지)
-    fetch("/api/auth/webauthn/authenticate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "ping" }),
-    }).catch(() => {});
     if (!pathnameRef.current.startsWith("/ward")) {
       router.push("/login");
     }
   };
 
-  // 생체인식 직후 navigate 전 profile을 미리 주입 → 홈 첫 렌더링에서 스피너 없음
-  const injectProfile = (p: Profile) => {
-    setProfile(p);
-    setLoading(false);
-  };
-
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signOut, injectProfile }}>
+    <AuthContext.Provider value={{ session, profile, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
