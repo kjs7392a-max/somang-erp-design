@@ -170,25 +170,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // counter 업데이트 + getUserById 병렬 실행 (둘 다 verify 결과에 의존하지 않음)
-    const counterUpdatePromise = admin
-      .from("webauthn_credentials")
-      .update({
-        counter: verification.authenticationInfo.newCounter,
-        last_used_at: new Date().toISOString(),
-      })
-      .eq("credential_id", credentialId);
-
-    const [, { data: userData, error: userError }] = await Promise.all([
-      counterUpdatePromise,
-      admin.auth.admin.getUserById(credRow.user_id),
-    ]);
+    // counter update + getUserById + profile + global_viewers 모두 병렬
+    const userId = credRow.user_id;
+    const [, { data: userData, error: userError }, { data: profileData }, { data: gvData }] =
+      await Promise.all([
+        admin
+          .from("webauthn_credentials")
+          .update({
+            counter: verification.authenticationInfo.newCounter,
+            last_used_at: new Date().toISOString(),
+          })
+          .eq("credential_id", credentialId),
+        admin.auth.admin.getUserById(userId),
+        admin.from("profiles").select("*").eq("id", userId).single(),
+        admin.from("global_viewers").select("id").eq("profile_id", userId).maybeSingle(),
+      ]);
 
     if (userError || !userData?.user?.email) {
-      return NextResponse.json(
-        { error: "Failed to get user" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to get user" }, { status: 500 });
     }
 
     const { data: linkData, error: linkError } =
@@ -203,7 +202,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 서버에서 직접 verifyOtp → 세션 토큰 반환 (클라이언트 왕복 1회 제거)
     const anonClient = createAnonClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -217,10 +215,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
     }
 
+    const profile = profileData
+      ? { ...profileData, is_global_viewer: !!gvData }
+      : null;
+
     const res = NextResponse.json({
       access_token: otpData.session.access_token,
       refresh_token: otpData.session.refresh_token,
       expires_at: otpData.session.expires_at,
+      profile, // 홈 진입 시 재조회 불필요하도록 포함
     });
     res.cookies.delete(AUTH_CHALLENGE_COOKIE);
     return res;

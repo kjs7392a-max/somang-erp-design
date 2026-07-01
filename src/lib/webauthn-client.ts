@@ -97,6 +97,8 @@ export async function registerBiometric(employeeId: string, force = false): Prom
  * 2) startAuthentication → 브라우저 지문인식
  * 3) verify → token_hash 반환
  */
+export const PROFILE_CACHE_KEY = "wn_profile_cache";
+
 export async function authenticateBiometric(): Promise<{ access_token: string; refresh_token: string; expires_at: number }> {
   const credentialId = getRegisteredCredentialId();
   const employeeId = getRegisteredEmployeeId();
@@ -137,7 +139,12 @@ export async function authenticateBiometric(): Promise<{ access_token: string; r
     const err = await verRes.json().catch(() => ({}));
     throw new Error((err as { error?: string }).error ?? "Authentication verification failed");
   }
-  return verRes.json();
+  const result = await verRes.json();
+  // profile을 sessionStorage에 캐시 → AuthContext가 홈 진입 시 Supabase 재조회 생략
+  if (result.profile && typeof sessionStorage !== "undefined") {
+    sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(result.profile));
+  }
+  return result;
 }
 
 function fetchAuthOptions(credentialId: string | null, employeeId: string | null): Promise<Response> {
