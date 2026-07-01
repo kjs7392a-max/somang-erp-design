@@ -14,6 +14,7 @@ import {
   Pencil,
   Check,
   X,
+  Fingerprint,
 } from "lucide-react";
 import { useT } from "@/context/LangContext";
 
@@ -29,10 +30,13 @@ export type MyInfoViewProps = {
   userDepartment: string;
 
  
- onOpenChangePassword?: () => void;
+  onOpenChangePassword?: () => void;
   onOpenNotifications?: () => void;
   onOpenAppInfo?: () => void;
   onLogout: () => void;
+  biometricRegistered?: boolean;
+  onRegisterBiometric?: () => void;
+  onUnregisterBiometric?: () => void;
 
   /** 개발용 역할 전환 */
   role?: import("@/types/role").UserRole;
@@ -53,6 +57,9 @@ export function MyInfoView({
   onLogout,
   role,
   onRoleChange,
+  biometricRegistered,
+  onRegisterBiometric,
+  onUnregisterBiometric,
 }: MyInfoViewProps) {
   const t = useT();
   const [editing, setEditing] = useState(false);
@@ -196,6 +203,12 @@ export function MyInfoView({
             icon={<KeyRound className="h-5 w-5 text-zinc-600" />}
             label={t("my_change_password")}
             onClick={onOpenChangePassword}
+          />
+          <SettingRow
+            icon={<Fingerprint className="h-5 w-5 text-zinc-600" />}
+            label={biometricRegistered ? "지문 로그인 해제" : "지문 로그인 등록"}
+            valueHint={biometricRegistered ? "등록됨" : undefined}
+            onClick={biometricRegistered ? onUnregisterBiometric : onRegisterBiometric}
           />
           <SettingRow
             icon={<Bell className="h-5 w-5 text-zinc-600" />}

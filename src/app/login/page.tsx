@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase";
 import { ROUTES } from "@/lib/routes";
 import { useWebAuthn } from "@/hooks/useWebAuthn";
 import {
-  registerBiometric,
   getRegisteredEmployeeId,
   prefetchAuthOptions,
 } from "@/lib/webauthn-client";
@@ -77,19 +76,6 @@ export default function LoginPage() {
         setLoading(false);
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");
         return;
-      }
-      // ID/PW 로그인 시 항상 재등록 (클라우드 패스키 → 기기 로컬 마이그레이션)
-      if (isSupported) {
-        try {
-          await Promise.race([
-            registerBiometric(rawId, true),
-            new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error("timeout")), 5000)
-            ),
-          ]);
-        } catch {
-          // 취소, 실패, 타임아웃 → 홈으로
-        }
       }
       window.location.href = ROUTES.home;
     } catch {
