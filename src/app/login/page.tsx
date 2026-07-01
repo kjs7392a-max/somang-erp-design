@@ -25,8 +25,14 @@ export default function LoginPage() {
     authenticate,
   } = useWebAuthn();
 
-  // 지문 등록 기기: 마운트 즉시 인증 시작
+  // 지문 등록 기기: 마운트 즉시 인증 시작 + 함수 예열 (cold start 방지)
   useEffect(() => {
+    // authenticate 함수 예열 (cold start 2~3초 제거)
+    fetch("/api/auth/webauthn/authenticate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "ping" }),
+    }).catch(() => {});
     if (initiallyRegistered) {
       authenticate();
     }

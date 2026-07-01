@@ -18,6 +18,11 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
 
   // ── options ──────────────────────────────────────────────────────────
+  // 예열 요청 — cold start 방지용, DB 호출 없음
+  if (body.action === "ping") {
+    return NextResponse.json({ ok: true });
+  }
+
   if (body.action === "options") {
     const credentialId = (body.credentialId as string | undefined)?.trim();
     const employeeId = (body.employeeId as string | undefined)?.trim();
@@ -165,7 +170,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await admin
+    // counter 업데이트 + getUserById 병렬 실행 (둘 다 verify 결과에 의존하지 않음)
+    const counterUpdatePromise = admin
       .from("webauthn_credentials")
       .update({
         counter: verification.authenticationInfo.newCounter,
@@ -173,9 +179,11 @@ export async function POST(request: NextRequest) {
       })
       .eq("credential_id", credentialId);
 
-    // getUserById로 이메일 조회 후 magiclink 발급
-    const { data: userData, error: userError } =
-      await admin.auth.admin.getUserById(credRow.user_id);
+    const [, { data: userData, error: userError }] = await Promise.all([
+      counterUpdatePromise,
+      admin.auth.admin.getUserById(credRow.user_id),
+    ]);
+
     if (userError || !userData?.user?.email) {
       return NextResponse.json(
         { error: "Failed to get user" },
