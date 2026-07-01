@@ -5,13 +5,15 @@ export const REG_CHALLENGE_COOKIE = "wn_reg_challenge";
 export const AUTH_CHALLENGE_COOKIE = "wn_auth_challenge";
 
 export function getAppOrigin(request?: { headers: { get(name: string): string | null } }): string {
-  if (request) {
-    const host = request.headers.get("host") ?? "";
-    const proto = request.headers.get("x-forwarded-proto") ?? "https";
-    if (host) return `${proto}://${host}`;
-  }
+  // 명시적으로 설정된 URL 우선 (Vercel 프로젝트별 설정)
   const configured = process.env.NEXT_PUBLIC_APP_URL;
   if (configured && !/localhost|127\.0\.0\.1/.test(configured)) return configured;
+  // APP_URL 미설정 시 요청 헤더에서 동적 결정 (현대ERP 등 다른 프로젝트)
+  if (request) {
+    const host = request.headers.get("host") ?? "";
+    const proto = (request.headers.get("x-forwarded-proto") ?? "https").split(",")[0].trim();
+    if (host) return `${proto}://${host}`;
+  }
   return "http://localhost:3000";
 }
 
