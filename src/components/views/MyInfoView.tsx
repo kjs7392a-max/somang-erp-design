@@ -38,9 +38,6 @@ export type MyInfoViewProps = {
   onRegisterBiometric?: () => void;
   onUnregisterBiometric?: () => void;
 
-  /** 개발용 역할 전환 */
-  role?: import("@/types/role").UserRole;
-  onRoleChange?: (r: import("@/types/role").UserRole) => void;
 };
 export function MyInfoView({
   editName,
@@ -55,8 +52,6 @@ export function MyInfoView({
   onOpenNotifications,
   onOpenAppInfo,
   onLogout,
-  role,
-  onRoleChange,
   biometricRegistered,
   onRegisterBiometric,
   onUnregisterBiometric,
@@ -168,32 +163,7 @@ export function MyInfoView({
         </div>
       </section>
 
-       {/* 역할 전환 (개발용) */}
-      {role && onRoleChange && (
-        <section className="mb-5">
-          <h3 className="mb-2 px-1 text-[0.8125rem] font-semibold text-zinc-500">
-            역할 전환 <span className="ml-1 text-zinc-400">(개발용)</span>
-          </h3>
-          <div className="flex gap-2 rounded-2xl bg-white p-2 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-            {(["staff", "manager", "exec"] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => onRoleChange(r)}
-                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-colors ${
-                  role === r
-                    ? "bg-[#3b5bdb] text-white"
-                    : "text-zinc-600 active:bg-zinc-100"
-                }`}
-              >
-                {r === "staff" ? "직원" : r === "manager" ? "관리자" : "임원"}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 설정 섹션 */}
+       {/* 설정 섹션 */}
       <section className="mb-5">
         <h3 className="mb-2 px-1 text-[0.8125rem] font-semibold text-zinc-500">
           {t("my_settings")}

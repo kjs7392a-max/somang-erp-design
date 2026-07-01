@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { MyInfoView } from "@/components/views/MyInfoView";
 import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
 import { useAuth } from "@/context/AuthContext";
-import { useUserRole } from "@/lib/role";
 import {
   getRegisteredEmployeeId,
   registerBiometric,
@@ -14,7 +13,6 @@ import {
 
 export default function MypagePage() {
   const { profile, signOut } = useAuth();
-  const { role } = useUserRole();
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [biometricRegistered, setBiometricRegistered] = useState(false);
   const [bioLoading, setBioLoading] = useState(false);
@@ -60,8 +58,6 @@ export default function MypagePage() {
         onOpenNotifications={() => alert("알림 설정 (추후 구현)")}
         onOpenAppInfo={() => alert("소망의료재단 ERP v0.1.0")}
         onLogout={signOut}
-        role={role}
-        onRoleChange={() => {}}
         biometricRegistered={biometricRegistered}
         onRegisterBiometric={bioLoading ? undefined : handleRegisterBiometric}
         onUnregisterBiometric={handleUnregisterBiometric}
