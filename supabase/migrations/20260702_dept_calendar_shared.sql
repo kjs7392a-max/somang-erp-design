@@ -99,6 +99,8 @@ create policy "leaves_select_own_dept" on public.leaves
 -- create policy "leaves_insert_by_service" on public.leaves for insert with check (...);
 
 -- ── 5) 승인→leaves 트리거: 정의만(미설치). 연동 Phase에서 주석 해제 ──
+-- 주의: 휴가 본문은 drafts가 아니라 별도 테이블 public.document_contents(draft_id, body jsonb)에 있음.
+--       (검증 2026-07-02: drafts에 body 컬럼 없음. useDraftDetail.ts의 document_contents(body) join 참고)
 -- create or replace function public.fn_leave_from_approved_draft()
 -- returns trigger language plpgsql security definer as $$
 -- begin
@@ -109,10 +111,11 @@ create policy "leaves_select_own_dept" on public.leaves
 --       leave_type, start_date, end_date, status, source_draft_id, created_by
 --     )
 --     select p.corporation_id, p.department, p.id, p.full_name,
---            coalesce(new.body->>'vacationType','annual'),
---            (new.body->>'startDate')::date, (new.body->>'endDate')::date,
+--            coalesce(dc.body->>'vacationType','annual'),
+--            (dc.body->>'startDate')::date, (dc.body->>'endDate')::date,
 --            '승인', new.id, new.drafter_id
 --     from public.profiles p
+--     join public.document_contents dc on dc.draft_id = new.id
 --     where p.id = new.drafter_id;
 --   end if;
 --   return new;

@@ -186,11 +186,12 @@ begin
     )
     select
       p.corporation_id, p.department, p.id, p.full_name,
-      coalesce(new.body->>'vacationType', '연차'),
-      (new.body->>'startDate')::date,
-      (new.body->>'endDate')::date,
+      coalesce(dc.body->>'vacationType', 'annual'),
+      (dc.body->>'startDate')::date,
+      (dc.body->>'endDate')::date,
       '승인', new.id, new.drafter_id
     from public.profiles p
+    join public.document_contents dc on dc.draft_id = new.id
     where p.id = new.drafter_id;
   end if;
   return new;
@@ -202,7 +203,7 @@ $$;
 --   for each row execute function public.fn_leave_from_approved_draft();
 ```
 
-> `drafts.body` 실제 키(`vacationType`/`startDate`/`endDate`)는 `draft-forms.ts`·`useDraftSubmit.ts`와 대조해 구현 시 확정한다.
+> **검증 2026-07-02:** 휴가 본문은 `drafts`가 아니라 별도 테이블 **`public.document_contents(draft_id, body jsonb)`**에 있다(`drafts`엔 `body` 컬럼 없음). 트리거는 `document_contents`를 `draft_id`로 join해 `body->>'vacationType'/'startDate'/'endDate'`를 읽는다. 키 이름은 `useDraftDetail.ts`의 seed(`vacationType`/`startDate`/`endDate`)로 확인됨.
 
 ### Realtime (나중)
 소비자 화면(총무·간호 대시보드, 모바일 일정탭)이 `leaves`/`dept_shifts`를 Supabase Realtime(`postgres_changes`) 구독 → 승인되면 새로고침 없이 갱신. 이번엔 구독 훅의 자리(seam)만 만들고 실제 구독은 나중.
