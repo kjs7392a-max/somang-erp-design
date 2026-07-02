@@ -9,7 +9,8 @@ function monthRange(): { start: string; end: string } {
   const d = new Date();
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
-  return { start: `${y}-${m}-01`, end: `${y}-${m}-31` };
+  const lastDay = String(new Date(y, d.getMonth() + 1, 0).getDate()).padStart(2, "0");
+  return { start: `${y}-${m}-01`, end: `${y}-${m}-${lastDay}` };
 }
 
 export function DeptLeavesView() {

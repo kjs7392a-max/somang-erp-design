@@ -8,8 +8,9 @@ export async function getWardShifts(
   month: string,
 ): Promise<WardShift[]> {
   const supabase = createClient();
+  const [y, m] = month.split("-").map(Number);
   const start = `${month}-01`;
-  const end = `${month}-31`;
+  const end = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
   const { data, error } = await supabase
     .from("dept_shifts")
     .select("id, corporation_id, department, ward, staff_id, staff_name, work_date, shift_code")
