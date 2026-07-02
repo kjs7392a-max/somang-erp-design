@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { CalendarEvent } from "@/types/calendar";
-import { SHIFT_2026_06_NURSE } from "@/lib/shift-data";
 
 const STORAGE_KEY = "somang-personal-events";
 
@@ -28,42 +27,6 @@ export const MOCK_EVENTS: CalendarEvent[] = [
   { id: "n0630a", title: "6월 업무 결산 회의",   date: "2026-06-30", startTime: "10:00", endTime: "11:30", category: "meeting",  location: "간호부 회의실" },
 ];
 
-type NurseShiftInfo = { title: string; category: CalendarEvent["category"]; startTime?: string; endTime?: string };
-
-const NURSE_SHIFT_INFO: Partial<Record<string, NurseShiftInfo>> = {
-  D:  { title: "낮번",   category: "shift",    startTime: "07:00", endTime: "15:30" },
-  E:  { title: "이브닝", category: "shift",    startTime: "15:00", endTime: "23:30" },
-  N:  { title: "나이트", category: "shift",    startTime: "23:00", endTime: "07:30" },
-  DB: { title: "더블",   category: "shift",    startTime: "07:00", endTime: "23:30" },
-  V:  { title: "연차",   category: "personal" },
-  H:  { title: "반차",   category: "personal" },
-};
-
-/** 간호사 시프트 데이터 → CalendarEvent[] 변환 */
-export function getNurseCalendarEvents(memberName: string): CalendarEvent[] {
-  const member =
-    SHIFT_2026_06_NURSE.find((m) => m.name === memberName) ??
-    SHIFT_2026_06_NURSE.find((m) => m.isMe);
-  if (!member) return [];
-
-  const events: CalendarEvent[] = [];
-  member.row.forEach((code, idx) => {
-    const info = NURSE_SHIFT_INFO[code];
-    if (!info) return; // OFF 등 표시 없음
-    const day = idx + 1;
-    const date = `2026-06-${String(day).padStart(2, "0")}`;
-    events.push({
-      id: `ns-${member.id}-${date}`,
-      title: info.title,
-      date,
-      category: info.category,
-      startTime: info.startTime,
-      endTime: info.endTime,
-    });
-  });
-  return events;
-}
-
 function loadPersonal(): CalendarEvent[] {
   if (typeof window === "undefined") return [];
   try {
@@ -80,10 +43,7 @@ function savePersonal(evts: CalendarEvent[]) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(evts));
 }
 
-/**
- * baseEvents: 간호사면 getNurseCalendarEvents() 결과를 전달, 없으면 MOCK_EVENTS 사용
- */
-export function usePersonalEvents(baseEvents?: CalendarEvent[]) {
+export function usePersonalEvents() {
   const [personal, setPersonal] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
