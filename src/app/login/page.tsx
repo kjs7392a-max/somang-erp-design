@@ -10,6 +10,7 @@ import {
   getRegisteredEmployeeId,
   prefetchAuthOptions,
 } from "@/lib/webauthn-client";
+import { InAppBrowserBanner } from "@/components/auth/InAppBrowserBanner";
 
 export default function LoginPage() {
   const [userId, setUserId] = useState("");
@@ -86,18 +87,27 @@ export default function LoginPage() {
   // 지문 등록 기기 & 폼 미표시 → 즉시 잠금화면
   if (initiallyRegistered && !showLoginForm) {
     return (
-      <BiometricLockScreen
-        loading={bioLoading}
-        error={bioError}
-        canRetry={hasRegistered}
-        onRetry={authenticate}
-        onFallback={() => setShowLoginForm(true)}
-      />
+      <>
+        <div className="fixed inset-x-0 top-0 z-[200] px-3 pt-3">
+          <InAppBrowserBanner />
+        </div>
+        <BiometricLockScreen
+          loading={bioLoading}
+          error={bioError}
+          canRetry={hasRegistered}
+          onRetry={authenticate}
+          onFallback={() => setShowLoginForm(true)}
+        />
+      </>
     );
   }
 
   return (
-    <LoginView
+    <>
+      <div className="fixed inset-x-0 top-0 z-[200] px-3 pt-3">
+        <InAppBrowserBanner />
+      </div>
+      <LoginView
       userId={userId}
       password={password}
       onUserIdChange={setUserId}
@@ -109,6 +119,7 @@ export default function LoginPage() {
       biometricLoading={bioLoading}
       onBiometricLogin={authenticate}
       biometricError={bioError}
-    />
+      />
+    </>
   );
 }

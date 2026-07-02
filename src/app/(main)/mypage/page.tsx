@@ -10,6 +10,8 @@ import {
   clearRegistered,
   isWebAuthnSupported,
 } from "@/lib/webauthn-client";
+import { isInAppBrowser } from "@/lib/in-app-browser";
+import { InAppBrowserBanner } from "@/components/auth/InAppBrowserBanner";
 
 export default function MypagePage() {
   const { profile, signOut } = useAuth();
@@ -22,7 +24,21 @@ export default function MypagePage() {
   }, []);
 
   const handleRegisterBiometric = async () => {
-    if (!profile?.employee_id || !isWebAuthnSupported()) return;
+    if (!profile?.employee_id) return;
+    if (isInAppBrowser()) {
+      alert(
+        "카카오톡 등 인앱 브라우저에서는 지문 등록이 안 됩니다.\n" +
+          "우측 상단 메뉴에서 'Chrome(외부 브라우저)으로 열기' 후 다시 시도해주세요.",
+      );
+      return;
+    }
+    if (!isWebAuthnSupported()) {
+      alert(
+        "이 브라우저는 지문 로그인을 지원하지 않습니다.\n" +
+          "Chrome 등 최신 브라우저로 열거나 홈 화면에 설치 후 이용해주세요.",
+      );
+      return;
+    }
     setBioLoading(true);
     try {
       await registerBiometric(profile.employee_id);
@@ -45,6 +61,9 @@ export default function MypagePage() {
 
   return (
     <>
+      <div className="px-4 pt-4">
+        <InAppBrowserBanner />
+      </div>
       <MyInfoView
         editName={profile.full_name}
         editPhone=""
