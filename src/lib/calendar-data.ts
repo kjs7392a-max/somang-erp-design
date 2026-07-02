@@ -110,10 +110,7 @@ export function usePersonalEvents(baseEvents?: CalendarEvent[]) {
     });
   }, []);
 
-  const all = [
-    ...(baseEvents ?? MOCK_EVENTS),
-    ...personal.map((e) => ({ ...e, mine: true })),
-  ];
+  const all = personal.map((e) => ({ ...e, mine: true }));
 
   return { personal, all, upsert, remove };
 }

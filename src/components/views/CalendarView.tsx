@@ -18,8 +18,11 @@ const CAT_KEYS: Record<EventCategory, TKey> = {
 import { usePersonalEvents } from "@/lib/calendar-data";
 import { DayBottomSheet } from "@/components/calendar/DayBottomSheet";
 import { EventFormSheet } from "@/components/calendar/EventFormSheet";
-import { ShiftTable } from "@/components/shift/ShiftTable";
 import { ClinicScheduleView } from "@/components/shift/ClinicScheduleView";
+import { WardShiftView } from "@/components/calendar/WardShiftView";
+import { DeptLeavesView } from "@/components/calendar/DeptLeavesView";
+import { calendarVariantFor, type CalendarVariant } from "@/lib/dept/registry";
+import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/lib/role";
 import { ROUTES } from "@/lib/routes";
 import { useT } from "@/context/LangContext";
@@ -41,11 +44,19 @@ export function CalendarView() {
   const t = useT();
   const router = useRouter();
   const { role } = useUserRole();
+  const { profile } = useAuth();
+  const variant: CalendarVariant = profile ? calendarVariantFor(profile.department) : "personal";
+  // exec는 부서 무관 진료 뷰. 그 외 personal이면 근무 탭 자체를 숨김.
+  const showShiftTab = role === "exec" || variant !== "personal";
   const today = new Date();
   const todayISO = toISO(today.getFullYear(), today.getMonth(), today.getDate());
 
   const [calView, setCalView] = useState<CalView>("month");
   useEffect(() => { setCalView(loadView()); }, []);
+
+  useEffect(() => {
+    if (!showShiftTab && calView === "shift") saveView("month");
+  }, [showShiftTab, calView]);
 
   const saveView = (v: CalView) => {
     setCalView(v);
@@ -106,16 +117,18 @@ export function CalendarView() {
     <div className="relative flex min-h-[calc(100dvh-3.5rem)] flex-col pb-24">
       {/* 뷰 토글 */}
       <div className="sticky top-14 z-20 flex items-center gap-2 border-b border-zinc-100 bg-white px-4 py-2">
-        <div className="flex flex-1 gap-1 rounded-xl bg-zinc-100 p-1">
-          <button type="button" onClick={() => saveView("month")}
-            className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${calView === "month" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>
-            📅 {t("cal_monthly")}
-          </button>
-          <button type="button" onClick={() => saveView("shift")}
-            className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${calView === "shift" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>
-            {role === "exec" ? "📋 진료" : `🕐 ${t("cal_shift")}`}
-          </button>
-        </div>
+        {showShiftTab && (
+          <div className="flex flex-1 gap-1 rounded-xl bg-zinc-100 p-1">
+            <button type="button" onClick={() => saveView("month")}
+              className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${calView === "month" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>
+              📅 {t("cal_monthly")}
+            </button>
+            <button type="button" onClick={() => saveView("shift")}
+              className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${calView === "shift" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}>
+              {role === "exec" ? "📋 진료" : `🕐 ${t("cal_shift")}`}
+            </button>
+          </div>
+        )}
         {calView === "month" && (
           <button type="button" onClick={() => handleStartLeave(todayISO)}
             className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold text-white"
@@ -125,9 +138,15 @@ export function CalendarView() {
         )}
       </div>
 
-      {calView === "shift" && (
+      {showShiftTab && calView === "shift" && (
         <div className="mt-3">
-          {role === "exec" ? <ClinicScheduleView /> : <ShiftTable />}
+          {role === "exec"
+            ? <ClinicScheduleView />
+            : variant === "ward_shift"
+              ? <WardShiftView />
+              : variant === "dept_leaves"
+                ? <DeptLeavesView />
+                : null}
         </div>
       )}
 
