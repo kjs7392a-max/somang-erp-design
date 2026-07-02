@@ -20,6 +20,23 @@ export function isInAppBrowser(): boolean {
   return detectInAppBrowser() !== null;
 }
 
+/**
+ * 모바일 OS 감지.
+ * iOS는 PWA 설치("홈 화면에 추가")가 Safari에서만 가능하므로,
+ * 안내 문구를 안드로이드(Chrome)와 다르게 분기해야 한다.
+ */
+export function getMobileOS(): "ios" | "android" | "other" {
+  if (typeof navigator === "undefined") return "other";
+  const ua = navigator.userAgent || "";
+  if (/Android/i.test(ua)) return "android";
+  if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+  // iPadOS 13+ 는 데스크톱 Safari로 위장(MacIntel + 터치)
+  if (/Macintosh/i.test(ua) && typeof document !== "undefined" && "ontouchend" in document) {
+    return "ios";
+  }
+  return "other";
+}
+
 /** 현재 URL을 외부 기본 브라우저(안드로이드=Chrome)로 다시 연다. */
 export function openInExternalBrowser(): void {
   if (typeof window === "undefined") return;
