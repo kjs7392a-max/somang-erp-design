@@ -156,3 +156,50 @@ production `profiles` 213건 분포: `재직` 203 / `active` 10.
 - 비번 규칙: `사번 그대로 + 1234` (접두사 포함, 예: `SM-00031234` / `HD-00011234`).
 
 ---
+
+## BUG-005 · 외국인 조리원 4명 로그인 불가 — auth 이메일이 규칙과 불일치 ✅ 수정완료
+
+**발생일** (사전 확인) · **수정일** 2026-07-02
+
+### 증상
+조리과 외국인 4명(RU001 이바노프 / UK001 코발렌코 / UZ001 카리모프 / ZH001 왕리)이 로그인 불가.
+
+### 원인
+로그인 규칙은 `{사번소문자}@somang.internal` + 비번 `{사번}1234` (`src/app/login/page.tsx` DOMAIN_MAP). 그런데 이 4명의 auth 이메일이 **비표준 `xx.cook@somang.test`** 형식으로 생성돼 있어, 사번 입력 시 만들어지는 이메일(`ru001@somang.internal`)과 불일치 → signInWithPassword 실패.
+
+### 수정 내용
+GoTrue Admin API(service role)로 4명 이메일·비밀번호 리셋 (password는 Admin API로 변경해야 올바르게 해싱됨):
+
+| 사번 | 신규 이메일 | 비번 |
+|---|---|---|
+| RU001 | ru001@somang.internal | RU0011234 |
+| UK001 | uk001@somang.internal | UK0011234 |
+| UZ001 | uz001@somang.internal | UZ0011234 |
+| ZH001 | zh001@somang.internal | ZH0011234 |
+
+프로필(조리과/lang ru·uk·uz·zh/active)은 정상 → 손대지 않음.
+
+### 검증
+anon 키 `signInWithPassword`(token grant)로 **4명 전원 LOGIN OK** 확인 (access_token·uid 반환). 실동작 검증 완료.
+
+### 교훈
+- 계정 생성 시 auth 이메일을 **로그인 규칙(`{사번}@{도메인}`)과 반드시 일치**시킬 것. `.test` 도메인·`xx.cook` 형식 같은 임의 이메일은 로그인 규칙과 어긋남.
+- `suhg@somang.com`(프로필 없음, 정체불명)은 이번 수정 대상 아님 — 삭제/보존 결정 대기 중이라 건드리지 않음.
+
+## BUG-006 · 외국인 조리원 native 언어 UI 안 나옴 — profiles.lang이 전부 ko ✅ 수정완료
+
+**수정일** 2026-07-02
+
+### 증상
+실제 외국인 조리원(SM-0120 안젤라 등 13명)이 로그인은 정상인데 앱 UI가 한국어로만 나옴.
+
+### 원인
+`staff_directory` 기반 profiles 일괄생성 시 lang이 기본 `ko`로 들어가고, 직원현황의 국적(비고: 러시아/중국/우즈베키스탄/우크라이나)이 반영 안 됨. LangBridge는 `profile.lang`으로 언어를 주입하므로 lang=ko면 한국어 UI.
+
+### 수정
+직원현황 엑셀 비고 기준으로 13명 lang 리셋: 러시아→ru, 중국→zh, 우즈벡→uz, 우크라이나→uk. (SM 9명 + HD 4명)
+
+### 교훈
+- 계정/프로필 대량 생성 시 **국적→lang** 같은 개인화 필드를 원본에서 채워야 함. 기본값 ko가 조용히 남으면 다국어 기능이 무력화됨.
+- 재발감지 후보: 조리원(영양과)인데 lang=ko이면서 이름/비고가 외국계인 프로필 자동 플래그.
+- ※ 별건: 로그인 불가로 알려졌던 RU001~ZH001 4계정(BUG-005에서 수정)은 직원현황에 없는 **유령 계정**으로 판명. 진짜 조리원은 SM-01XX/HD-00XX로 이미 존재.
